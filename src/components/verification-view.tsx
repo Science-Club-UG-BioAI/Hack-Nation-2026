@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { EvidenceGraphView } from "./evidence-graph-view";
 import {
   resultLabel,
   providerLabels,
+  verdictLabels,
   type VerificationResult,
 } from "@/core/contracts";
 
@@ -15,6 +17,14 @@ function dateLabel(value: string) {
 
 export function VerificationView({ result }: { result: VerificationResult }) {
   const [copied, setCopied] = useState(false);
+  const graphDecision = result.evidenceGraph?.nodes.find(
+    (node) => node.id === "verdict" && node.type === "VERDICT",
+  );
+  const graphVerdict =
+    graphDecision?.type === "VERDICT" ? graphDecision.verdict : undefined;
+  const displayedVerdict = result.verdict;
+  const displayedLabel = resultLabel(result);
+  const differs = graphVerdict !== undefined && graphVerdict !== result.verdict;
   const sourcesById = new Map(
     result.sources.map((source) => [source.id, source]),
   );
@@ -30,7 +40,10 @@ export function VerificationView({ result }: { result: VerificationResult }) {
             ? "PRZYKŁAD DEMONSTRACYJNY"
             : "Automatyczna analiza znalezionych materiałów",
           result.claim,
-          resultLabel(result),
+          displayedLabel,
+          ...(differs
+            ? [`Dodatkowa ocena grafu · ${verdictLabels[graphVerdict!]}`]
+            : []),
           result.explanation,
           ...result.limitations,
           ...result.sources.map((s) => `${s.title}: ${s.url}`),
@@ -45,15 +58,15 @@ export function VerificationView({ result }: { result: VerificationResult }) {
 
   return (
     <>
-      <div className={`verdict verdict-${result.verdict}`}>
+      <div className={`verdict verdict-${displayedVerdict}`}>
         <span>
-          {result.verdict === "supported"
+          {displayedVerdict === "supported"
             ? "✓"
-            : result.verdict === "refuted"
+            : displayedVerdict === "refuted"
               ? "×"
               : "?"}
         </span>
-        <h2 id="result-title">{resultLabel(result)}</h2>
+        <h2 id="result-title">{displayedLabel}</h2>
       </div>
       {result.mode === "demo" && (
         <p className="demo-notice">
@@ -87,6 +100,28 @@ export function VerificationView({ result }: { result: VerificationResult }) {
             })
           : result.explanation}
       </p>
+      {differs && (
+        <p>
+          <strong>Dodatkowa ocena grafu</strong> ·{" "}
+          {verdictLabels[graphVerdict!]}
+        </p>
+      )}
+      {result.evidenceGraph && (
+        <EvidenceGraphView graph={result.evidenceGraph} />
+      )}
+      {result.graphStatus === "failed" && (
+        <p role="status" className="status-notice">
+          Nie udało się zbudować grafu dowodowego. Wyświetlono wynik sprawdzenia
+          całego twierdzenia.
+        </p>
+      )}
+      {result.graphStatus === "unavailable" && (
+        <p className="status-notice">
+          Graf pojawi się po sprawdzeniu doprecyzowanego twierdzenia w
+          obsługiwanym zakresie.
+        </p>
+      )}
+
       {result.status !== "completed" && (
         <p className="status-notice">
           To status obsługi zgłoszenia. Nie wydano werdyktu o prawdziwości.

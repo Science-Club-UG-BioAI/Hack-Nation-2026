@@ -504,3 +504,25 @@ Resolver traktuje quoteId w ustaleniu jako jawny wybór istniejącego cytatu: ma
 Unresolved z jawnym brakiem ustaleń nie wymusza opisywania przypadkowych wyników wyszukiwania. Niespójne lub wymyślone odwołania pozostają błędami. Logi rozdzielają błędy formatu, odwołań i negatywny audyt, bez surowej odpowiedzi modelu. Jedynie jawny status dostawcy incomplete podczas audytu może wywołać jedno ponowienie z większym budżetem wyjścia, przy co najmniej 10 s pozostałych w niezmienionym limicie 60 s. Negatywnego audytu nie ponawiamy w poszukiwaniu akceptacji.
 
 Walidacja: **206** testów jednostkowych/integracyjnych, **19** przeglądarkowych; typecheck i build zaliczone. Pominięto 5 testów opt-in i 4 przeglądarkowe live; opisane płatne benchmarki uruchomiono osobno. Runner odmówi nadpisania istniejącego results.json. Polecenie npm run benchmark:evaluate -- reports/benchmark/NAZWA zapisuje spójne mierniki i formularz niezależnej oceny związany z hashem wyników.
+
+## Graf dowodowy
+
+Na ekranie weryfikacji wybierz **Graf dowodowy · dane syntetyczne**, aby
+przejść od werdyktu do przesłanek, cytatu i dokumentu bez kluczy API.
+Główny werdykt pozostaje wynikiem wspólnej analizy WWW i adaptera. Graf jest
+dodatkową analizą; ewentualna różnica ocen jest oznaczona osobno. Awaria grafu
+nie zastępuje ani nie usuwa wyniku sprawdzenia całego twierdzenia.
+
+Klienci API mogą zażądać grafu, dodając `"evidenceGraph": true` do treści
+istniejącego żądania `POST /api/verify`. Wynik grafu jest dostępny w
+`evidenceGraph`, pod węzłem `verdict`. Powtórzenie tego samego żądania w tej
+samej sesji wykorzystuje zapisany wynik przez pięć minut.
+Eksport JSON zawiera graf i cytowane fragmenty zapisanych migawek, więc można
+porównać cytaty, zakresy znaków i hashe bez ponawiania analizy. Serwerowe
+archiwum audytu zachowuje dotychczasową politykę przechowywania metadanych.
+
+`npm test` sprawdza konstrukcję, krytykę i walidację grafu.
+`npm run test:e2e -- e2e/evidence-graph.spec.ts` sprawdza widok demonstracyjny
+oraz pobieranie JSON i PNG.
+
+Integracja równoległych zmian grafu: 219 testów jednostkowych/integracyjnych, 23 przeglądarkowe, typecheck i build zaliczone. Pomiar P0.2 (30/30) wykonano przed tą integracją i bez evidenceGraph=true; nie jest pomiarem dodatkowej analizy grafowej, o którą teraz prosi WWW. Pełny benchmark połączonej ścieżki z grafem pozostaje do wykonania.

@@ -1343,3 +1343,93 @@ blockquote {
     scroll-behavior: auto !important;
   }
 }
+
+.evidence-graph {
+  margin-block: 1.25rem;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  border: 1px solid #d4dde6;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #182c43;
+  overflow-wrap: anywhere;
+}
+
+.evidence-graph h3,
+.evidence-graph h4 {
+  margin: 0 0 0.5rem;
+}
+
+.graph-controls,
+.graph-actions,
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+
+.graph-controls label,
+.graph-element {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.graph-controls label {
+  flex: 1 1 9rem;
+}
+
+.evidence-graph select,
+.graph-actions button {
+  max-width: 100%;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #a4b4c4;
+  border-radius: 6px;
+  background: #fff;
+  color: #182c43;
+  font: inherit;
+}
+
+.graph-actions button {
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.graph-actions button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.graph-legend span {
+  border-inline-start: 3px solid #a45f00;
+  padding-inline-start: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.graph-legend .graph-unverified {
+  border-inline-start-style: dashed;
+}
+
+.graph-canvas {
+  position: relative;
+  height: clamp(320px, 55vh, 520px);
+  margin-block: 0.75rem;
+  border: 1px solid #d4dde6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.graph-detail {
+  margin-block-start: 0.75rem;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background: #eaf0f6;
+}
+
+.graph-detail blockquote {
+  margin-inline: 0;
+  border-inline-start: 3px solid #176866;
+  padding-inline-start: 0.6rem;
+}

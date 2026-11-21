@@ -33,7 +33,7 @@ Brief wymaga oszacowania kosztu **1000 zapytań** i zachowania przy większym ru
 | Priorytet | Praca i stan | Kryterium odbioru |
 |---|---|---|
 | P0.1 | **GOTOWE — mechanizm i pomiar strukturalny**, 44/44 ustaleń w P0.2 | Każde opublikowane ustalenie ma przypisany dowód; znaczenie i atomowość niezależnie ocenia P0.3. |
-| P0.2 | **CZĘŚCIOWE — poprawki i pełny pomiar główny 30/30; kontrolowane źródła 3/4** | Główne progi zaliczone: macro-F1 1,000, pokrycie 44/44, wstrzymanie 3/3, mediana 11,588 s, kanały 30/30. Pozostaje odrzucony audyt sprzecznych pomiarów S02. Niezależna poprawność cytatów jest P0.3, koszt P1.2; pełna próba jury P0.4. |
+| P0.2 | **CZĘŚCIOWE — 30/30 bez grafu; źródła 3/4; po integracji grafu potrzebny nowy pomiar** | Główne progi zaliczone: macro-F1 1,000, pokrycie 44/44, wstrzymanie 3/3, mediana 11,588 s, kanały 30/30. Pozostaje odrzucony audyt sprzecznych pomiarów S02. Niezależna poprawność cytatów jest P0.3, koszt P1.2; pełna próba jury P0.4. |
 | P0.3 | **BRAK** — niezależna ocena znaczeniowa cytatów | Wypełniona ocena powiązana z konkretnym przebiegiem i jego hashem, metoda/recenzent, wynik ≥85%; audyt tym samym modelem nie zastępuje oceny referencyjnej. |
 | P0.4 | **CZĘŚCIOWE** — potwierdzić pełną ścieżkę i odporność | Próba jury działa bez ingerencji; jawnie oznaczone demo nie zastępuje analizy online. Testy ataków na wejściu i w źródłach sprawdzają zachowanie oraz zapis zdarzeń. |
 | P1.1 | **CZĘŚCIOWE** — aktualność, wydawcy i siła podstawy | Daty publikacji mają podstawę albo jawny brak; czas zdarzenia jest porównany z tezą; archiwalny materiał ma ostrzeżenie tam, gdzie to istotne. UI wyjaśnia adekwatność, aktualność, rozbieżności i niezależność dowodów. |
@@ -59,6 +59,8 @@ Pełny bieżący pomiar: **30/30**, macro-F1 **1,000**, pokrycie **44/44**, wstr
 Naprawiono podwójne wybieranie cytatów (referencja w ustaleniu jest jawnym wyborem istniejącego fragmentu), brak dowodów przy niepowiązanych wynikach, rolę korekty kontekstu, przekazywanie nieudanej próby między kanałami oraz ograniczone ponowienie niedokończonego audytu. Nie dodano odpowiedzi benchmarku do aplikacji. Negatywny audyt nadal blokuje publikację. Jest 206 testów jednostkowych/integracyjnych i 19 przeglądarkowych; typecheck i build przechodzą.
 
 Dowody: [raport P0.2](reports/benchmark/p02-report.md), [bieżące mierniki i progi](reports/benchmark/p02-run4/summary.json), [surowe wyniki](reports/benchmark/p02-run4/results.json). **Kontrolowane źródła: 3/4**; S02 (sprzeczne pomiary) odrzucone przez audyt, bez publikacji werdyktu. Ataki w źródłach 2/2 odparte i odnotowane. Dlatego P0.2/P0.4 pozostają częściowe. Niezależny przegląd ≥85%, koszt i próba jury pozostają otwarte w P0.3/P1.2/P0.4. Wynik jawnego zestawu po iteracjach rozwojowych nie jest dowodem skuteczności na nowych tematach.
+
+Po pomiarze P0.2 dołączono równoległy graf dowodowy. Połączony kod przechodzi 219 testów jednostkowych/integracyjnych i 23 przeglądarkowe oraz typecheck/build. Wynik 30/30 i mediana 11,588 s dotyczą zapisanej wersji bez grafu; nie obejmują dodatkowych wywołań analizy grafowej, o którą teraz prosi WWW. Graf nie zastępuje wspólnego werdyktu kanałów. Pełny benchmark po integracji grafu pozostaje otwarty.
 
 ## Co już mamy, co jest częściowe, czego brakuje
 
@@ -237,7 +239,7 @@ Publiczne demo jest opcjonalne. Lokalne, odtwarzalne uruchomienie przez jury mus
 | Katalog regionalny, router temat/region, cron i indeks treści | BRAK; istnieje katalog JSON i proste wyszukiwanie metadanych |
 | OCR, transkrypcja, EXIF, perceptual hash, reverse image API | BRAK; przy wdrożeniu ujawnić koszt, retencję, zakres i ograniczenia |
 | Pełna pętla moderatora, deduplikacja spraw, panel | BRAK; oddzielna decyzja o minimalnym alercie w P1 |
-| Graf / oś czasu dowodów | BRAK; karty cytatów i relacje dowodowe już są |
+| Graf / oś czasu dowodów | CZĘŚCIOWE: dołączono graf dowodowy z równoległej pracy, testy konstrukcji i UI; brak pełnego benchmarku online ścieżki z grafem. Oś czasu niepotwierdzona. |
 | Wielojęzyczne wyszukiwanie EN/UA/RU/DE | CZĘŚCIOWE: materiały obcojęzyczne mogą trafić do silnika; brak dedykowanej strategii i walidacji języków |
 | Neutralne ostrzeżenia o statusie źródła | BRAK; wymagają aktualnej, sprawdzalnej podstawy i oddzielenia od werdyktu |
 | Eksport CSV, OpenCTI/DISARM, OpenAPI | BRAK; eksport JSON własnej sesji już jest |

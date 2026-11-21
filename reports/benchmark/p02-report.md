@@ -75,3 +75,7 @@ Kontrola kodu: 206 testów jednostkowych/integracyjnych zaliczonych, 5 opt-in po
 Główny przebieg bazowy nie zawierał błędów dostępności Gemini po przywróceniu dostępu do sieci. Większość niepowodzeń dotyczyła kontraktu dowodów i audytu. Zmiana dostawcy nie usuwa błędów koordynacji kanałów ani walidatora. Jednocześnie model potrafił błędnie zinterpretować niepowiązane materiały; audyt tym samym modelem nie jest niezależną gwarancją.
 
 Końcowy pomiar na tym samym dostawcy poprawił główny zestaw z 21/30 do 30/30. Odrzucona ocena S02 nadal pokazuje potrzebę niezależnej walidacji i ewentualnego porównania modeli. Ewentualny wybór innego modelu/dostawcy wymaga próby porównawczej na tych samych przypadkach i dowodach, z oceną trafności, błędów formatu, czasu i kosztu. Ten pomiar nie jest takim porównaniem. Obecny fallback to drugi model Gemini, a nie drugi dostawca.
+
+## Integracja równoległych zmian po pomiarze
+
+Przed pushem dołączono zdalny graf dowodowy (origin/main, 1610c0d). Wynik p02-run4 dotyczy wersji oznaczonej zapisanymi hashami i żądań bez evidenceGraph=true. Nie przenosimy jego czasu, pokrycia ani poprawności na nową analizę grafową, o którą prosi WWW. Wspólny werdykt i ustalenia pozostają podstawą odpowiedzi w obu kanałach; odmienna ocena grafu ma osobne oznaczenie. Cache łączy opcjonalny graf z regułą ponawiania nieudanych prób. Po integracji: 219 testów jednostkowych/integracyjnych, 23 przeglądarkowe, kontrola typów i build zaliczone. Nowy pełny benchmark z grafem pozostaje otwarty; surowych wcześniejszych wyników nie zmieniono.

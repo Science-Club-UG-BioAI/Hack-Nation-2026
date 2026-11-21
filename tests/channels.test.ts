@@ -251,3 +251,103 @@ it("applies the same cross-origin protection in the second channel", async () =>
   expect((await discord(req)).status).toBe(403);
   expect(generate).not.toHaveBeenCalled();
 });
+
+it("adds a verified graph to a shared result and replays it without calling providers", async () => {
+  const session = randomUUID();
+  const channel = await discord(request({ content: claim }, session));
+  const legacy = (await channel.json()).result;
+  const original = vi.mocked(generate).getMockImplementation()!;
+  const { proposalSchema, critiqueSchema } =
+    await import("@/server/evidence-graph");
+  vi.mocked(generate).mockImplementation(async (...args) => {
+    const [schema, instruction, payload] = args;
+    if (instruction.startsWith("Wydziel wszystkie"))
+      return {
+        composition: "single",
+        claims: [
+          {
+            text: claim,
+            checkable: true,
+            queries: ["NATO accession date", "NATO evidence alternative"],
+            wikipediaQuery: null,
+            sejmQuery: null,
+            arxivQuery: null,
+          },
+        ],
+      } as never;
+    if (schema === proposalSchema)
+      return {
+        relations: ["document-1-q1", "document-2-q1"].map((quoteId) => ({
+          quoteId,
+          claimId: "claim-1",
+          type: "SUPPORTS",
+          reason: "Źródło podaje datę akcesji.",
+        })),
+        inferences: [],
+      } as never;
+    if (schema === critiqueSchema) {
+      const { graph } = payload as {
+        graph: import("@/core/evidence-graph").EvidenceGraph;
+      };
+      return {
+        reviews: [...graph.nodes, ...graph.edges]
+          .filter((item) => item.validation.semantic === "NEEDS_REVIEW")
+          .map((item) => ({
+            targetId: item.id,
+            decision: "ACCEPT",
+            reason: "Poprawne odwołanie do daty.",
+          })),
+        repeats: [],
+        limitations: [],
+      } as never;
+    }
+    return original(...args);
+  });
+  const graphResponse = await web(
+    request({ claim, evidenceGraph: true }, session),
+  );
+  expect(graphResponse.status).toBe(200);
+  const result = await graphResponse.json();
+  expect(result).toMatchObject({
+    requestId: legacy.requestId,
+    citationContract: legacy.citationContract,
+    findings: legacy.findings,
+    explanation: legacy.explanation,
+    verdict: legacy.verdict,
+    graphStatus: "ready",
+    evidenceGraph: {
+      analysisId: legacy.requestId,
+      synthetic: false,
+      validation: { technical: "valid" },
+      nodes: expect.arrayContaining([
+        expect.objectContaining({ id: "verdict", verdict: "supported" }),
+      ]),
+    },
+  });
+  const replay = await web(request({ claim, evidenceGraph: true }, session));
+  expect(await replay.json()).toMatchObject({
+    evidenceGraph: result.evidenceGraph,
+    delivery: { reused: true },
+  });
+  const plain = await discord(request({ content: claim }, session));
+  expect((await plain.json()).result).not.toHaveProperty("evidenceGraph");
+  expect(generate).toHaveBeenCalledTimes(6);
+  expect(search).toHaveBeenCalledTimes(4);
+});
+
+it("returns the existing result when graph generation fails", async () => {
+  const session = randomUUID();
+  const original = vi.mocked(generate).getMockImplementation()!;
+  vi.mocked(generate).mockImplementation(async (...args) => {
+    if (args[1].startsWith("Wydziel wszystkie"))
+      throw new Error("Graph provider failure");
+    return original(...args);
+  });
+  const response = await web(request({ claim, evidenceGraph: true }, session));
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({
+    status: "completed",
+    verdict: "supported",
+    graphStatus: "failed",
+  });
+});
