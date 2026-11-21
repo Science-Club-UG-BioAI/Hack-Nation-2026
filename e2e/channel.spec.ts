@@ -13,8 +13,7 @@ test("adapter automatically displays a response and works on a narrow screen", a
     const result = { ...demoResult("context")!, mode: "live" as const };
     await route.fulfill({ json: channelReply(result) });
   });
-  await page.goto("/");
-  await page.getByRole("link", { name: "Symulator Discord" }).click();
+  await page.goto("/kanal-demo");
   await expect(page.getByText(/Nie łączymy się z Discordem/)).toBeVisible();
   await page
     .getByLabel("Treść wiadomości")

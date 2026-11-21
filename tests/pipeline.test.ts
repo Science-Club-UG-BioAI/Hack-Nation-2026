@@ -178,6 +178,7 @@ describe("verification pipeline", () => {
       verdict: null,
       findings: [],
       evidence: [],
+      explanation: expect.stringContaining("fragmenty źródeł nie uzasadniały"),
     });
   });
   it.each(
@@ -231,6 +232,8 @@ describe("verification pipeline", () => {
       });
       expect(JSON.stringify(result)).not.toContain("UNSUPPORTED_EXTRA_FACT");
       expect(JSON.stringify(result)).not.toContain("UNVERIFIED_AUDIT_PROSE");
+      if (findingChecks.some((check) => !check.atomic))
+        expect(result.explanation).toContain("wymagają osobnego sprawdzenia");
     },
   );
   it("publishes multiple audited findings with their own citations and suppresses all alternate prose", async () => {
@@ -481,6 +484,7 @@ describe("verification pipeline", () => {
       status: "unable_to_verify",
       verdict: null,
       evidence: [],
+      explanation: expect.stringContaining("Po odfiltrowaniu fragmentów"),
     });
     expect(model).toHaveBeenCalledTimes(1);
   });
@@ -695,6 +699,7 @@ describe("verification pipeline", () => {
     const result = await verify(input, "request", new AbortController().signal);
     expect(result.verdict).toBeNull();
     expect(result.status).toBe("unable_to_verify");
+    expect(result.explanation).toContain("wszystkich ustaleń");
     expect(result.evidence).toEqual([]);
     expect(result.limitations[0]).toContain("Nie potwierdzono");
     expect(JSON.stringify(result)).not.toContain(

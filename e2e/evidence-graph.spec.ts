@@ -12,11 +12,18 @@ test("graf pokazuje ten sam werdykt co panel", async ({ page }) => {
 });
 
 test("błąd sprawdzenia pokazuje status obsługi", async ({ page }) => {
+  const explanation =
+    "Przytoczone fragmenty źródeł nie uzasadniały co najmniej jednego z ustaleń.";
   await page.route("**/api/demo?id=synthetic-graph", async (route) => {
     const response = await route.fetch();
     const result = await response.json();
     await route.fulfill({
-      json: { ...result, status: "unable_to_verify", verdict: null },
+      json: {
+        ...result,
+        status: "unable_to_verify",
+        verdict: null,
+        explanation,
+      },
     });
   });
   await page.goto("/");
@@ -26,6 +33,7 @@ test("błąd sprawdzenia pokazuje status obsługi", async ({ page }) => {
   await expect(page.locator("#result-title")).toHaveText(
     "Nie można ukończyć sprawdzenia",
   );
+  await expect(page.getByText("Dlaczego? " + explanation)).toBeVisible();
   await expect(page.getByRole("region", { name: "Graf dowodowy" })).toHaveCount(
     0,
   );

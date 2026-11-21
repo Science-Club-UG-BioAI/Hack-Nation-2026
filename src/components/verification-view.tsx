@@ -107,6 +107,11 @@ export function VerificationView({ result }: { result: ResultDetails }) {
         </span>
         <h2 id="result-title">{displayedLabel}</h2>
       </div>
+      {result.status === "unable_to_verify" && (
+        <p className="status-notice">
+          <strong>Dlaczego?</strong> {result.explanation}
+        </p>
+      )}
       {result.mode === "demo" && (
         <p className="demo-notice">
           Przykład demonstracyjny przygotowany ręcznie. To nie jest wynik
@@ -119,26 +124,28 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           Sprawdzane twierdzenie po oddzieleniu poleceń: {result.checkedClaim}
         </p>
       )}
-      <p className="explanation">
-        {result.citationContract === "findings-v1"
-          ? result.explanation.split(/(\[\d+\])/).map((part, i) => {
-              const number = /^\[(\d+)\]$/.exec(part)?.[1];
-              return number &&
-                Number(number) > 0 &&
-                Number(number) <= result.evidence.length ? (
-                <a
-                  key={i}
-                  href={`#evidence-${number}`}
-                  aria-label={`Dowód ${number}`}
-                >
-                  {part}
-                </a>
-              ) : (
-                part
-              );
-            })
-          : result.explanation}
-      </p>
+      {result.status !== "unable_to_verify" && (
+        <p className="explanation">
+          {result.citationContract === "findings-v1"
+            ? result.explanation.split(/(\[\d+\])/).map((part, i) => {
+                const number = /^\[(\d+)\]$/.exec(part)?.[1];
+                return number &&
+                  Number(number) > 0 &&
+                  Number(number) <= result.evidence.length ? (
+                  <a
+                    key={i}
+                    href={`#evidence-${number}`}
+                    aria-label={`Dowód ${number}`}
+                  >
+                    {part}
+                  </a>
+                ) : (
+                  part
+                );
+              })
+            : result.explanation}
+        </p>
+      )}
       {disagreement.length > 0 ? (
         <section
           className="coverage-panel"

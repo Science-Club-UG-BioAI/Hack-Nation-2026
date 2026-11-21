@@ -85,10 +85,6 @@ export function ImageInput({
       <label htmlFor="claim-image">
         Dołącz obraz <span className="optional">opcjonalnie</span>
       </label>
-      <p className="input-privacy-hint" id="image-privacy">
-        Wybór pliku wysyła obraz do Google Gemini bez maskowania. Jego opis
-        zostanie dołączony do tezy.
-      </p>
       <input
         ref={inputRef}
         id="claim-image"
@@ -96,7 +92,7 @@ export function ImageInput({
         accept={imageMimeSchema.options.join(",")}
         disabled={disabled}
         onChange={(event) => select(event.target.files?.[0])}
-        aria-describedby="image-privacy image-formats"
+        aria-describedby="image-formats"
       />
       <small id="image-formats">JPG, PNG lub WebP · do 4 MiB</small>
       {file && preview && (

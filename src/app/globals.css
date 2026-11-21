@@ -104,21 +104,6 @@ summary:focus-visible {
 .brand-dot {
   color: var(--blue);
 }
-.edition {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--muted);
-}
-.edition > span {
-  padding: 6px 8px;
-  border: 1px solid #d2dce9;
-  border-radius: 5px;
-  font-size: 10px;
-}
 .dashboard-nav {
   display: flex;
   gap: 8px;
@@ -1130,9 +1115,6 @@ blockquote {
   .shell {
     padding: 0 28px;
   }
-  .edition {
-    display: none;
-  }
   .trust-note {
     display: none;
   }
@@ -1195,7 +1177,7 @@ blockquote {
   }
   .dashboard-nav {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
     justify-content: space-between;
     gap: 4px;
@@ -1308,11 +1290,7 @@ blockquote {
     gap: 12px;
   }
   .page-footer p {
-    order: 3;
     width: 100%;
-  }
-  .page-footer > span:last-child {
-    margin-left: auto;
   }
 }
 @media (max-width: 370px) {
@@ -1471,9 +1449,6 @@ blockquote {
 .image-input small {
   display: block;
   color: var(--muted);
-}
-.image-input .input-privacy-hint {
-  margin: 4px 0;
 }
 .image-input input {
   max-width: 100%;

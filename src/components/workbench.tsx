@@ -169,7 +169,7 @@ export function Workbench() {
           </span>
           KitCheck<span className="brand-dot">.</span>
         </a>
-        <nav className="dashboard-nav" aria-label="Kanały weryfikacji">
+        <nav className="dashboard-nav" aria-label="Nawigacja główna">
           <a href="/" aria-current="page">
             <Icon name="shield" />
             Weryfikacja WWW
@@ -178,14 +178,7 @@ export function Workbench() {
             <Icon name="layers" />
             Korpus źródeł
           </a>
-          <a href="/kanal-demo">
-            <Icon name="chat" />
-            Symulator Discord
-          </a>
         </nav>
-        <span className="edition">
-          HACKNATION <span>PROTOTYP</span>
-        </span>
       </header>
       <main id="workspace" tabIndex={-1}>
         <section className="dashboard-intro">
@@ -485,7 +478,6 @@ export function Workbench() {
         <footer className="page-footer">
           <span>KitCheck · HackNation 2026</span>
           <p>Sprawdzaj źródła. Zachowaj własny osąd.</p>
-          <span>Wersja eksperymentalna</span>
         </footer>
       </main>
     </div>

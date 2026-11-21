@@ -2,6 +2,7 @@ import { countSourcesByProvider } from "@/core/source-counts";
 import {
   auditSchema,
   planSchema,
+  providerLabels,
   type Assessment,
   type Document,
   type VerificationResult,
@@ -57,7 +58,7 @@ async function auditFindings(
   requestId: string,
   deadlineAt: number,
   runAudit: (maxOutputTokens?: number) => Promise<z.infer<typeof auditSchema>>,
-): Promise<boolean> {
+): Promise<string | null> {
   let audit: z.infer<typeof auditSchema>;
   try {
     audit = await runAudit();
@@ -78,26 +79,33 @@ async function auditFindings(
   }
 
   const checks = audit.findingChecks ?? [];
-  const findingsApproved =
+  const checkedIds = new Set(checks.map((check) => check.findingId));
+  const complete =
     checks.length === findings.length &&
-    new Set(checks.map((c) => c.findingId)).size === checks.length &&
-    findings.every((f) =>
-      checks.some((c) => c.findingId === f.id && c.supported && c.atomic),
-    );
-  if (audit.approved && findingsApproved) return true;
+    checkedIds.size === checks.length &&
+    findings.every((finding) => checkedIds.has(finding.id));
+  const unsupported = checks.filter((check) => !check.supported).length;
+  const nonatomic = checks.filter((check) => !check.atomic).length;
+  if (audit.approved && complete && !unsupported && !nonatomic) return null;
   console.warn(
     JSON.stringify({
       requestId,
       event: "semantic_audit_rejected",
       approved: audit.approved,
-      findingsApproved,
+      findingsApproved: complete && !unsupported && !nonatomic,
       findings: findings.length,
       checks: checks.length,
-      unsupported: checks.filter((c) => !c.supported).length,
-      nonatomic: checks.filter((c) => !c.atomic).length,
+      unsupported,
+      nonatomic,
     }),
   );
-  return false;
+  if (!complete)
+    return "Końcowa kontrola nie objęła poprawnie wszystkich ustaleń potrzebnych do wydania oceny.";
+  if (unsupported)
+    return "Przytoczone fragmenty źródeł nie uzasadniały co najmniej jednego z ustaleń.";
+  if (nonatomic)
+    return "Jedno z ustaleń łączyło kilka twierdzeń, które wymagają osobnego sprawdzenia.";
+  return "Końcowa kontrola nie potwierdziła, że proponowana ocena wynika z przytoczonych źródeł.";
 }
 
 export async function verify(
@@ -320,26 +328,32 @@ export async function verify(
   const protectedSources = guardDocuments(prepared);
   recordGuard("source", protectedSources.removed);
   const documents = protectedSources.documents;
+  const incompleteProviders = retrieval
+    .filter(
+      (source) => source.status === "error" || source.status === "partial",
+    )
+    .map((source) => providerLabels[source.provider]);
   if (
     !documents.length &&
-    (found.hits.length > 0 ||
-      retrieval.some((s) => s.status === "error" || s.status === "partial"))
+    (found.hits.length > 0 || incompleteProviders.length > 0)
   )
     return noDecision(
       "unable_to_verify",
-      "Nie udało się uzyskać tekstu materiałów potrzebnych do sprawdzenia. To ograniczenie dostępu, a nie ocena prawdziwości twierdzenia.",
+      protectedSources.removed > 0
+        ? "Po odfiltrowaniu fragmentów z poleceniami dla modelu nie pozostał żaden materiał do sprawdzenia tezy."
+        : found.hits.length > 0
+          ? "Wśród znalezionych materiałów nie było tekstu, który można było wykorzystać do sprawdzenia tezy."
+          : `Wyszukiwanie było niepełne (${incompleteProviders.join(", ")}). Nie udało się pobrać materiału do sprawdzenia tezy.`,
     );
   if (!documents.length)
     return simple(
       "insufficient",
       "Nie znaleziono dostępnego tekstu źródeł pozwalającego ocenić tę tezę. To nie jest dowód jej fałszywości.",
     );
-  const retrievalWarnings = retrieval
-    .filter((s) => ["error", "partial"].includes(s.status))
-    .map(
-      (s) =>
-        `Niepełne wyszukiwanie: ${s.provider}. Część materiałów była niedostępna.`,
-    );
+  const retrievalWarnings = incompleteProviders.map(
+    (provider) =>
+      `Niepełne wyszukiwanie: ${provider}. Część materiałów była niedostępna.`,
+  );
   const catalog = quotationCatalog(documents);
   const payload = {
     ...analysisInput,
@@ -395,7 +409,7 @@ export async function verify(
     if (retrievalWarnings.length)
       return noDecision(
         "unable_to_verify",
-        "Wyszukiwanie było niepełne i nie uzyskano dowodów pozwalających ukończyć sprawdzenie.",
+        `Wyszukiwanie było niepełne (${incompleteProviders.join(", ")}). W dostępnych materiałach nie znaleziono dowodów pozwalających ocenić tezę.`,
         documents,
         [...assessment.limitations, ...retrievalWarnings],
       );
@@ -445,23 +459,18 @@ export async function verify(
     retrievalWarnings,
     assessment,
   };
-  const approved = await auditFindings(
+  const auditFailure = await auditFindings(
     assessment.findings ?? [],
     requestId,
     deadlineAt,
     (outputTokenLimit) =>
       model(auditSchema, instructionForAudit, auditPayload, outputTokenLimit),
   );
-  if (!approved) {
-    return noDecision(
-      "unable_to_verify",
-      "Kontrola zgodności dowodów z wnioskiem nie pozwoliła ukończyć sprawdzenia. Nie publikujemy niezatwierdzonej oceny.",
-      documents,
-      [
-        "Nie potwierdzono zgodności wszystkich ustaleń i przypisanych cytatów z proponowaną oceną.",
-        ...retrievalWarnings,
-      ],
-    );
+  if (auditFailure) {
+    return noDecision("unable_to_verify", auditFailure, documents, [
+      "Nie potwierdzono zgodności wszystkich ustaleń i przypisanych cytatów z proponowaną oceną.",
+      ...retrievalWarnings,
+    ]);
   }
   return finish(
     {

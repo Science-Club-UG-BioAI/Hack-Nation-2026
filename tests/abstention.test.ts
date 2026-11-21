@@ -65,7 +65,13 @@ it("does not turn incomplete retrieval into successful abstention", async () => 
   });
   expect(
     await verify(input, "partial", new AbortController().signal),
-  ).toMatchObject({ status: "unable_to_verify", verdict: null });
+  ).toMatchObject({
+    status: "unable_to_verify",
+    verdict: null,
+    explanation: expect.stringContaining(
+      "Wyszukiwanie było niepełne (Wyszukiwanie WWW)",
+    ),
+  });
 });
 it("discards incidental evidence when the model explicitly establishes no facts", async () => {
   vi.mocked(generate)

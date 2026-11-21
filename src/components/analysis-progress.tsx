@@ -84,6 +84,18 @@ export function AnalysisProgress({
           ? "Przykład demonstracyjny"
           : "Przebieg zakończony"
         : "Każdy etap, na bieżąco";
+  const caption =
+    busy && !demo
+      ? "Statusy pochodzą z trwającej analizy na serwerze."
+      : result?.mode === "demo"
+        ? "Gotowy przykład — bez wyszukiwania i analizy na żywo."
+        : result?.delivery?.reused
+          ? "Ponownie pokazano wynik z tej sesji. Bez nowego wyszukiwania."
+          : interrupted
+            ? "Nie wydano nowego werdyktu. Możesz uruchomić sprawdzenie ponownie."
+            : result
+              ? "Szczegóły oceny i ograniczenia znajdziesz poniżej."
+              : null;
   return (
     <section className="pipeline-card" aria-labelledby="pipeline-title">
       <div className="pipeline-heading">
@@ -149,19 +161,7 @@ export function AnalysisProgress({
           );
         })}
       </ol>
-      <div className="pipeline-caption">
-        {busy && !demo
-          ? "Statusy pochodzą z trwającej analizy na serwerze."
-          : result?.mode === "demo"
-            ? "Gotowy przykład — bez wyszukiwania i analizy na żywo."
-            : result?.delivery?.reused
-              ? "Ponownie pokazano wynik z tej sesji. Bez nowego wyszukiwania."
-              : interrupted
-                ? "Nie wydano nowego werdyktu. Możesz uruchomić sprawdzenie ponownie."
-                : result
-                  ? "Szczegóły oceny i ograniczenia znajdziesz poniżej."
-                  : "Po uruchomieniu zobaczysz aktualne działania oraz dostępność źródeł."}
-      </div>
+      {caption && <div className="pipeline-caption">{caption}</div>}
       {sources.size > 0 && (
         <div className="source-activity">
           {[...sources.values()].map((source) => (
