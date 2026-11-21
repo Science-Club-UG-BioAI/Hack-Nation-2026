@@ -1,0 +1,204 @@
+vi.mock("@/server/corpus", () => ({
+  corpus: async () => ({ hits: [], partial: false }),
+}));
+import { randomUUID } from "node:crypto";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { POST as web } from "@/app/api/verify/route";
+import { POST as discord } from "@/app/api/channels/discord-demo/route";
+import { generate, search } from "@/server/providers";
+import { planSchema, auditSchema } from "@/core/contracts";
+import { AppError } from "@/core/errors";
+
+vi.mock("@/server/providers", () => ({ generate: vi.fn(), search: vi.fn() }));
+const claim = "Polska przystąpiła do NATO 12 marca 1999 roku.";
+const request = (body: unknown, session = randomUUID(), path = "verify") =>
+  new NextRequest(`http://localhost:3000/api/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: `prawdowid-session=${session}`,
+    },
+    body: JSON.stringify(body),
+  });
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.stubEnv("GEMINI_API_KEY", "test");
+  vi.stubEnv("TAVILY_API_KEY", "test");
+  vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
+  vi.mocked(search).mockResolvedValue([
+    {
+      title: "Official",
+      url: "https://nato.int/source",
+      raw_content:
+        "Poland joined NATO on 12 March 1999. The accession is recorded in the official history.",
+    },
+    {
+      title: "Public record",
+      url: "https://gov.pl/nato",
+      raw_content:
+        "Polska przystąpiła do NATO 12 marca 1999 roku. Data ta jest opisana w źródle urzędowym.",
+    },
+  ]);
+  vi.mocked(generate).mockImplementation(async (schema) => {
+    if (schema === planSchema)
+      return {
+        checkable: true,
+        needsClarification: false,
+        outOfScope: false,
+        explanation: "Data.",
+        queries: ["Poland NATO date", "Poland NATO alternative date"],
+      } as never;
+    if (schema === auditSchema)
+      return { approved: true, reason: "Wniosek uzasadniony." } as never;
+    return {
+      verdict: "supported",
+      explanation: "Oba źródła podają tę samą datę.",
+      limitations: [],
+      evidence: ["q1", "q2"].map((quoteId) => ({
+        quoteId,
+        relation: "supports",
+        relevance: "Data akcesji.",
+      })),
+    } as never;
+  });
+});
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
+
+it.each(["web", "discord"])(
+  "runs the full pipeline from %s and shares the exact result with the other channel",
+  async (first) => {
+    const session = randomUUID();
+    const a = await (first === "web"
+      ? web(request({ claim }, session))
+      : discord(request({ content: claim }, session)));
+    const b = await (first === "web"
+      ? discord(request({ content: claim }, session))
+      : web(request({ claim }, session)));
+    expect(a.status).toBe(200);
+    expect(b.status).toBe(200);
+    const aBody = await a.json(),
+      bBody = await b.json();
+    const initial = first === "web" ? aBody : aBody.result;
+    const repeated = first === "web" ? bBody.result : bBody;
+    expect(initial).toMatchObject({
+      status: "completed",
+      verdict: "supported",
+      mode: "live",
+      delivery: { reused: false },
+    });
+    expect(repeated).toMatchObject({
+      requestId: initial.requestId,
+      verdict: initial.verdict,
+      evidence: initial.evidence,
+      sources: initial.sources,
+      checkedAt: initial.checkedAt,
+      delivery: { reused: true },
+    });
+    const channel = first === "web" ? bBody : aBody;
+    expect(channel.delivery).toBe("simulated");
+    const reply = channel.messages.join("\n");
+    expect(reply).toContain("Ocena: Potwierdzone");
+    for (const item of initial.evidence) expect(reply).toContain(item.quote);
+    for (const source of initial.sources) expect(reply).toContain(source.url);
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(search).toHaveBeenCalledTimes(2);
+  },
+);
+
+it("does not share results across browser sessions", async () => {
+  await web(request({ claim }));
+  await discord(request({ content: claim }));
+  expect(generate).toHaveBeenCalledTimes(6);
+});
+it("coalesces simultaneous messages in both channels into one live analysis", async () => {
+  const session = randomUUID();
+  let release!: () => void;
+  let entered!: () => void;
+  const started = new Promise<void>((resolve) => {
+    entered = resolve;
+  });
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const original = vi.mocked(generate).getMockImplementation()!;
+  vi.mocked(generate).mockImplementationOnce(async (...args) => {
+    entered();
+    await gate;
+    return original(...args);
+  });
+  const first = web(request({ claim }, session));
+  await started;
+  const second = discord(request({ content: claim }, session));
+  release();
+  const [a, b] = await Promise.all([first, second]);
+  const initial = await a.json(),
+    channel = await b.json();
+  expect(channel.result.requestId).toBe(initial.requestId);
+  expect(channel.result.evidence).toEqual(initial.evidence);
+  expect(generate).toHaveBeenCalledTimes(3);
+});
+it("includes the stated date in the shared result key", async () => {
+  const session = randomUUID();
+  await web(request({ claim, statedAt: "2026-01-01" }, session));
+  await discord(request({ content: claim, statedAt: "2026-01-02" }, session));
+  expect(generate).toHaveBeenCalledTimes(6);
+});
+it("expires shared results after five minutes", async () => {
+  const session = randomUUID();
+  const now = Date.now();
+  await web(request({ claim }, session));
+  vi.spyOn(Date, "now").mockReturnValue(now + 301_000);
+  await discord(request({ content: claim }, session));
+  expect(generate).toHaveBeenCalledTimes(6);
+});
+it("responds automatically to a clarification without a factual verdict", async () => {
+  vi.mocked(generate).mockResolvedValueOnce({
+    checkable: true,
+    needsClarification: true,
+    explanation: "Podaj kraj i okres.",
+    queries: [],
+  });
+  const response = await discord(
+    request({
+      content: "Wydatki wzrosły dwukrotnie w porównaniu z poprzednim okresem.",
+    }),
+  );
+  const body = await response.json();
+  expect(body.result).toMatchObject({
+    status: "needs_clarification",
+    verdict: null,
+  });
+  expect(body.messages.join("\n")).toContain(
+    "Status obsługi: Potrzebne doprecyzowanie",
+  );
+  expect(search).not.toHaveBeenCalled();
+});
+it("does not cache provider errors or convert them into verdicts", async () => {
+  vi.mocked(generate).mockRejectedValueOnce(
+    new AppError("MODEL_UNAVAILABLE", "Chwilowa awaria", 503, true),
+  );
+  const session = randomUUID();
+  const failure = await discord(request({ content: claim }, session));
+  expect(failure.status).toBe(503);
+  const error = await failure.json();
+  expect(error.status).toBe("technical_error");
+  expect(error).not.toHaveProperty("verdict");
+  expect((await web(request({ claim }, session))).status).toBe(200);
+  expect(generate).toHaveBeenCalledTimes(4);
+});
+it("rejects fabricated client verdicts at the adapter boundary", async () => {
+  expect(
+    (await discord(request({ content: claim, verdict: "supported" }))).status,
+  ).toBe(400);
+  expect(generate).not.toHaveBeenCalled();
+});
+it("applies the same cross-origin protection in the second channel", async () => {
+  const req = request({ content: claim });
+  req.headers.set("origin", "https://attacker.example");
+  expect((await discord(req)).status).toBe(403);
+  expect(generate).not.toHaveBeenCalled();
+});

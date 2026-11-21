@@ -1,0 +1,70 @@
+{
+  "failures": [
+    {
+      "url": "https://www.factcheck.org/author/eliza-keefe",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2019/09/trump-wrong-on-european-aid-to-ukraine",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2019/12/factchecking-trumps-nato-remarks",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2019/12/the-whoppers-of-2019",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/issue/european-union",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2016/05/trump-on-hairspray-and-ozone",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/location/european-union",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/issue/afghanistan/page/5",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2019/05/trump-17-repeats-in-17-hours",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2008/06/obama-and-european-affairs-subcommittee",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/page/331",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/author/eugene-kiely/page/97",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/page/422",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/page/69",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/page/338?cat=4",
+      "reason": "fetch failed"
+    },
+    {
+      "url": "https://www.factcheck.org/2022/03/rothschild-co-has-office-in-russia-contrary-to-conspiracy-claim-on-social-media",
+      "reason": "fetch failed"
+    }
+  ],
+  "discoveryRequestsThisPass": 2,
+  "scope": "supplemental pass only (factcheck.org and pap.pl); initial 13-query pass not retained in this file"
+}

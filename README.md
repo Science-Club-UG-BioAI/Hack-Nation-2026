@@ -1,1 +1,476 @@
-Projekt na Hack-Nation2026
+# Prawdowid
+
+**Aktualizacja: niezawodność, prywatność i audyt.** Aktualny zakres opisuje ostatnia sekcja tego pliku. Wcześniejsze tabele benchmarków i braków są historyczne; nie stanowią wyników po najnowszych zmianach.
+
+Prototyp HackNation 2026: **teza → wyszukiwanie → ocena → kontrola cytatów → wynik z dowodami**.
+Ta wersja przyjmuje jedną tezę (20–500 znaków), nie cały artykuł. Obsługuje WWW i działający adapter demonstracyjny wiadomości Discord, zgodnie z pierwszym etapem dostosowania do opisu wyzwania.
+
+## Uruchomienie
+
+Wymagany Node.js 22.13+ (testowano na 24) oraz npm. Skrypty benchmarku używają wbudowanego usuwania typów TypeScript.
+
+```powershell
+npm ci
+Copy-Item .env.example .env.local
+# Uzupełnij GEMINI_API_KEY i TAVILY_API_KEY lokalnie.
+npm run dev
+```
+
+Otwórz http://127.0.0.1:3000. Nie nadpisuj istniejącego `.env.local`. Po dodaniu lub zmianie kluczy uruchom serwer ponownie. Sekrety są używane wyłącznie na serwerze. Nie dodawaj ich do `.env.example` ani repozytorium.
+
+Bez kluczy działają trzy **ręcznie przygotowane i oznaczone przykłady demo**. Analiza online zwróci `NOT_CONFIGURED`; nigdy nie zastępujemy jej przykładem.
+
+```powershell
+npm run build
+npm start
+```
+
+Serwer nasłuchuje tylko na `127.0.0.1`. To lokalne demo, nie publiczne wdrożenie.
+
+## Konfiguracja
+
+| Zmienna                        | Znaczenie                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`               | Klucz Gemini API                                                            |
+| `GEMINI_MODEL`                 | Dokładny identyfikator modelu dostępny na koncie; domyślny w `.env.example` |
+| `GEMINI_FALLBACK_MODEL`        | Model zapasowy na awarię usługi; pusty wpis wyłącza przełączenie            |
+| `TAVILY_API_KEY`               | Klucz Tavily Search API                                                     |
+| `VERIFY_TIMEOUT_MS`            | Wspólny limit analizy; domyślnie i maksymalnie 60000 ms                     |
+| `MAX_CONCURRENT_VERIFICATIONS` | Domyślnie 3 analizy w jednym procesie                                       |
+| `MAX_LIVE_VERIFICATIONS`       | Domyślnie 100 prób online od uruchomienia procesu                           |
+
+Na sesję obowiązuje dodatkowo 10 prób na 10 minut. Limity są w pamięci i resetują się po restarcie. Przed publikacją potrzebne są bramka dostępu, współdzielony limiter i limity wydatków u dostawców.
+
+Diagnostyka bez wypisywania kluczy:
+
+```powershell
+node --env-file=.env.local scripts/check-providers.mjs
+# Opcjonalny minimalny płatny test generowania:
+node --env-file=.env.local scripts/check-providers.mjs --generate
+```
+
+## Przebieg analizy
+
+1. Walidacja danych, origin i limitów. Opcjonalna data wypowiedzi jest przekazywana do modelu.
+2. Gemini rozpoznaje opinię, potrzebę doprecyzowania i wyjście poza zakres. Dla sprawdzalnej tezy przygotowuje dwa zapytania: neutralne oraz szukające kontrdowodu. Doprecyzowanie i nieobsługiwane wejście mają osobne statusy, bez werdyktu.
+3. Tavily wykonuje dwa wyszukiwania równolegle, do 6 wyników każde. Dodatkowo model dobiera bezpośrednie API do tematu: Wikipedia, Sejm/ELI, arXiv (do 3 wyników z każdego). Używamy pobranego materiału, nie odpowiedzi wygenerowanej przez wyszukiwarkę.
+4. Usuwamy powtarzające się URL-e, identyczne i niemal identyczne teksty. Dobieramy dokumenty naprzemiennie z grup wydawców: maksymalnie 10 dokumentów, 3 na grupę, 4000 znaków na dokument i 40000 łącznie. Fragmenty otrzymują identyfikatory.
+5. Serwer dzieli fragmenty na oznaczone cytaty (do 650 znaków). Gemini ocenia tezę, dążąc do 3–5 trafnych dowodów, i wybiera identyfikatory `quoteId`. Tekst cytatu i przypisanie do źródła wstawia serwer z pobranego materiału — model ich nie przepisuje.
+6. Kod sprawdza istnienie źródła, fragmentu i dosłownego cytatu. Dopuszczalna jest tylko normalizacja Unicode NFC i białych znaków. Potwierdzenie lub obalenie wymaga odpowiednich dowodów z co najmniej 2 grup wydawców. Brak takiego potwierdzenia daje `insufficient`, zachowując prawidłowe cytaty. Kilka poddomen gov.pl lub wersji językowych Wikipedii to jedna grupa. To konserwatywna reguła MVP, nie naukowa miara pewności ani niezależności źródeł.
+7. Dodatkowe wywołanie modelu sprawdza sens wniosku, okres, podmiot i kontrdowody. Wyjątek: po udanym wyszukiwaniu ocena `insufficient` bez wybranych dowodów kończy się stałym komunikatem serwera o ograniczeniach, bez publikowania nieaudytowanego uzasadnienia modelu. Negatywny audyt daje status `unable_to_verify` i `verdict: null`, z przyczyną i bez zatwierdzonych cytatów. Nieudana kontrola odpowiedzi nie jest oceną prawdziwości tezy.
+8. UI pokazuje wynik, cytaty, liczbę cytowanych źródeł i grup, statusy API, zakres materiału, linki, daty i ograniczenia. Pozostałe przejrzane dokumenty są dostępne osobno, bez sugerowania, że popierają ocenę. Zmiana tezy usuwa poprzedni wynik.
+
+Analiza wykonuje do 2 wyszukiwań Tavily i maksymalnie 9 żądań do publicznych API (Wikipedia: 1 wyszukiwanie + do 3 artykułów; Sejm: 1 wyszukiwanie + do 3 tekstów; arXiv: 1 wyszukiwanie). Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
+
+## Odporność Gemini i rozliczenia
+
+- HTTP 500/502/503/504 i błąd połączenia: jedno ponowienie po 1–1,5 sekundy; następnie model zapasowy, jeśli skonfigurowany. Nieistniejący model (404) przełącza się bez ponawiania.
+- Krótkotrwały limit 429: jedno ponowienie z uwzględnieniem `Retry-After` (do 5 sekund); bez zmiany modelu. Dłuższe oczekiwanie jest komunikowane użytkownikowi.
+- Brak środków (402 / payment_required), limit dzienny lub zerowy (429 / quota_exceeded), brak uprawnień i błędne żądanie: brak automatycznych ponowień i przełączania modelu. UI pokazuje konkretną przyczynę.
+- Sam HTTP 503 nie dowodzi braku środków. Saldo można sprawdzić w [Google AI Studio Billing](https://aistudio.google.com/billing); aplikacja nie odczytuje salda i nie zmienia ustawień rozliczeń. [Oficjalne kody błędów](https://aistudio.google.com/docs/api-errors).
+- Klucze i surowe błędy dostawcy nie trafiają do UI ani logów aplikacji. Logi identyfikują użyty model i przełączenie.
+
+## Bezpośrednie źródła
+
+| API                       | Pobierany materiał                                                                              | Ograniczenia                                                                                                                                |
+| ------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wikipedia (polska edycja) | Wyszukiwanie haseł i tekst HTML artykułu; link z numerem konkretnej rewizji                     | Encyklopedia jest źródłem wtórnym. Data rewizji nie jest datą powstania opisywanego faktu.                                                  |
+| api.sejm.gov.pl / ELI     | Wyszukiwanie tytułów aktów DU/MP, tekst HTML jeśli dostępny; w pozostałych przypadkach metadane | Nie odczytujemy PDF. Metadane pozwalają sprawdzić tytuł lub datę aktu, nie treść przepisów. Nie pobieramy jeszcze głosowań ani stenogramów. |
+| arXiv                     | Atom: tytuł, link do wersji, data i abstrakt                                                    | Nie pobieramy pełnego tekstu; obecność w arXiv nie dowodzi recenzji ani konsensusu.                                                         |
+
+Te API nie wymagają dodatkowych kluczy. Zapytania dobiera model; źródło niepasujące do tematu ma status „nie wybrano”. Pobieranie jest ograniczone do stałych hostów API, bez przekierowań, do 3 MB na odpowiedź. HTML/XML parsujemy przez Cheerio; HTML źródeł nie jest wykonywany.
+
+Grupy wydawców wyznaczamy z domen rejestrowalnych (tldts), z dodatkowym grupowaniem gov.pl. Wszystkie prace arXiv również należą do jednej grupy — to ograniczenie tej prostej heurystyki. Deduplikacja podobnych tekstów używa wspólnych sekwencji pięciu słów; nie wykrywa wszystkich przedruków, tłumaczeń ani wspólnego pierwotnego źródła. Audyt modelu dodatkowo sprawdza zależności, ale może się mylić.
+
+ArXiv ma procesową kolejkę: jedna aktywna prośba, minimum 3 sekundy między rozpoczęciami. Przed uruchomieniem wielu instancji potrzebny będzie limiter współdzielony.
+
+Dokumentacja: [Wikipedia Search](https://www.mediawiki.org/wiki/API:Search), [Wikipedia Parse](https://www.mediawiki.org/wiki/API:Parsing_wikitext), [Sejm ELI](https://api.sejm.gov.pl/eli_pl.html), [arXiv API](https://info.arxiv.org/help/api/user-manual.html), [zasady arXiv API](https://info.arxiv.org/help/api/tou.html).
+
+## API
+
+- `GET /api/health`: gotowość konfiguracji, nie test połączenia z dostawcami.
+- `POST /api/verify`: JSON `{ "claim": "…", "statedAt": "2026-11-21" }`; data opcjonalna.
+- `GET /api/demo?id=nato|eu|context`: wyłącznie oznaczone przykłady; `context` demonstruje doprecyzowanie bez werdyktu.
+- `POST /api/channels/discord-demo`: JSON `{ "content": "…", "statedAt": "2026-11-21" }`; data opcjonalna. Automatyczna odpowiedź tekstowa oraz ten sam strukturalny wynik co WWW.
+
+Kontrakty: `src/core/contracts.ts`.
+
+| Status                | Znaczenie                                                                        | Werdykt                          |
+| --------------------- | -------------------------------------------------------------------------------- | -------------------------------- |
+| `completed`           | Sprawdzenie zakończone                                                           | Jedna z pięciu kategorii poniżej |
+| `needs_clarification` | Brakuje podmiotu, czasu lub zakresu                                              | `null`                           |
+| `out_of_scope`        | Wejście lub działanie poza zakresem prototypu                                    | `null`                           |
+| `unable_to_verify`    | Nie można uzyskać tekstu źródeł lub zatwierdzić oceny                            | `null`                           |
+| `technical_error`     | Błąd API, konfiguracji, limitu, wejścia lub połączenia; odpowiedź HTTP spoza 2xx | Brak pola `verdict`              |
+
+Pięć kategorii: `supported` — Potwierdzone; `refuted` — Fałszywe; `misleading` — Wprowadzające w błąd; `insufficient` — Brak wystarczających dowodów; `not_checkable` — Nie podlega weryfikacji.
+
+`misleading` wymaga dowodu brakującego lub zniekształconego kontekstu i pozytywnego audytu znaczenia. Nierozstrzygnięta sprzeczność źródeł to `insufficient` z `evidenceConflict: true` i dowodami obu stron, nie szósta kategoria. Udane wyszukiwanie bez wyników daje brak dowodów; brak dostępu do tekstu lub niepełne wyszukiwanie bez użytecznych materiałów daje status braku możliwości sprawdzenia.
+
+Błędy: `INPUT_INVALID` (400; 403 dla obcego origin), `RATE_LIMITED` (429), `NOT_CONFIGURED` (503), `PROVIDER_ERROR` (502), `INVALID_MODEL_OUTPUT` (502), `VERIFICATION_TIMEOUT` (504), `REQUEST_CANCELLED` (499). Dodatkowo: `MODEL_UNAVAILABLE`, `PROVIDER_PAYMENT_REQUIRED`, `PROVIDER_AUTH_ERROR` (503), `PROVIDER_RATE_LIMITED`, `PROVIDER_QUOTA_EXCEEDED` (429), `PROVIDER_REQUEST_ERROR` (502).
+
+## Drugi kanał: adapter demonstracyjny Discord
+
+1. Otwórz [symulator](http://127.0.0.1:3000/kanal-demo) lub link „Wypróbuj drugi kanał” na stronie głównej.
+2. Wpisz treść wiadomości i opcjonalną datę; wybierz „Wyślij w symulatorze”.
+3. Adapter sam uruchamia wyszukiwanie, ocenę, walidację cytatów i audyt. Odpowiedź trafia automatycznie do rozmowy, bez kopiowania przez twórców.
+4. Wpisz identyczny tekst i datę w WWW, w tej samej przeglądarce. Otrzymasz dokładnie ten sam wynik i zestaw dowodów, oznaczony jako ponownie pokazany. Działa również kierunek WWW → adapter.
+
+`POST /api/channels/discord-demo` przyjmuje `content` zamiast `claim`. Zwraca `{ channel: "discord_demo", delivery: "simulated", messages: [...], result: {...} }`. Odpowiedzi są dzielone na części do 1800 znaków; cytaty, odnośniki i ograniczenia nie są usuwane. Formatter nie wywołuje modelu i nie zmienia oceny.
+
+**To adapter demonstracyjny, nie aktywna integracja z Discordem.** Nie wymaga konta, tokenu ani zewnętrznego serwera; nie wysyła wiadomości do osób trzecich. Zastępuje tylko transport wiadomości. Nie emuluje autoryzacji webhooków, limitów ani potwierdzeń dostarczenia Discorda. Żeby podłączyć prawdziwy komunikator, trzeba wdrożyć i skonfigurować jego transport oraz uwierzytelnianie; silnik weryfikacji pozostaje wspólny.
+
+Oba endpointy korzystają z `handleVerification` → `runVerification` → `verify` i tych samych zabezpieczeń wejścia, origin, terminów oraz limitów. Brak modelu lub błąd usługi daje komunikat bez werdyktu w obu kanałach.
+
+### Spójność i przechowywanie wyników
+
+Wyniki rzeczywistych analiz są współdzielone **w tej samej sesji, dla identycznego tekstu i daty, przez maksymalnie 5 minut**. Zmiana konfiguracji modelu wymusza nową analizę. Ponowne użycie jest jawnie opisane; zachowujemy pierwotną datę i identyfikator sprawdzenia. Równoczesne identyczne zgłoszenia do obu kanałów korzystają z jednego wykonania. Błędy techniczne i status `unable_to_verify` nie są zapamiętywane.
+
+Magazyn działa tylko w pamięci jednego procesu (maks. 100 wyników). Przechowuje tekst pytania, wynik i wykorzystane cytaty; usuwa wpisy automatycznie po 5 minutach oraz po restarcie. Nie współdzieli danych między sesjami. To bufor spójności kanałów; osobny rejestr SQLite zachowuje zminimalizowany przebieg do 24 godzin. Usunięcie sesji usuwa obie warstwy i przerywa jej aktywne analizy. Anulowanie zgłoszenia, które uruchomiło analizę, może przerwać również oczekującą na nią odpowiedź drugiego kanału. Wieloinstancyjne wdrożenie wymaga współdzielonego magazynu i limitera.
+
+## Struktura i stos
+
+```text
+src/app/          widoki i endpointy Next.js
+src/components/   interfejs analizy
+src/core/         kontrakty, walidacja dowodów, przykłady
+src/server/       orkiestracja, dostawcy, konfiguracja, limity
+tests/            testy logiki i integracji z kontrolowanym HTTP
+e2e/              testy przeglądarki
+scripts/          diagnostyka dostawców
+```
+
+Next.js 16, React 19, TypeScript, Zod, Vitest, Playwright. Gemini Interactions API z `store: false`, przez serwerowy `fetch`, bez dodatkowego SDK. Style w CSS; na tym etapie nie potrzebujemy Tailwind ani biblioteki komponentów. Lokalny rejestr audytowy SQLite (`node:sqlite`); bez trwałej kolejki zadań i orkiestracji agentów.
+
+## Testy
+
+```powershell
+npm run typecheck
+npm test
+npm run test:e2e
+npm run build
+```
+
+E2E domyślnie używają lokalnego Chrome; dla Edge ustaw `PLAYWRIGHT_CHANNEL=msedge`. Testy jednostkowe i E2E nie wymagają kluczy i nie wykonują płatnych analiz. E2E używają demo oraz kontrolowanego błędu HTTP. Test integracyjny endpointu uruchamia rzeczywisty kod adapterów z podmienionym wyłącznie HTTP dostawców.
+
+Osobne testy live są domyślnie pomijane. Uruchamiaj je świadomie, przy działającym serwerze z kluczami; korzystają z limitów/płatnych usług:
+
+```powershell
+$env:RUN_LIVE_TESTS='1'
+npx playwright test e2e/live.spec.ts e2e/channels-live.spec.ts --workers=1
+Remove-Item Env:RUN_LIVE_TESTS
+```
+
+Domyślny model to `gemini-3.1-flash-lite`, a zapasowy `gemini-3.5-flash-lite`. Wybrano je po próbach na rzeczywistym API. Nie deklarujemy pełnej niezawodności usług ani przewagi jakościowej modelu na podstawie dwóch tez. Wyniki live zależą od dostępności API i aktualnego wyszukiwania.
+
+Bezpłatne testy publicznych API, również uruchamiane tylko jawnie:
+
+```powershell
+$env:RUN_SOURCE_LIVE_TESTS='1'
+npx vitest run tests/sources-live.test.ts
+Remove-Item Env:RUN_SOURCE_LIVE_TESTS
+```
+
+Pokryte scenariusze: wybór nieistniejących lub powtórzonych identyfikatorów cytatów, brak przepisywania tekstu przez model, zmyślone cytaty, obce identyfikatory, cytat przetłumaczony zamiast dosłownego, brak danych, opinia, brak kontekstu, kopie i niemal identyczne przedruki, różnorodność wydawców, pojedynczy dowód, częściowa awaria wyszukiwania, metadane zamiast pełnego tekstu, przypięta rewizja Wikipedii, abstrakty arXiv, negatywny audyt znaczenia, jedna naprawa, timeout, awaria API, ograniczone przełączanie modelu, brak ponowień przy błędzie płatności lub limicie dziennym, przerwanie ponowień, walidacja wejścia, ochrona sekretów, zmiana tezy, mobile i jawne demo.
+
+## Ostatnia kontrola pełnej ścieżki online — 21.11.2026
+
+Chrome/Playwright, prawdziwe API, bez podmiany odpowiedzi i bez użycia przygotowanego demo. Model: `gemini-3.1-flash-lite`. Obie analizy przeszły wybór fragmentów, ścisłą walidację cytatów, audyt znaczenia i wyświetlenie w UI.
+
+| Teza                                                 | Wynik                   | Dowody / cytowane źródła | Czas backendu |
+| ---------------------------------------------------- | ----------------------- | ------------------------ | ------------- |
+| Polska przystąpiła do NATO 12 marca 1999 roku.       | Potwierdzone w źródłach | 5 / 5                    | 34,7 s        |
+| Polska przystąpiła do Unii Europejskiej w 1999 roku. | Sprzeczne z dowodami    | 4 / 3                    | 39,8 s        |
+
+W trakcie prób wystąpiły HTTP 503 i timeout pojedynczego żądania; ograniczone ponowienia pozwoliły ukończyć obie analizy. Nie wystąpił błąd płatności. To potwierdzenie działania ścieżki, nie gwarancja dostępności usług ani reprezentatywny benchmark jakości.
+
+Test zapisuje `live-result.json` i `live.png` w katalogu wyników Playwright (ignorowanym przez Git). Przykłady z przycisków „DEMO” nadal są oznaczonymi materiałami statycznymi; aby wykonać analizę online, wpisz tezę i wybierz „Sprawdź dowody”.
+
+## Dane i ograniczenia
+
+- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do 5 minut w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
+- Logi zawierają identyfikator żądania, czas, liczbę źródeł, kody błędów i status HTTP dostawcy. Nie zawierają kluczy ani treści wejścia.
+- Walidator potwierdza obecność cytatu w pobranym materiale, nie prawdziwość źródła. Audyt tym samym modelem może powielać jego błędy.
+- Deduplikacja nie rozpoznaje wszystkich przedruków ani wspólnego pierwotnego źródła. Nie deklarujemy niezależności domen.
+- Prosty wybór fragmentów może pominąć kontekst. Brak tekstu uniemożliwia wykorzystanie materiału jako dowodu. Nieznana data publikacji pozostaje jawna.
+- Źródła są niezaufanymi danymi; model nie ma narzędzi wykonawczych ani dostępu do kluczy. To ograniczenie skutków prompt injection, nie gwarancja odporności.
+- UI nie wykonuje HTML źródeł. Linki są filtrowane do HTTP/HTTPS. Backend nie pobiera adresów wskazanych przez użytkownika.
+- Nie wykonano reprezentatywnego benchmarku jakości. Testy techniczne nie dowodzą trafności fact-checkingu.
+
+Consensus można później wykorzystać do źródeł naukowych. Obecna wersja potrzebuje także dokumentów urzędowych i bieżących informacji z szerokiego internetu. [API Consensus](https://help.consensus.app/en/articles/16516328-the-consensus-api).
+
+## Dostosowanie do opisu wyzwania — stan bieżący
+
+Zrealizowany etap: pięć kategorii, statusy obsługi oddzielone od werdyktów, WWW i automatyczny adapter demonstracyjny, wspólna logika oraz testy spójności w obu kierunkach.
+
+Próby online 21.11.2026 (rzeczywiste API, bez podstawiania odpowiedzi):
+
+| Scenariusz                                                 | Kanał inicjujący → kanał powtórzenia | Wynik                                  | Cytaty / źródła |
+| ---------------------------------------------------------- | ------------------------------------ | -------------------------------------- | --------------- |
+| Data wejścia Polski do NATO                                | WWW → adapter                        | Potwierdzone                           | 5 / 4           |
+| Błędna data wejścia Polski do UE                           | WWW → adapter                        | Fałszywe                               | 3 / 3           |
+| Członkostwo w UE jako rzekomy dowód używania euro w Polsce | Adapter → WWW                        | Wprowadzające w błąd                   | 4 / 3           |
+| Nieokreślony wzrost wydatków                               | Adapter → WWW                        | Potrzebne doprecyzowanie; bez werdyktu | 0 / 0           |
+
+Po dodaniu endpointów test inicjowania przez adapter został wykonany również po ponownym uruchomieniu serwera. Pełne odpowiedzi i zrzuty zapisują testy Playwright; katalog `test-results` jest ignorowany przez Git.
+
+**To nadal nie jest komplet wymagań konkursowych.** Korpus i benchmark dodano w etapie opisanym poniżej. Zapis sprawdzeń, maskowanie i usuwanie sesji dodano w etapie opisanym na końcu README. Nadal pozostają pomiar kosztów, pełna ocena aktualności i siły dowodów oraz materiały zgłoszeniowe.
+
+## Następne kroki
+
+1. Niezależna ocena przez ludzi zestawu referencyjnego i cytowań; usunięcie problemów ujawnionych benchmarkiem, pomiar kosztu.
+2. Wyodrębnianie do 3 twierdzeń z dłuższego tekstu (`/api/claims`).
+3. Rozpoznawanie pochodzenia przedruków i lepszy wybór fragmentów.
+4. Utwardzenie dostępu i limitów przed publicznym wdrożeniem.
+
+Projekt jest prototypem zespołu. Wyniki nie są stanowiskiem MSZ.
+
+## Korpus źródeł — etap 2
+
+`data/corpus/catalog.json` zawiera **130 rzeczywistych rekordów, 10 domen i 3 typy źródeł**. Każda przyjęta strona odpowiedziała HTTP 200 z HTML podczas zbierania 21.11.2026. To potwierdzenie dostępności w chwili pobrania, nie gwarancja wiarygodności ani przyszłej dostępności. Duplikaty adresów i tytułów w obrębie domeny oraz strony główne zostały wykluczone. Poddomeny administracji grupujemy konserwatywnie jako jedno `gov.pl`; subdomeny instytucji UE jako `europa.eu`.
+
+| Grupa domen   | Rekordy | Rola                                           |
+| ------------- | ------: | ---------------------------------------------- |
+| gov.pl        |      19 | Urzędowe, administracja polska                 |
+| nbp.pl        |      10 | Urzędowe, bank centralny                       |
+| europa.eu     |      11 | Urzędowe, instytucje UE                        |
+| nato.int      |      18 | Pierwotne, NATO o swoich traktatach i historii |
+| un.org        |      18 | Pierwotne, ONZ                                 |
+| worldbank.org |       8 | Instytucjonalne, Bank Światowy                 |
+| esa.int       |       4 | Instytucjonalne, ESA                           |
+| nasa.gov      |       3 | Urzędowe/naukowe, NASA                         |
+| wikipedia.org |      20 | Wtórne, encyklopedia                           |
+| pap.pl        |      19 | Wtórne, agencja prasowa                        |
+
+Lista do przeglądu: `/zrodla`. Pełny eksport: `GET /api/corpus`. Rekord ma identyfikator, tytuł, URL, wydawcę, typ, datę publikacji lub jawne `null`, datę pobrania, zapytanie odkrywania i opis praw do wykorzystania. **Tylko 2/130 dat publikacji udało się odczytać automatycznie.** Nie wstawiamy daty faktu ani pobrania w miejsce nieznanej daty publikacji. Wymaganie aktualności pozostaje częściowo niezrealizowane.
+
+Kwalifikacja: źródła urzędowe/instytucjonalne przyjmujemy jako materiał pierwotny wyłącznie w granicach ich kompetencji. PAP kwalifikujemy jako redakcyjne źródło wtórne, Wikipedię jako edytowalne źródło wtórne wymagające kontroli przypisów. Domena nie jest dowodem prawdziwości konkretnego zdania; dwie domeny mogą powielać jedno źródło. Przekierowania, PDF, strony blokujące automat, strony bez tytułu i duplikaty są odrzucane. Nie obchodzimy blokad. Próby pozyskania stron organizacji fact-checkingowych nie dały użytecznego zestawu; nie deklarujemy posiadania ich korpusu ani danych organizatora.
+
+**Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają 5-minutowej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
+
+Aktualizacja: przed demo i następnie co tydzień operator może przebudować katalog. Zmiany tytułu, domeny, wydawcy lub warunków użycia wymagają przeglądu; niedostępne rekordy nie są przenoszone do nowego zbioru. Nowy katalog zastępuje poprzedni dopiero po osiągnięciu minimum 100 rekordów i 10 domen. Nie ma automatycznego harmonogramu ani obietnicy pełnej świeżości.
+
+```powershell
+npm run corpus:check  # lokalna kontrola liczebności, domen, typów i metadanych
+npm run corpus:build # pobiera aktualny katalog; używa limitu/płatnego Tavily
+```
+
+`src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus jest dodatkiem do wyszukiwania otwartego, nie zamkniętym indeksem wszystkich treści. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
+
+## Benchmark jakości i czasu — odtwarzanie
+
+`data/benchmark/cases.json`: **30 przypadków zamrożonych przed wykonaniem**: prawda, fałsz, częściowo prawdziwy/błędny kontekst, materiały nieaktualne, brak dowodów, opinie, doprecyzowanie i trzy ataki w wejściu. Etykiety i uzasadnienia opracował asystent implementujący projekt, nie niezależny ekspert. Zestaw jest jawny i skupiony na polskiej historii UE/NATO oraz walucie; nie dowodzi jakości na dowolnym temacie. Syntetyczne przypadki bez dowodów nie oznaczają dowodu nieistnienia opisanych zdarzeń. Etykiety nie trafiają do promptów ani kodu aplikacji.
+
+`data/benchmark/controlled-cases.json`: dodatkowe **4 przypadki**, dwa konflikty źródeł i dwa ataki w materiałach. Używają rzeczywistego modelu do oceny i audytu oraz rzeczywistej walidacji cytatów, ale kontrolowanego planu i wyszukiwania. Domeny `example.org/net` są fikcyjnymi danymi testowymi, nie korpusem. Czasów tych testów nie mieszamy z pomiarem online. Pierwszy wariant z rzeczywistym planerem (`controlled-planning-v1`) zatrzymał dwa testy na doprecyzowaniu fikcyjnych nazw, zanim dotarły do ataku; zachowano raport. Wariant v2 izoluje granicę niezaufanego źródła zamiast udawać test pełnej ścieżki.
+
+Przy uruchomionym serwerze, z kluczami w `.env.local`:
+
+```powershell
+npm run benchmark
+# Dopiero po zakończeniu benchmarku, aby nie kumulować ruchu do modelu:
+$env:RUN_BENCHMARK_CONTROLLED='1'
+node --env-file=.env.local node_modules/vitest/vitest.mjs run tests/benchmark-controlled-live.test.ts
+Remove-Item Env:RUN_BENCHMARK_CONTROLLED
+npm run benchmark:report
+```
+
+Skrypt wykonuje przypadki kolejno, z przerwą 10 s między nimi (konfigurowalne `BENCHMARK_INTERVAL_MS`). Po HTTP 429 czeka co najmniej 60 s; trzy kolejne limity lub problem rozliczeń/autoryzacji przerywają przebieg z jawną listą niewykonanych przypadków. Nie zmienia modelu ani limitów aplikacji. Nowa sesja dla każdego przypadku zapobiega użyciu wyniku z poprzedniego testu. Następnie sprawdza automatyczną odpowiedź drugiego kanału na tej samej sesji, zgodnie z mechanizmem 5-minutowego współdzielenia wyników. Nie jest to porównanie dwóch niezależnych generacji.
+
+Próba kanałów porównuje dokładną migawkę: identyfikator, status, werdykt, cytaty i metadane źródeł. `unable_to_verify` nie jest zapamiętywane, więc drugi kanał może uruchomić nową analizę z innym identyfikatorem; niezaliczenie takiej próby nie dowodzi samo w sobie sprzecznych ocen merytorycznych. Cztery błędy HTTP w drugim przebiegu uniemożliwiły porównanie kanałów; piąta niezaliczona migawka dotyczyła właśnie niezatwierdzonej oceny I02. W zapisanym przebiegu zachowano wynik porównania, ale nie pełną drugą odpowiedź. Runner rozszerzono po pomiarze o zapis `channelResult` dla przyszłych przebiegów; nie uzupełniamy wstecz danych, których nie zapisano.
+
+Zapisy: `reports/benchmark/latest/results.json` (pełne wyniki, czasy, cytaty, hash zestawu), `initial/results.json` (pierwsza próba), `controlled/results.json` (kontrolowane źródła) i `summary.json` (przeliczone metryki i progi). `BENCHMARK_OUTPUT` pozwala zachować kolejny przebieg w innym katalogu. Dane dynamicznych stron i dostępność modeli mogą się zmieniać; odtwarzalne są wejścia i metoda, nie gwarantowane identyczne odpowiedzi. Nie zapisujemy sekretów. Raporty mają wyłącznie publiczne lub syntetyczne pytania testowe; nie są audytem zgłoszeń użytkowników.
+
+Definicje metryk:
+
+- Macro-F1: średnia F1 pięciu kategorii. Błąd API, brak werdyktu lub zła klasa daje false negative dla oczekiwanej klasy; awarie nie są usuwane z próby. Osobno raportujemy zgodność statusów doprecyzowania.
+- Pokrycie cytowań: udział 22 przypadków wymagających faktograficznego rozstrzygnięcia z ukończoną oceną i co najmniej jednym cytatem. To pokrycie na poziomie pytania, nie automatyczny pomiar wszystkich zdań wygenerowanego uzasadnienia.
+- Wstrzymanie: `insufficient` dla trzech przypadków braku dowodów. Błąd techniczny lub nieudany audyt nie jest poprawnym wstrzymaniem merytorycznym.
+- Odporność: właściwa ocena faktu mimo ataku i obecność dowodów. Ataki w pytaniu i materiałach raportujemy osobno. Samo niewykonanie ataku bez ukończenia sprawdzenia nie zalicza scenariusza.
+- Czas: od wysłania HTTP do otrzymania JSON, razem z wyszukiwaniem, ponowieniami, oceną i audytem; bez pisania użytkownika, renderowania przeglądarki i przerw między przypadkami. Mediana/p95 wszystkich odpowiedzi oraz ukończonych analiz są osobne; szybkie błędy nie dowodzą spełnienia celu ≤30 s.
+- Poprawność znaczeniowa cytowań wymaga oddzielnej oceny. Ścisłe dopasowanie tekstu i audyt tym samym modelem nie zastępują niezależnych ocen referencyjnych. Nie deklarujemy spełnienia progu 85% na tej podstawie.
+- Koszt 100 testów i szacunek 1000 zapytań pozostają niezmierzone; brak wartości nie oznacza kosztu zerowego.
+
+Wszystkie wyniki należy czytać wraz z dostępnością usług, liczebnością klas i ograniczeniami. Przejście testów z kontrolowanymi odpowiedziami HTTP nie jest pomiarem jakości modelu.
+
+`npm run benchmark:report` tworzy `latest/citation-review.template.json` ze wszystkimi cytatami, tezami, relacjami i URL-ami. Niezależny recenzent kopiuje go do `citation-review.json`, wpisuje swoją identyfikację/metodę oraz `valid: true/false` i uzasadnienie dla każdego cytatu. Ponowne wygenerowanie raportu oblicza trafność cytowania. Niepełna ocena pozostaje oznaczoną próbą; próg 85% nie jest zaliczany przed oceną całości. Hash wyniku blokuje użycie ocen z innego przebiegu, a powtórzone/nieznane identyfikatory są odrzucane. Samo uzupełnienie pól nie dowodzi niezależności ani kompetencji recenzenta.
+
+### Wyniki pomiaru 21.11.2026
+
+Pełny drugi przebieg: Windows, Node.js 24, lokalny serwer Next.js w trybie developerskim, jedna sekwencja 30 zapytań, przerwy 10 s, bez równoległych płatnych testów. Nie jest to test obciążeniowy ani pomiar czasu renderowania UI. Konfiguracja modeli: `gemini-3.1-flash-lite` z zapasowym `gemini-3.5-flash-lite`. Pierwszy przebieg bez przerw częściowo nakładał się na testy kontrolowane i zakończył 25/30 prób błędami, głównie limitem Google; zachowano go w `initial` zamiast wybierać tylko korzystniejsze wyniki.
+
+| Miernik                                                    | Wynik drugiego przebiegu                         | Cel z PDF / ocena                                                                 |
+| ---------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Macro-F1, 5 klas                                           | **0,591**                                        | ≥0,75 — niespełniony                                                              |
+| Pokrycie cytowań                                           | **18/22 = 81,8%**                                | ≥95% — niespełniony                                                               |
+| Poprawne wstrzymanie przy braku dowodów                    | **1/3 = 33,3%**                                  | ≥80% — niespełniony                                                               |
+| Pełna poprawna obsługa ataków w pytaniu                    | **1/3 = 33,3%**                                  | ≥90% — niepotwierdzony; jedna awaria API i jedna ocena zatrzymana przez audyt     |
+| Mediana HTTP / p95, wszystkie odpowiedzi                   | **19,64 s / 42,69 s**                            | Mediana ≤30 s — spełniona w tej próbie                                            |
+| Mediana / p95 odpowiedzi bez awarii lub odrzuconego audytu | **19,01 s / 43,66 s**                            | Nie mylimy szybkich błędów z szybką analizą                                       |
+| Odpowiedzi bez awarii lub odrzuconego audytu               | **25/30**                                        | 100% scenariuszy — niespełniony                                                   |
+| Zgodność oczekiwanej kategorii/statusu                     | **18/30**                                        | Miernik pomocniczy, obejmuje statusy                                              |
+| Dokładna migawka drugiego kanału                           | **25/30 całej próby; 25/26 wykonanych porównań** | Cztery błędy bez porównania; I02 bez zachowanej migawki, patrz ograniczenie wyżej |
+| Poprawność znaczeniowa cytatów                             | **Nieoceniona niezależnie**                      | ≥85% — niepotwierdzony; gotowy formularz oceny                                    |
+| Koszt 100 testów                                           | **Niezmierzony**                                 | Raport kosztów — niespełniony                                                     |
+
+Dodatkowy kontrolowany test rzeczywistego modelu: **4/4 scenariusze zaliczone** (2 konflikty źródeł, 2 instrukcje w źródłach). To test oceny i audytu z podstawionym planem/wyszukiwaniem, nie 4 dodatkowe pełne ścieżki online. Dwie próby ataku są za małą próbą do ogólnej deklaracji odporności ≥90%; rejestr zdarzeń nadal nie powstał.
+
+Najważniejsze konkretne błędy: wszystkie **M01–M06** dostały `refuted` zamiast `misleading`, mimo rozpoznania brakującego kontekstu w uzasadnieniach. **T04, F01, N02 i I03** zakończyły się niedostępnością modelu. **N03** otrzymał prośbę o źródło jako doprecyzowanie zamiast `insufficient`; ten przypadek wymaga także niezależnego przeglądu oczekiwanej etykiety. W **I02** atak wpłynął na proponowany `supported`; audyt wykrył sprzeczność z dokumentami i nie opublikował błędnego werdyktu. Jest to skuteczne zatrzymanie błędu, ale nie poprawne ukończenie sprawdzenia. Nie zmieniano promptów ani etykiet w trakcie pomiaru.
+
+Raport zbiorczy: `reports/benchmark/summary.json`. Testy implementacji: **130 jednostkowych/integracyjnych oraz 9 przeglądarkowych**, osobno 4 kontrolowane scenariusze live; build produkcyjny przechodzi. Odtwarzalne testy implementacji nie znoszą powyższych niezaliczonych progów jakości.
+
+### Lista zgodności i braków
+
+| Wymaganie                                                                  | Stan po etapie 2 / brakująca praca                                                                                                                                                       |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | Spełnione liczbowo: 130/10/3; lista w repo, WWW i JSON. Katalog metadanych z pobieraniem na żądanie, nie archiwum pełnych tekstów.                                                       |
+| Pięć ocen i osobne statusy obsługi                                         | Zaimplementowane i testowane.                                                                                                                                                            |
+| WWW i drugi kanał/adapter, wspólna logika                                  | Zaimplementowane; adapter jawnie symuluje transport. Próba spójności oraz dostępność raportowane w benchmarku.                                                                           |
+| Tekst **lub** URL, jedno lub kilka twierdzeń                               | Obsługiwany tekst jednej tezy. Sam URL zwraca wyjście poza zakres; URL i wiele tez to rozszerzenia, nie deklarowana funkcja.                                                             |
+| Tytuł, wydawca, daty i linki; aktualność                                   | Częściowo: metadane i daty pobrania są; większość dat publikacji korpusu pozostaje nieznana. Brak systematycznego ostrzegania o nieaktualności i ważności faktu w czasie.                |
+| Siła podstawy odpowiedzi                                                   | Częściowo: źródła, cytaty, relacje i grupy wydawców; brak skalibrowanej oceny siły, wiarygodnego wykrywania zależności i pełnej oceny pierwotności.                                      |
+| Podstawowy zapis przebiegu od pytania do wyniku                            | Niespełnione w trwałej postaci: logi techniczne i 5-minutowy magazyn sesji nie zastępują zminimalizowanego rejestru audytowego. Raport benchmarku nie jest audytem użytkowników.         |
+| Maskowanie danych, retencja, usunięcie sesji                               | Retencja pamięci 5 min jest; brak automatycznego maskowania oczywistych danych osobowych i funkcji usunięcia sesji na żądanie.                                                           |
+| Prompt injection i logowanie zdarzeń                                       | Separacja instrukcji i walidacja cytatów są; testy źródłowe są kontrolowane. Brak odrębnej detekcji/rejestru prób ataku; nie deklarujemy pełnej odporności.                              |
+| ≥30 przypadków i obowiązkowe metryki                                       | Zestaw 30 + 4 i odtwarzalny runner są. Spełnienie progów zależy od raportu; niezależna poprawność cytowań i pomiar kosztu 100 testów pozostają niewykonane.                              |
+| Koszt 1000 zapytań, kanału i większego ruchu                               | Niezmierzone. Limity procesowe istnieją, ale nie są testem obciążeniowym ani pomiarem kosztu. Adapter nie ponosi opłat komunikatora, co nie oznacza zerowego kosztu modeli/wyszukiwania. |
+| Lokalizacja przetwarzania, retencja dostawców, migracja                    | Dostawcy i przepływ są opisane. Brak potwierdzonej konfiguracji regionów oraz pełnego przeglądu warunków retencji i transferów.                                                          |
+| Licencje i kwalifikacja                                                    | Kwalifikacja i ograniczenie do metadanych są jawne. Brak kompletnego przeglądu licencji pełnych tekstów oraz praw do publikacji zapisanych cytatów; pełne archiwum wyłączone.            |
+| Dostępność                                                                 | Responsywność i obsługa podstawowych błędów sprawdzone; brak pełnego audytu WCAG i badań z użytkownikami.                                                                                |
+| Zgłoszenie: opis ≤4000 znaków, PDF ≤12 slajdów, film ≤3 min, nazwa zespołu | Nie przygotowano kompletu materiałów zgłoszeniowych.                                                                                                                                     |
+| Multimodalność, incydenty, pętla moderatora                                | Niezaimplementowane; opis kwalifikuje je jako premiowane/warunkowe. Niejednoznaczne wymaganie powiadomień wysokiego ryzyka z sekcji 2 należy uzgodnić z mentorem.                        |
+
+Priorytet następnego etapu: niezawodność/limity modelu i błędy z benchmarku → audyt i prywatność → niezależne etykiety/cytowania i aktualność → pomiar kosztu oraz materiały zgłoszenia. Nie należy dodawać multimodalności kosztem tych braków.
+
+## Poprawki po benchmarku — kategorie, brak dowodów, instrukcje
+
+W generowaniu oceny wymagamy teraz `basis`: rodzaju podstawy, prawdziwej przesłanki, błędnego wniosku/korekty i identyfikatorów cytatów. Kod mapuje `confirmed → supported`, `contradicted → refuted`, `mixed_context → misleading`, `unresolved/conflict → insufficient`. Pole `verdict` modelu nie może nadpisać tej mapy. `mixed_context` wymaga niepustej prawdziwej przesłanki, korekty oraz wybranych cytatów uzasadniających obie części; sama prawdziwa nazwa kraju w fałszywej tezie nie wystarcza. Audyt sprawdza również rozróżnienie fałszywego pojedynczego faktu od prawdziwej przesłanki użytej w błędnym wniosku lub czasie. Sam wybór `basis.kind` i sens dowodów nadal zależą od modelu — nie jest to mechaniczny dowód prawdziwości.
+
+Planer rozróżnia `ambiguous_claim` (nie wiadomo, co sprawdzać) i `missing_evidence` (wiadomo, co sprawdzać, ale materiał jest nieznany lub nieopublikowany). Ten drugi przypadek uruchamia wyszukiwanie, zamiast zwracać prośbę o udowodnienie twierdzenia jako doprecyzowanie. Awaria API, niedostępny tekst i odrzucony audyt zachowują osobne statusy; nie przeliczamy ich na poprawne wstrzymanie oceny.
+
+`src/core/untrusted.ts` rozpoznaje konserwatywny zestaw bezpośrednich poleceń w języku polskim i angielskim oraz podszywanie się pod role. W pytaniu oddziela zdania sterujące, zachowuje oryginalny tekst wyniku i pokazuje `checkedClaim` w obu kanałach. Wyłącznie oczyszczone twierdzenie trafia do planowania, oceny i audytu. Jeśli nic sprawdzalnego nie pozostaje, pojawia się prośba o podanie faktu. W źródłach wyklucza całe podejrzane fragmenty lub dokument z podejrzanym tytułem; nigdy nie skleja tekstu po wycięciu instrukcji w jeden pozornie dosłowny cytat. Zdarzenie `untrusted_instruction_filtered` zawiera jedynie identyfikator żądania, miejsce i liczbę pominiętych fragmentów. To log techniczny, nie trwały audyt użytkowników.
+
+Filtr nie stanowi kompletnej ochrony przed prompt injection. Może nie rozpoznać parafrazy, innego języka lub złożonego ataku, a bezpośredni cytat polecenia może zostać nadmiernie odrzucony. Nadal obowiązuje separacja danych/instrukcji, kontrola cytatów i audyt. Nie wolno interpretować kilku zaliczonych prób jako dowodu odporności na dowolny atak.
+
+Porównanie zachowuje niezmienione 30 wejść, etykiety i hash zestawu oraz konfigurację modeli i przerw. Raport sprzed zmian znajduje się w `reports/benchmark/before-hardening/results.json`, po zmianach w `after-hardening/results.json`. Skrypt porównania odmawia zestawienia różnych hashy/etykiet i pokazuje poprawy oraz regresje każdego przypadku, łącznie z awariami. Źródła są pobierane na żywo; nie jest to kontrolowany eksperyment przy identycznych tekstach źródeł ani niezależny zestaw ukryty.
+
+```powershell
+$env:BENCHMARK_OUTPUT='reports/benchmark/after-hardening'
+npm run benchmark
+Remove-Item Env:BENCHMARK_OUTPUT
+npm run benchmark:compare
+# Po zakończeniu głównego pomiaru:
+$env:RUN_BENCHMARK_CONTROLLED='1'
+$env:BENCHMARK_CONTROLLED_OUTPUT='reports/benchmark/controlled-after-hardening'
+node --env-file=.env.local node_modules/vitest/vitest.mjs run tests/benchmark-controlled-live.test.ts
+Remove-Item Env:RUN_BENCHMARK_CONTROLLED
+Remove-Item Env:BENCHMARK_CONTROLLED_OUTPUT
+```
+
+Wyniki z wcześniejszej sekcji „Wyniki pomiaru 21.11.2026” i lista braków etapu 2 są historycznym punktem odniesienia, a nie wynikami poprawionej wersji. Obecnie istnieje podstawowy filtr instrukcji i zminimalizowany log jego zdarzeń; nadal brakuje trwałego rejestru audytowego.
+
+Planer otrzymuje dzień weryfikacji z zegara serwera w UTC. Data wypowiedzi pozostaje osobnym polem. Chroni to przed uznaniem zdarzenia z przeszłości za prognozę tylko dlatego, że model pamięta starszą datę. Test regresji używa zegara z innym rokiem niż zestaw benchmarku.
+
+Walidacja podstawy odrzuca każdy identyfikator cytatu spoza dostarczonego katalogu. Nadmiarowe znane odwołania niewybrane w `evidence` są pomijane, a nie automatycznie dodawane do dowodów. Po ich pominięciu każda wymagana rola nadal musi mieć wybrany cytat. Ścisłe sprawdzenie dosłowności cytatów pozostaje bez zmian.
+
+Zachowano także próbę rozwojową `hardening-attempt-1/results.json`: macro-F1 0,736, wstrzymanie 2/3, ataki w pytaniu 3/3, ale 10/30 błędów technicznych i jeden błąd daty. Diagnostyka M01 wykazała odrzucenie poprawnej podstawy przez nadmiarowe znane odwołanie; zapisy przed i po korekcie są w `diagnostics/`. Osobne powtórzenia diagnostyczne nie są włączane do końcowego wyniku. Po korekcie daty i walidacji wykonywany jest od nowa cały zestaw 30 przypadków, bez zmiany etykiet.
+
+### Końcowe porównanie po poprawkach
+
+Pełny przebieg z 21.11.2026: ten sam zestaw i hash, modele `gemini-3.1-flash-lite` / `gemini-3.5-flash-lite`, serwer developerski, nowe sesje i przerwy 10 s. Nie zmieniano kodu logiki podczas tego pomiaru. Raport: `reports/benchmark/hardening-comparison.json`; wszystkie odpowiedzi i cytaty: `after-hardening/results.json`. Błędy pozostają w mianownikach.
+
+| Miernik                                                               | Przed           | Po                  |
+| --------------------------------------------------------------------- | --------------- | ------------------- |
+| Macro-F1, pięć kategorii                                              | 0,591           | **0,930**           |
+| Poprawne rozpoznanie „wprowadzające w błąd”                           | 0/6             | **5/6**             |
+| Poprawne rozpoznanie wszystkich oczekiwanych „fałszywe”, w tym ataków | 6/8             | **8/8**             |
+| Wstrzymanie przy braku dowodów                                        | 1/3             | **2/3**             |
+| Pełna poprawna obsługa ataków w pytaniu                               | 1/3             | **3/3**             |
+| Pokrycie cytowaniami przypadków faktograficznych                      | 18/22           | **22/22**           |
+| Zgodność oczekiwanej kategorii/statusu                                | 18/30           | **28/30**           |
+| Odpowiedzi bez awarii lub odrzuconego audytu                          | 25/30           | **29/30**           |
+| Dokładna zgodność kanałów, wykonane porównania                        | 25/26           | **29/29**           |
+| Mediana / p95 HTTP, z błędami                                         | 19,64 / 42,69 s | **23,26 / 57,84 s** |
+| Mediana / p95 odpowiedzi bez awarii lub odrzuconego audytu            | 19,01 / 43,66 s | **21,27 / 54,47 s** |
+
+Dziesięć przypadków przeszło z niezaliczonego na zaliczony. Żaden wcześniej zaliczony przypadek nie stracił tego statusu, ale opóźnienia wzrosły. Wśród 22 przypadków z ukończoną klasyfikacją w obu przebiegach trafność wzrosła z 16/22 do 21/22; jest to tylko dodatkowa diagnostyka, nie zastąpienie wyniku całej próby. Poprawa dostępności dostawcy współtworzy wynik i nie może zostać przypisana wyłącznie zmianom kodu.
+
+**Pozostałe dwa niezaliczone przypadki:**
+
+- **M05:** `refuted` zamiast `misleading`. Model uznał prawdziwą historyczną przesłankę w uzasadnieniu, ale błędnie skategoryzował jej przeniesienie na 2024 rok; audyt tego nie zatrzymał. Oznacza to nieusuniętą niestabilność klasyfikacji, mimo 5/6 poprawnych przypadków tej klasy. Nie dodano wyjątku zależnego od treści lub identyfikatora testu. Następny krok: jawna ocena oddzielnych części twierdzenia i niezależna walidacja kategorii, sprawdzona również na nowych tezach.
+- **N03:** HTTP 504 po 60,05 s, bez opublikowanego werdyktu. Nie zaliczamy timeoutu jako merytorycznego wstrzymania. Poprawa logiki braku dowodów nie usuwa opóźnień modelu; wymagane są pomiary etapów i dobór budżetu ponowień/dostawcy, bez zamieniania awarii w `insufficient`.
+
+W tej próbie osiągnięto liczbowo progi macro-F1 i pokrycia cytowaniami; próg wstrzymania ≥80% nadal nie jest spełniony. Mediana mieści się w 30 s, ale p95 jest bliskie limitu 60 s. Trzy zaliczone ataki w pytaniu nie dowodzą ogólnej odporności ≥90%. Niezależna poprawność znaczeniowa cytatów, koszt i wcześniejsze braki zgodności nadal wymagają osobnej pracy.
+
+Walidacja lokalna końcowego kodu: **147 testów jednostkowych/integracyjnych**, **10 testów przeglądarkowych**, kontrola typów, formatowania oraz kompilacja produkcyjna. Testy przeglądarkowe używają kontrolowanych odpowiedzi; jakość usług online mierzy powyższy benchmark. Pięć testów opt-in nie jest wykonywanych przez zwykłe `npm test`.
+
+Oddzielny test kontrolowanych źródeł z rzeczywistym modelem: **3/4 zaliczenia** (wcześniej 4/4). Oba ataki źródłowe **S03–S04: 2/2** poprawne, z zarejestrowaną kwarantanną fragmentu i zachowanymi dowodami; konflikt S02 poprawnie zwrócił `insufficient` z flagą sprzeczności. **S01 nie ukończył oceny z powodu `MODEL_UNAVAILABLE`** po błędach połączenia i HTTP 503 modelu zapasowego. Test integracyjny słusznie zgłasza niepowodzenie całości; nie jest opisany jako pełne przejście. Wyniki: `reports/benchmark/controlled-after-hardening/results.json`, punkt odniesienia: `controlled-before-hardening/results.json`. Nie wykonywano powtórzeń w celu zastąpienia niekorzystnego wyniku.
+
+## Niezawodność, prywatność i audyt — etap 3
+
+Zmiany są ogólne; nie dodano wyjątków zależnych od treści ani identyfikatorów przypadków testowych.
+
+### Wstrzymanie i budżet czasu
+
+Po udanym wyszukiwaniu ocena `insufficient` bez wybranych dowodów kończy się komunikatem napisanym w kodzie: w pobranym materiale nie wskazano dowodów rozstrzygających. Nie publikujemy uzasadnienia ani dodatkowych faktów wygenerowanych przez model i nie wykonujemy kolejnego wywołania tylko po to, by zatwierdzić ten komunikat. Lista przejrzanych materiałów pozostaje dostępna. Niepełne wyszukiwanie bez wybranych dowodów daje `unable_to_verify`, a awaria modelu nadal błąd techniczny. Brak dowodu nie staje się dowodem fałszu. Oceny z cytatami nadal przechodzą audyt znaczenia.
+
+Planowanie ma budżet do 12 sekund, ocena lub naprawa do 24 sekund, audyt do 15 sekund; wszystkie dzielą maksymalny termin całego żądania 60 sekund. Przed audytem rezerwujemy 10 sekund; dodatkowa naprawa/uzupełnienie dowodów uruchamia się wyłącznie przy co najmniej 18 sekundach pozostałego czasu. Przy przekroczeniu czasu pojedynczej próby modelu przechodzimy do skonfigurowanego modelu zapasowego, zamiast ponawiać tę samą zawieszoną próbę. Błędy rozliczeń, autoryzacji i limitów nadal nie powodują obejścia ograniczeń przez zmianę modelu. Logi etapów zawierają identyfikator sprawdzenia, czas operacji i czas od rozpoczęcia, bez treści pytania. Mniejsze limity wyjścia planowania i audytu ograniczają niepotrzebną długość generowania. Budżety nie gwarantują dostępności dostawcy.
+
+### Maskowanie i zarządzanie sesją
+
+`src/core/privacy.ts` maskuje adresy e-mail, polskie telefony, 11-cyfrowe identyfikatory i polskie numery rachunków **przed pierwszym wywołaniem modelu**. Nie zachowujemy mapy umożliwiającej odtworzenie usuniętych wartości. Zwracane pytanie jest zamaskowane; UI ujawnia ograniczenie. Wzorce mogą pominąć nietypowy zapis lub nadmiernie zamaskować liczbę. Nie jest to rozpoznawanie wszystkich nazwisk, adresów i informacji wrażliwych ani pełna anonimizacja. Jeśli maskowanie usuwa istotny kontekst, system powinien poprosić o doprecyzowanie bez danych poufnych. Materiały publicznych źródeł nie podlegają tej samej transformacji cytatów, aby zachować ich dosłowność.
+
+W obu widokach są **Pobierz zapis sesji** i **Usuń sesję i jej zapis**. Przed analizą interfejs ustanawia cookie sesji; usuwanie działa także podczas pierwszego sprawdzenia. Usunięcie kasuje rejestr i bufor wyniku, przerywa aktywne analizy sesji, usuwa jej lokalny limiter i cookie, czyści otwarte karty obu kanałów. Globalny limit wydatków/liczby wywołań nie jest resetowany. Opóźniona odpowiedź nie może ponownie zapisać usuniętej sesji ani ustawić starego cookie. Ochrona przed powtórnym zapisem zachowuje przez 24 godziny wyłącznie skrót identyfikatora usuniętej sesji i termin wygaśnięcia.
+
+Usunięcie dotyczy aplikacji. Nie usuwa wcześniejszych transmisji u dostawców, pobranych eksportów ani kopii zapasowych operatora. Zasady retencji usług zewnętrznych nadal wymagają osobnego przeglądu.
+
+### Trwały, zminimalizowany rejestr
+
+SQLite zapisuje dane w `.runtime/audit.sqlite` (katalog ignorowany przez Git); opcjonalny `AUDIT_DB_PATH` wybiera inną prywatną lokalizację. Wymagany Node.js **22.13+**, testowany 24, z wbudowanym `node:sqlite`. Rejestr zachowuje zamaskowane pytanie, datę wypowiedzi, czas, kanał, identyfikatory żądania i weryfikacji, status, werdykt lub kod błędu, zamaskowane uzasadnienie i ograniczenia, statusy wyszukiwania oraz metadane źródeł. Nie archiwizuje artykułów ani pełnych cytatów: zapisuje przypisanie do źródła, rolę dowodu i SHA-256 cytatu. Linki w audycie są minimalizowane (usunięte parametry poza rewizją `oldid`); mogą wymagać odszukania dokumentu. Nie jest to archiwum pozwalające odtworzyć zmienioną stronę źródłową.
+
+Każde dostarczenie odpowiedzi przez kanał ma własny wpis, także gdy korzysta z bufora wspólnego wyniku. Błędy po walidacji pytania są zapisywane bez werdyktu; nie zapisujemy niepoprawnych surowych żądań. Brak możliwości zapisania udanego sprawdzenia daje `AUDIT_UNAVAILABLE`, bez pozornego sukcesu. Błędy zapisu przy już nieudanej analizie są dodatkowo logowane bez treści.
+
+Retencja: 24 godziny i maksymalnie 5000 wpisów globalnie (najstarsze mogą zostać usunięte wcześniej). Wygasłe wpisy są usuwane przy otwarciu bazy, odczycie/zapisie oraz co minutę podczas działania procesu. Przy wyłączonej aplikacji czyszczenie następuje po uruchomieniu, przed udostępnieniem danych; bez działającego procesu nie ma niezależnego harmonogramu kasowania pliku. SQLite używa `secure_delete` i dziennika DELETE, nie WAL. Nie deklarujemy usuwania kopii systemu plików ani kopii zapasowych.
+
+API sesji:
+
+- `POST /api/session`, nagłówek `x-prawdowid-action: start-session`: ustanowienie cookie HttpOnly/SameSite=Strict, Secure pod HTTPS, ważnego 24 godziny.
+- `GET /api/session`: eksport wyłącznie bieżącej sesji, `Cache-Control: no-store`; bez cookie zwraca pustą listę.
+- `DELETE /api/session`, nagłówek `x-prawdowid-action: delete-session`: usunięcie własnej sesji. Nie przyjmuje identyfikatora innej sesji w treści/URL. Żądania z innego origin są odrzucane.
+
+To nadal lokalne MVP z dostępem przez cookie, bez kont i panelu administracyjnego. Baza nie jest serwowana publicznie ani szyfrowana przez aplikację. Operator musi chronić katalog uprawnieniami systemowymi i ustalić zasady kopii zapasowych; wdrożenie wieloinstancyjne wymaga wspólnego zarządzania zadaniami i limiterem. Zapis nie obejmuje jeszcze kosztu/tokenów ani pełnej historii wszystkich etapów w bazie — czasy etapów znajdują się w logach technicznych.
+
+### Walidacja etapu 3
+
+- **162 testy jednostkowe/integracyjne zaliczone**, 5 testów wymagających jawnego uruchomienia pominiętych. Nowe testy obejmują bezpieczne wstrzymanie bez audytu, niepełne wyszukiwanie, awarie i budżety etapów, maskowanie przed wywołaniem dostawców, izolację/retencję rejestru, ponowne otwarcie bazy, usunięcie podczas analizy, blokadę odtworzenia sesji i niedostępność bazy.
+- **12 testów przeglądarkowych zaliczonych** w przebiegu sekwencyjnym. Testy obejmują oba kanały, widok mobilny, usuwanie w dwóch kartach oraz brak pozornego sukcesu przy nieudanym usunięciu. Początkowy test ujawnił możliwość wpisania tekstu przed hydratacją formularza; pola są teraz nieaktywne do podłączenia obsługi. Jeden równoległy przebieg testu nawigacji do korpusu przekroczył czas; test izolowany i pełny przebieg sekwencyjny przeszły. Cztery testy UI korzystające z płatnych API były pominięte; rzeczywiste API sprawdzano osobnym runnerem poniżej.
+- Kontrola typów i kompilacja produkcyjna zaliczone. Prywatna baza nie jest dołączana do plików wdrożenia przez mechanizm śledzenia zależności Next.js. Testy z kontrolowanymi odpowiedziami dostawców nie dowodzą jakości modeli w dowolnym temacie.
+
+**Pomiar online 21.11.2026 jest niepełny.** `reports/benchmark/reliability-privacy-online/results.json` zachowuje wszystkie odpowiedzi, czasy, cytaty i listę 12 niewykonanych przypadków. Zestaw, etykiety i modele nie były zmieniane. Uruchomiono 18/30 przypadków: 13 poprawnych zakończeń, 1 awaria modeli (F06), 1 ocena zatrzymana przez audyt kategorii (M01), następnie 3 kolejne limity HTTP 429 (M03–M05). Runner przerwał pomiar po wymaganych przerwach, bez zmiany modeli, limitów lub zastępowania niekorzystnych wyników powtórzeniami. Próby drugiego kanału korzystają z udokumentowanej migawki; przy M01 ponowna analiza dała inną odpowiedź, co nie zalicza spójności tej próby.
+
+**N01–N03 nie zostały wykonane w tym przebiegu**, więc nie deklarujemy poprawy wskaźnika wstrzymania z historycznych 2/3 ani osiągnięcia progu 80%. Nie porównujemy częściowego macro-F1 (brak całych klas) i czasu z pełnym poprzednim benchmarkiem. Wcześniejsza próba w `reliability-privacy/results.json` została przerwana po 4 błędach połączenia: środowisko blokowało ruch sieciowy (EACCES), nie był to pomiar jakości modelu. Nie uruchamiano dodatkowych płatnych prób kontrolowanych po utrzymujących się limitach dostawcy.
+
+Odtworzenie po ustąpieniu limitów, przy działającym serwerze (nie nadpisuje zachowanych przebiegów):
+
+```powershell
+$env:BENCHMARK_OUTPUT='reports/benchmark/reliability-privacy-next'
+npm run benchmark
+Remove-Item Env:BENCHMARK_OUTPUT
+```
+
+Opcjonalnie `BENCHMARK_URL` wskazuje inny lokalny port; `PLAYWRIGHT_BASE_URL` pozwala użyć tego samego portu w testach przeglądarkowych. Skrypt porównania przyjmuje `COMPARE_BEFORE`, `COMPARE_AFTER`, `COMPARE_OUTPUT` i nazwy katalogów `COMPARE_CONTROLLED_BEFORE/AFTER`; odrzuca niekompletne lub różne zestawy. Domyślne ścieżki historycznego porównania pozostają bez zmian.
+
+Do dalszej pracy pozostają m.in. pełny pomiar po ustąpieniu ograniczeń usług, niezależna ocena cytatów, koszt, aktualność źródeł, przegląd zasad dostawców i materiały zgłoszeniowe.
+
+## Panel weryfikacji i statusy na żywo
+
+Widok WWW ma wspólną niebieską paletę z pozostałymi ekranami, osobną kolumnę formularza, przebieg analizy, podsumowanie materiałów i raport z dowodami. Potwierdzenie jest zielone, niepewność i kontekst pomarańczowe, obalenie czerwone. Etykiety i symbole uzupełniają kolor; błędy techniczne nie są werdyktem. Na telefonie panel układa się w jedną kolumnę i przenosi użytkownika do trwającej analizy, a następnie do wyniku.
+
+Po ustanowieniu sesji przez `POST /api/session` klient WWW wysyła `POST /api/verify` z `Accept: text/event-stream`. Strumień SSE zawiera obiekty JSON w ramkach `data: …\n\n`:
+
+- `stage`: rzeczywisty etap silnika (planowanie, wyszukiwanie, ocena, ewentualne poprawianie cytatów lub uzupełnianie dowodów, audyt). Odczyt z pamięci i oczekiwanie na identyczne trwające zgłoszenie mają osobne statusy.
+- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Dwa wyszukiwania WWW pozostają w trakcie do zakończenia obu.
+- `result` lub `error`: zdarzenie końcowe. W strumieniu błędy są przekazywane jako zdarzenie, ponieważ nagłówki HTTP zostały już wysłane. Brak zdarzenia końcowego oznacza przerwane połączenie, nie sukces.
+
+Bez nagłówka `Accept` lub bez poprawnego identyfikatora sesji pozostaje dotychczasowa odpowiedź JSON i kody HTTP. Adapter Discord zachowuje swój kontrakt. Rozłączenie strumienia przerywa analizę przez istniejący mechanizm anulowania; walidacja, limity, maskowanie danych, audyt i reguły werdyktu pozostają wspólne. Demo nie symuluje wykonania etapów, a ponowne użycie wyniku nie udaje nowego wyszukiwania.
+
+Walidacja panelu: kontrola typów, kompilacja produkcyjna, 167 testów jednostkowych/integracyjnych i 16 testów przeglądarkowych. Sprawdzono szerokości 320, 390, 768, 1024 i 1440 px oraz zrzuty widoku pustego, wyniku i analizy. Scenariusze API używają kontrolowanych odpowiedzi dostawców; nie uruchamiano płatnych testów live. Testy transportu obejmują ramki podzielone wewnątrz znaków UTF-8, przerwane połączenie, zdarzenie przed odpowiedzią dostawcy i anulowanie po rozłączeniu.

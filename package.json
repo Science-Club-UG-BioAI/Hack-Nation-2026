@@ -1,0 +1,41 @@
+{
+  "name": "prawdowid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "format": "prettier --write src tests e2e scripts *.ts *.json README.md",
+    "format:check": "prettier --check src tests e2e scripts *.ts *.json README.md",
+    "corpus:build": "node --env-file=.env.local scripts/build-corpus.mjs",
+    "corpus:check": "node scripts/check-corpus.mjs",
+    "benchmark": "node --experimental-strip-types --env-file=.env.local scripts/benchmark.mjs",
+    "benchmark:report": "node --experimental-strip-types scripts/benchmark-report.mjs",
+    "benchmark:compare": "node --experimental-strip-types scripts/compare-benchmarks.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tldts": "^7.5.5",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

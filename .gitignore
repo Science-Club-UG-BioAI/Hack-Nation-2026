@@ -221,3 +221,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Prawdowid / Next.js
+.runtime/
+data/corpus/catalog.candidate.json
+node_modules/
+.next/
+.env.*
+!.env.example
+*.tsbuildinfo
+playwright-report/
+test-results/

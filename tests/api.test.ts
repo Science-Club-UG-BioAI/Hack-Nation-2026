@@ -1,0 +1,313 @@
+vi.mock("@/server/corpus", () => ({
+  corpus: async () => ({ hits: [], partial: false }),
+}));
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { POST } from "@/app/api/verify/route";
+import { GET } from "@/app/api/health/route";
+import {
+  readVerificationStream,
+  type VerificationEvent,
+} from "@/core/progress";
+import { randomUUID } from "node:crypto";
+
+const claim = "Polska przystąpiła do NATO 12 marca 1999 roku.";
+const quote = "Poland joined NATO on 12 March 1999.";
+const request = (body: unknown, headers: Record<string, string> = {}) =>
+  new NextRequest("http://localhost:3000/api/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+const geminiResponse = (value: unknown) =>
+  Response.json({
+    status: "completed",
+    steps: [
+      {
+        type: "model_output",
+        content: [{ type: "text", text: JSON.stringify(value) }],
+      },
+    ],
+  });
+
+beforeEach(() => {
+  vi.stubEnv("GEMINI_API_KEY", "test-key-not-real");
+  vi.stubEnv("TAVILY_API_KEY", "test-key-not-real");
+  vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
+});
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
+
+describe("real route and adapters with controlled HTTP provider responses", () => {
+  it.each(["json", "stream"])(
+    "completes the entire %s path and keeps keys server-side",
+    async (transport) => {
+      let modelCalls = 0;
+      const fetcher = vi.fn(
+        async (url: string | URL | Request, init?: RequestInit) => {
+          expect(init?.signal).toBeTruthy();
+          if (String(url).includes("tavily"))
+            return Response.json({
+              results: [
+                {
+                  title: "NATO",
+                  url: "https://nato.int/source",
+                  raw_content: quote + " More relevant historical context.",
+                },
+                {
+                  title: "Official",
+                  url: "https://gov.pl/nato",
+                  raw_content: quote + " Official membership record.",
+                },
+              ],
+            });
+          modelCalls++;
+          if (modelCalls === 1)
+            return geminiResponse({
+              checkable: true,
+              needsClarification: false,
+              explanation: "Sprawdzalna data.",
+              queries: ["Poland NATO date", "Poland NATO alternative date"],
+            });
+          if (modelCalls === 2)
+            return geminiResponse({
+              verdict: "supported",
+              basis: {
+                kind: "confirmed",
+                establishedPremise: "",
+                inferenceOrCorrection: "Date matches",
+                premiseQuoteIds: [],
+                decisiveQuoteIds: ["q1", "q2"],
+              },
+              explanation: "Źródło potwierdza datę.",
+              limitations: [],
+              evidence: [
+                {
+                  quoteId: "q1",
+                  relation: "supports",
+                  relevance: "Właściwa data.",
+                },
+                {
+                  quoteId: "q2",
+                  relation: "supports",
+                  relevance: "Drugie źródło potwierdza datę.",
+                },
+              ],
+            });
+          return geminiResponse({
+            approved: true,
+            reason: "Zgodne z dowodem.",
+          });
+        },
+      );
+      vi.stubGlobal("fetch", fetcher);
+      const response = await POST(
+        request(
+          { claim },
+          transport === "stream"
+            ? {
+                accept: "text/event-stream",
+                cookie: `prawdowid-session=${randomUUID()}`,
+              }
+            : {},
+        ),
+      );
+      expect(response.status).toBe(200);
+      const events: VerificationEvent[] = [];
+      let body;
+      if (transport === "stream") {
+        await readVerificationStream(response.body!, (event) =>
+          events.push(event),
+        );
+        expect(
+          events.filter((e) => e.type === "stage").map((e) => e.stage),
+        ).toEqual(["planning", "searching", "assessing", "auditing"]);
+        expect(
+          events.some(
+            (e) => e.type === "source" && e.source.status === "running",
+          ),
+        ).toBe(true);
+        expect(
+          events.some(
+            (e) =>
+              e.type === "source" &&
+              e.source.provider === "web" &&
+              e.source.status === "ok",
+          ),
+        ).toBe(true);
+        const last = events.at(-1);
+        expect(last?.type).toBe("result");
+        body = last?.type === "result" ? last.result : null;
+      } else body = await response.json();
+      expect(body.verdict).toBe("supported");
+      expect(body.mode).toBe("live");
+      expect(fetcher).toHaveBeenCalledTimes(5);
+      expect(JSON.stringify(body)).not.toContain("test-key-not-real");
+      expect(response.headers.get("cache-control")).toContain("no-store");
+    },
+  );
+  it("streams failures without a verdict and preserves origin validation", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const response = await POST(
+      request(
+        { claim },
+        {
+          accept: "text/event-stream",
+          cookie: `prawdowid-session=${randomUUID()}`,
+          origin: "https://attacker.example",
+        },
+      ),
+    );
+    const events: VerificationEvent[] = [];
+    await readVerificationStream(response.body!, (event) => events.push(event));
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "error",
+      error: { code: "INPUT_INVALID" },
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+  it("delivers a stage before the provider resolves and aborts work on disconnect", async () => {
+    let providerAborted = false;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        (_url, init) =>
+          new Promise((_resolve, reject) => {
+            init.signal.addEventListener(
+              "abort",
+              () => {
+                providerAborted = true;
+                reject(init.signal.reason);
+              },
+              { once: true },
+            );
+          }),
+      ),
+    );
+    const response = await POST(
+      request(
+        { claim },
+        {
+          accept: "text/event-stream",
+          cookie: `prawdowid-session=${randomUUID()}`,
+        },
+      ),
+    );
+    const reader = response.body!.getReader();
+    const first = await reader.read();
+    expect(new TextDecoder().decode(first.value)).toContain(
+      '"stage":"planning"',
+    );
+    await reader.cancel();
+    await vi.waitFor(() => expect(providerAborted).toBe(true));
+  });
+  it("rejects invalid input before accessing providers", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    expect((await POST(request({ claim: "short" }))).status).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+  it("rejects a cross-origin request", async () =>
+    expect(
+      (await POST(request({ claim }, { origin: "https://attacker.example" })))
+        .status,
+    ).toBe(403));
+  it("accepts the browser host when Next normalizes the loopback URL", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+    const response = await POST(
+      request(
+        { claim },
+        { origin: "http://127.0.0.1:3000", host: "127.0.0.1:3000" },
+      ),
+    );
+    expect(response.status).toBe(503);
+    expect((await response.json()).code).toBe("NOT_CONFIGURED");
+  });
+  it("rejects oversized bodies", async () =>
+    expect((await POST(request({ claim: "a".repeat(9000) }))).status).toBe(
+      400,
+    ));
+  it.each(["application/json-invalid", "text/plain; type=application/json"])(
+    "rejects a misleading content type: %s",
+    async (contentType) => {
+      const fetcher = vi.fn();
+      vi.stubGlobal("fetch", fetcher);
+      expect(
+        (await POST(request({ claim }, { "content-type": contentType })))
+          .status,
+      ).toBe(400);
+      expect(fetcher).not.toHaveBeenCalled();
+    },
+  );
+  it("applies the deadline to a stalled request body before calling providers", async () => {
+    vi.stubEnv("VERIFY_TIMEOUT_MS", "20");
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const cancel = vi.fn();
+    const body = new ReadableStream<Uint8Array>({ cancel });
+    const init = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      duplex: "half" as const,
+    };
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/verify", init),
+    );
+    expect(response.status).toBe(504);
+    expect((await response.json()).code).toBe("VERIFICATION_TIMEOUT");
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(body.locked).toBe(false);
+  });
+  it("reports missing configuration without returning demo data", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+    const response = await POST(request({ claim }));
+    const body = await response.json();
+    expect(response.status).toBe(503);
+    expect(body.code).toBe("NOT_CONFIGURED");
+    expect(body).not.toHaveProperty("verdict");
+  });
+  it("does not leak provider error details", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () => new Response("sensitive-provider-message", { status: 401 }),
+      ),
+    );
+    const response = await POST(request({ claim }));
+    const body = await response.json();
+    expect(response.status).toBe(503);
+    expect(body.code).toBe("PROVIDER_AUTH_ERROR");
+    expect(JSON.stringify(body)).not.toContain("sensitive");
+    expect(body).not.toHaveProperty("verdict");
+  });
+  it("aborts a stalled provider within the shared deadline", async () => {
+    vi.stubEnv("VERIFY_TIMEOUT_MS", "20");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        (_url, init) =>
+          new Promise((_resolve, reject) =>
+            init.signal.addEventListener(
+              "abort",
+              () => reject(new Error("aborted")),
+              { once: true },
+            ),
+          ),
+      ),
+    );
+    const response = await POST(request({ claim }));
+    expect(response.status).toBe(504);
+    expect((await response.json()).code).toBe("VERIFICATION_TIMEOUT");
+  });
+  it("health exposes readiness, never credentials", async () => {
+    const body = await GET().json();
+    expect(body.providers.ready).toBe(true);
+    expect(JSON.stringify(body)).not.toContain("test-key-not-real");
+  });
+});

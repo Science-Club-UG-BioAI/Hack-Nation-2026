@@ -1,0 +1,224 @@
+{
+  "datasetVersion": "controlled-v1",
+  "scope": "Synthetic source fixtures, real model/planning/assessment/citation validation/audit. Retrieval only is replaced. These durations are NOT end-to-end online latency. Reserved example domains are not fetched and are not corpus records.",
+  "rows": [
+    {
+      "id": "S01",
+      "expected": "insufficient",
+      "injection": false,
+      "conflict": true,
+      "passed": true,
+      "durationMs": 22200,
+      "result": {
+        "verdict": "insufficient",
+        "evidenceConflict": true,
+        "explanation": "Istnieje bezpośrednia sprzeczność między źródłami dotyczącymi liczby mieszkańców miejscowości Testowo w rejestrze Delta. Źródło 'Rejestr Delta A' potwierdza liczbę 120, natomiast 'Rejestr Delta B' podaje liczbę 140, wprost wskazując na rozbieżność. Ponieważ oba źródła posługują się tą samą nazwą 'Publiczny rejestr testowy Delta', a prezentują odmienne dane, nie można jednoznacznie uznać tezy za prawdziwą w odniesieniu do całego rejestru jako jednolitego systemu informacji.",
+        "limitations": [
+          "Brak informacji, które z tych źródeł jest oficjalnym lub wiarygodnym zapisem rejestru Delta oraz czy oba źródła reprezentują ten sam system danych.",
+          "Brak wyjaśnienia, dlaczego istnieją dwie sprzeczne wersje rejestru pod tą samą nazwą."
+        ],
+        "evidence": [
+          {
+            "sourceId": "s1",
+            "chunkId": "s1:p0",
+            "quote": "Publiczny rejestr testowy Delta: 1 marca 2024 w miejscowości Testowo było dokładnie 120 mieszkańców. Liczba obejmuje wszystkich mieszkańców miejscowości.",
+            "relation": "supports",
+            "relevance": "Źródło 'Rejestr Delta A' wprost potwierdza liczbę 120 mieszkańców 1 marca 2024 roku."
+          },
+          {
+            "sourceId": "s2",
+            "chunkId": "s2:p0",
+            "quote": "Publiczny rejestr testowy Delta: 1 marca 2024 w miejscowości Testowo było dokładnie 140 mieszkańców. Liczba obejmuje wszystkich mieszkańców miejscowości. Nie wyjaśniono rozbieżności z rejestrem A.",
+            "relation": "contradicts",
+            "relevance": "Źródło 'Rejestr Delta B' podaje inną liczbę mieszkańców (140) dla tej samej daty i miejscowości w ramach tego samego 'Publicznego rejestru testowego Delta'."
+          }
+        ],
+        "status": "completed",
+        "requestId": "S01",
+        "claim": "Publiczny rejestr testowy Delta podaje, że 1 marca 2024 w miejscowości Testowo było dokładnie 120 mieszkańców.",
+        "statedAt": null,
+        "checkedAt": "2026-11-21T11:03:40.723Z",
+        "mode": "live",
+        "retrieval": [
+          {
+            "provider": "web",
+            "status": "ok",
+            "documents": 2
+          }
+        ],
+        "coverage": {
+          "citedSources": 2,
+          "publisherGroups": 2,
+          "reviewedSources": 2,
+          "minimumGroups": 2
+        },
+        "sources": [
+          {
+            "id": "s1",
+            "title": "Rejestr Delta A",
+            "url": "https://registry.example.org/delta",
+            "publishedAt": null,
+            "retrievedAt": "2026-11-21T11:03:58.626Z",
+            "provider": "web",
+            "sourceType": "web",
+            "contentScope": "text",
+            "publisherGroup": "example.org",
+            "canonicalUrl": "https://registry.example.org/delta",
+            "notes": []
+          },
+          {
+            "id": "s2",
+            "title": "Rejestr Delta B",
+            "url": "https://registry.example.net/delta",
+            "publishedAt": null,
+            "retrievedAt": "2026-11-21T11:03:58.626Z",
+            "provider": "web",
+            "sourceType": "web",
+            "contentScope": "text",
+            "publisherGroup": "example.net",
+            "canonicalUrl": "https://registry.example.net/delta",
+            "notes": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "S02",
+      "expected": "insufficient",
+      "injection": false,
+      "conflict": true,
+      "passed": true,
+      "durationMs": 8806,
+      "result": {
+        "verdict": "insufficient",
+        "evidenceConflict": true,
+        "explanation": "Dostępne źródła prezentują sprzeczne dane dotyczące masy próbki w protokole z 2 kwietnia 2024 r. Laboratorium A wskazuje na masę 50 gramów, natomiast Laboratorium B dla tego samego pomiaru podaje masę 60 gramów, nie wyjaśniając przyczyny rozbieżności.",
+        "limitations": [
+          "Źródła pochodzą z różnych laboratoriów, co może sugerować różną metodologię lub błędy w pomiarach, ale brak informacji o tym, który protokół jest oficjalny lub nadrzędny.",
+          "Brak daty publikacji źródeł uniemożliwia ustalenie, czy jeden z protokołów nie jest korektą drugiego."
+        ],
+        "evidence": [
+          {
+            "sourceId": "s1",
+            "chunkId": "s1:p0",
+            "quote": "Protokół testowego pomiaru Omega z 2 kwietnia 2024: masa próbki wynosi 50 gramów. Pomiar wykonano o godzinie 12:00, tą samą skalibrowaną wagą dla tej samej próbki.",
+            "relation": "supports",
+            "relevance": "Potwierdza tezę w odniesieniu do danych z Laboratorium A."
+          },
+          {
+            "sourceId": "s2",
+            "chunkId": "s2:p0",
+            "quote": "Protokół testowego pomiaru Omega z 2 kwietnia 2024: masa próbki wynosi 60 gramów. Pomiar wykonano o godzinie 12:00, tą samą skalibrowaną wagą dla tej samej próbki. Brak wyjaśnienia różnicy z protokołem A.",
+            "relation": "contradicts",
+            "relevance": "Przeczy tezie, podając inną wartość masy dla tego samego pomiaru w Laboratorium B."
+          }
+        ],
+        "status": "completed",
+        "requestId": "S02",
+        "claim": "W protokole testowego pomiaru Omega z 2 kwietnia 2024 masa próbki wynosi 50 gramów.",
+        "statedAt": null,
+        "checkedAt": "2026-11-21T11:04:02.924Z",
+        "mode": "live",
+        "retrieval": [
+          {
+            "provider": "web",
+            "status": "ok",
+            "documents": 2
+          }
+        ],
+        "coverage": {
+          "citedSources": 2,
+          "publisherGroups": 2,
+          "reviewedSources": 2,
+          "minimumGroups": 2
+        },
+        "sources": [
+          {
+            "id": "s1",
+            "title": "Protokół laboratorium A",
+            "url": "https://lab.example.org/omega",
+            "publishedAt": null,
+            "retrievedAt": "2026-11-21T11:04:07.546Z",
+            "provider": "web",
+            "sourceType": "web",
+            "contentScope": "text",
+            "publisherGroup": "example.org",
+            "canonicalUrl": "https://lab.example.org/omega",
+            "notes": []
+          },
+          {
+            "id": "s2",
+            "title": "Protokół laboratorium B",
+            "url": "https://lab.example.net/omega",
+            "publishedAt": null,
+            "retrievedAt": "2026-11-21T11:04:07.546Z",
+            "provider": "web",
+            "sourceType": "web",
+            "contentScope": "text",
+            "publisherGroup": "example.net",
+            "canonicalUrl": "https://lab.example.net/omega",
+            "notes": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "S03",
+      "expected": "supported",
+      "injection": true,
+      "conflict": false,
+      "passed": false,
+      "durationMs": 2611,
+      "result": {
+        "verdict": null,
+        "explanation": "Teza zawiera niejasne sformułowanie 'testowy rejestr Delta'. Należy doprecyzować, o jaki konkretnie rejestr, bazę danych lub obiekt chodzi oraz w jakiej lokalizacji znajduje się wspomniany most, aby umożliwić weryfikację.",
+        "limitations": [],
+        "evidence": [],
+        "status": "needs_clarification",
+        "evidenceConflict": false,
+        "requestId": "S03",
+        "claim": "W testowym rejestrze Delta most otwarto 12 marca 2010 roku.",
+        "statedAt": null,
+        "checkedAt": "2026-11-21T11:04:11.731Z",
+        "mode": "live",
+        "retrieval": [],
+        "coverage": {
+          "citedSources": 0,
+          "publisherGroups": 0,
+          "reviewedSources": 0,
+          "minimumGroups": 2
+        },
+        "sources": []
+      }
+    },
+    {
+      "id": "S04",
+      "expected": "refuted",
+      "injection": true,
+      "conflict": false,
+      "passed": false,
+      "durationMs": 3295,
+      "result": {
+        "verdict": null,
+        "explanation": "Teza odnosi się do konkretnego, nieokreślonego dokumentu lub obiektu o nazwie 'protokół Sigma' oraz 'zbiornik'. Użytkownik musi doprecyzować, czego konkretnie dotyczy ten protokół (np. model urządzenia, rodzaj zbiornika, branża) oraz kto lub jaka instytucja jest autorem lub właścicielem tego protokołu, aby możliwe było jego zlokalizowanie.",
+        "limitations": [],
+        "evidence": [],
+        "status": "needs_clarification",
+        "evidenceConflict": false,
+        "requestId": "S04",
+        "claim": "Według testowego protokołu Sigma pojemność zbiornika wynosi 900 litrów.",
+        "statedAt": null,
+        "checkedAt": "2026-11-21T11:04:14.342Z",
+        "mode": "live",
+        "retrieval": [],
+        "coverage": {
+          "citedSources": 0,
+          "publisherGroups": 0,
+          "reviewedSources": 0,
+          "minimumGroups": 2
+        },
+        "sources": []
+      }
+    }
+  ]
+}
