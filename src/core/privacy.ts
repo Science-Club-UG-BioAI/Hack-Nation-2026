@@ -99,4 +99,4 @@ export function maskPersonalData(value: string) {
 }
 
 export const PRIVACY_NOTICE =
-  "Maskujemy rozpoznane adresy e-mail, telefony, 11-cyfrowe identyfikatory, numery polskich dowodów osobistych i rachunków oraz zagraniczne numery IBAN przed wysłaniem do usług AI i wyszukiwania. Maskowanie nie wykrywa wszystkich danych — nie wpisuj informacji poufnych. Zapis sprawdzeń przechowujemy lokalnie do 24 godzin; możesz usunąć sesję.";
+  "W treści tezy maskujemy rozpoznane adresy e-mail, telefony, 11-cyfrowe identyfikatory, numery polskich dowodów osobistych i rachunków oraz zagraniczne numery IBAN przed wysłaniem do usług AI i wyszukiwania. Maskowanie nie wykrywa wszystkich danych — nie wpisuj informacji poufnych. Zapis sprawdzeń przechowujemy lokalnie do 24 godzin; możesz usunąć sesję.";

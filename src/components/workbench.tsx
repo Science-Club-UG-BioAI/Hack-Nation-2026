@@ -13,10 +13,12 @@ import { SessionControls, ensureSession } from "./session-controls";
 import { AnalysisProgress, type TimedProgress } from "./analysis-progress";
 import { readVerificationStream } from "@/core/progress";
 import { Icon } from "./icon";
+import { ImageInput } from "./image-input";
 
 export function Workbench() {
   const [mounted, setMounted] = useState(false);
   const [claim, setClaim] = useState("");
+  const [imageSession, setImageSession] = useState(0);
   const [statedAt, setStatedAt] = useState("");
   const [ready, setReady] = useState<boolean | null>(null);
   const { busy, cancel, runRequest } = useVerificationRequest();
@@ -206,6 +208,15 @@ export function Workbench() {
                 Wpisz twierdzenie. My znajdziemy źródła, sprawdzimy dowody i
                 pokażemy kontekst.
               </p>
+              <ImageInput
+                key={imageSession}
+                disabled={!mounted || busy}
+                onUseClaim={(value) => {
+                  setClaim(value);
+                  clearResult();
+                  claimRef.current?.focus();
+                }}
+              />
               <form onSubmit={submit}>
                 <label htmlFor="claim">Twierdzenie do sprawdzenia</label>
                 <textarea
@@ -313,6 +324,7 @@ export function Workbench() {
               onClear={() => {
                 cancel();
                 setClaim("");
+                setImageSession((previous) => previous + 1);
                 setStatedAt("");
                 clearResult();
               }}

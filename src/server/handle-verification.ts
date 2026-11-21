@@ -5,7 +5,11 @@ import {
   channelInputSchema,
   type VerifyInput,
 } from "@/core/contracts";
-import { AppError, InvalidModelOutput } from "@/core/errors";
+import {
+  AppError,
+  InvalidModelOutput,
+  verificationFailure,
+} from "@/core/errors";
 import {
   numberSetting,
   requireConfiguration,
@@ -70,29 +74,6 @@ async function readVerificationInput(
     ...supplied,
     statedAt: supplied.statedAt ?? verificationDate(startedAt),
   };
-}
-
-function verificationFailure(
-  error: unknown,
-  timedOut: boolean,
-  cancelled: boolean,
-) {
-  if (timedOut)
-    return new AppError(
-      "VERIFICATION_TIMEOUT",
-      "Analiza przekroczyła limit czasu. Spróbuj ponownie.",
-      504,
-      true,
-    );
-  if (cancelled)
-    return new AppError("REQUEST_CANCELLED", "Analiza została przerwana.", 499);
-  if (error instanceof AppError) return error;
-  return new AppError(
-    "PROVIDER_ERROR",
-    "Nie udało się połączyć z usługą analizy. Spróbuj ponownie.",
-    502,
-    true,
-  );
 }
 
 export async function handleVerification(

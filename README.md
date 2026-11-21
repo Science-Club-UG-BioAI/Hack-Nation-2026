@@ -5,6 +5,8 @@
 Prototyp HackNation 2026: **teza → wyszukiwanie → ocena → kontrola cytatów → wynik z dowodami**.
 Ta wersja przyjmuje jedną tezę (20–500 znaków), nie cały artykuł. Obsługuje WWW i działający adapter demonstracyjny wiadomości Discord, zgodnie z pierwszym etapem dostosowania do opisu wyzwania.
 
+W panelu WWW opcja **Dodaj obraz** przyjmuje JPG, PNG i WebP do 4 MiB. **Opisz obraz** wysyła plik do skonfigurowanego modelu Gemini i wyświetla opis oraz ewentualną propozycję tezy. Po wstawieniu tezy do formularza można ją poprawić i sprawdzić w źródłach. Sam opis wymaga tylko klucza Gemini i zużywa jedną próbę ze wspólnego limitu analiz.
+
 ## Uruchomienie
 
 Wymagany Node.js 22.13+ (testowano na 24) oraz npm. Skrypty benchmarku używają wbudowanego usuwania typów TypeScript.
