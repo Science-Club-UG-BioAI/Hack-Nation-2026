@@ -1,0 +1,41 @@
+{
+  "scope": "Sanitized error events; provider events correlated by sequential request stages. No request content, credentials or generated prose.",
+  "events": [
+    {
+      "caseId": "F02",
+      "provider": "gemini",
+      "invalidOutput": "interaction_schema",
+      "responseStatus": "incomplete",
+      "issues": [
+        {
+          "path": "status",
+          "code": "invalid_value"
+        }
+      ]
+    },
+    {
+      "caseId": "F02",
+      "requestId": "ab8f065d-4c7f-44bb-ac08-9b5f9796675a",
+      "code": "INVALID_MODEL_OUTPUT",
+      "validationIssues": [],
+      "durationMs": 15326
+    },
+    {
+      "caseId": "M06",
+      "requestId": "248edae6-49d1-4469-b109-7be3b6dcb1ec",
+      "event": "assessment_validation_failed",
+      "validationIssues": [
+        "Select at most 10 distinct quotations across evidence and findings; keep only the facts necessary to explain the verdict."
+      ]
+    },
+    {
+      "caseId": "M06",
+      "requestId": "248edae6-49d1-4469-b109-7be3b6dcb1ec",
+      "code": "INVALID_MODEL_OUTPUT",
+      "validationIssues": [
+        "misleading requires evidence of the missing or distorted context."
+      ],
+      "durationMs": 13331
+    }
+  ]
+}

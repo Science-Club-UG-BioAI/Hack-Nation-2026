@@ -1,11 +1,52 @@
 import { it, vi, expect } from "vitest";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { verify } from "@/server/verify";
 import { AppError, InvalidModelOutput } from "@/core/errors";
 import dataset from "../data/benchmark/cases.json";
 const diagnostics = vi.hoisted(
-  () => [] as { basis: unknown; selectedIds: string[]; issues: string[] }[],
+  () =>
+    [] as {
+      basis: unknown;
+      findings: unknown;
+      availableIds: string[];
+      selectedIds: string[];
+      issues: string[];
+    }[],
 );
+const stages = vi.hoisted(() => [] as unknown[]);
+const transport = vi.hoisted(() => [] as unknown[]);
+vi.mock("@/server/gemini-transport", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/server/gemini-transport")>();
+  return {
+    ...actual,
+    geminiResponse: async (
+      ...args: Parameters<typeof actual.geminiResponse>
+    ) => {
+      const response = await actual.geminiResponse(...args);
+      const body = response as Record<string, unknown>;
+      transport.push({
+        keys: Object.keys(body),
+        status: body.status,
+        usage: body.usage,
+        error: body.error,
+      });
+      return response;
+    },
+  };
+});
+vi.mock("@/server/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/server/providers")>();
+  return {
+    ...actual,
+    generate: async (...args: Parameters<typeof actual.generate>) => {
+      const response = await actual.generate(...args);
+      // Public benchmark inputs only; never capture provider credentials or headers.
+      stages.push({ input: args[2], response });
+      return response;
+    },
+  };
+});
 vi.mock("@/core/quotations", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/core/quotations")>();
   return {
@@ -13,10 +54,13 @@ vi.mock("@/core/quotations", async (importOriginal) => {
     resolveSelection: (...args: Parameters<typeof actual.resolveSelection>) => {
       const draft = args[0] as {
         basis?: unknown;
+        findings?: unknown;
         evidence?: { quoteId: string }[];
       };
       const record = {
         basis: draft.basis,
+        findings: draft.findings,
+        availableIds: [...args[1].quotes.keys()],
         selectedIds: draft.evidence?.map((e) => e.quoteId) ?? [],
         issues: [] as string[],
       };
@@ -40,6 +84,12 @@ it.skipIf(!process.env.BENCHMARK_DIAGNOSTIC_CASE)(
       (c) => c.id === process.env.BENCHMARK_DIAGNOSTIC_CASE,
     );
     if (!item) throw new Error("Unknown reference case");
+    const directory =
+      process.env.BENCHMARK_DIAGNOSTIC_OUTPUT ||
+      "reports/benchmark/diagnostics";
+    const path = `${directory}/${item.id}.json`;
+    if (existsSync(path))
+      throw new Error("Diagnostic output exists; select a new directory.");
     let result;
     try {
       result = await verify(
@@ -54,9 +104,9 @@ it.skipIf(!process.env.BENCHMARK_DIAGNOSTIC_CASE)(
         verdict: null,
       };
     }
-    mkdirSync("reports/benchmark/diagnostics", { recursive: true });
+    mkdirSync(directory, { recursive: true });
     writeFileSync(
-      `reports/benchmark/diagnostics/${item.id}.json`,
+      path,
       JSON.stringify(
         {
           caseId: item.id,
@@ -64,6 +114,8 @@ it.skipIf(!process.env.BENCHMARK_DIAGNOSTIC_CASE)(
             "Separate diagnostic repeat, excluded from headline comparison",
           checkedAt: new Date().toISOString(),
           diagnostics,
+          stages,
+          transport,
           result,
         },
         null,

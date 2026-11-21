@@ -69,6 +69,22 @@ it("derives misleading from evidence-linked mixed context rather than the contra
     "misleading",
   );
 });
+it("uses the explicit decisive-context role instead of a conflicting support label", () => {
+  const result = resolveSelection(
+    {
+      ...selection,
+      evidence: selection.evidence.map((e) => ({ ...e, relation: "supports" })),
+    },
+    catalog,
+    documents,
+  );
+  expect(result.verdict).toBe("misleading");
+  expect(result.evidence.map((e) => e.relation)).toEqual([
+    "supports",
+    "context",
+  ]);
+  expect(result.evidence[1].quote).toBe(documents[1].chunks[0].text);
+});
 it("does not turn a pure contradiction into misleading", () => {
   expect(
     resolveSelection(

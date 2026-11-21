@@ -67,7 +67,26 @@ export function VerificationView({ result }: { result: VerificationResult }) {
           Sprawdzane twierdzenie po oddzieleniu poleceń: {result.checkedClaim}
         </p>
       )}
-      <p className="explanation">{result.explanation}</p>
+      <p className="explanation">
+        {result.citationContract === "findings-v1"
+          ? result.explanation.split(/(\[\d+\])/).map((part, i) => {
+              const number = /^\[(\d+)\]$/.exec(part)?.[1];
+              return number &&
+                Number(number) > 0 &&
+                Number(number) <= result.evidence.length ? (
+                <a
+                  key={i}
+                  href={`#evidence-${number}`}
+                  aria-label={`Dowód ${number}`}
+                >
+                  {part}
+                </a>
+              ) : (
+                part
+              );
+            })
+          : result.explanation}
+      </p>
       {result.status !== "completed" && (
         <p className="status-notice">
           To status obsługi zgłoszenia. Nie wydano werdyktu o prawdziwości.
@@ -129,7 +148,11 @@ export function VerificationView({ result }: { result: VerificationResult }) {
           {result.evidence.map((e, index) => {
             const source = sourcesById.get(e.sourceId);
             return (
-              <article className="evidence" key={`${e.chunkId}-${index}`}>
+              <article
+                id={`evidence-${index + 1}`}
+                className="evidence"
+                key={`${e.chunkId}-${index}`}
+              >
                 <div className="evidence-top">
                   <span className={`relation relation-${e.relation}`}>
                     {e.relation === "supports"

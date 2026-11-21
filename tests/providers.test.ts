@@ -18,8 +18,34 @@ const completed = () =>
     ],
   });
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+});
+it("logs bounded schema diagnostics without provider text or input values", async () => {
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      Response.json({
+        status: "incomplete",
+        steps: [],
+        error: "PRIVATE_PROVIDER_TEXT",
+      }),
+    ),
+  );
+  await expect(
+    generate(
+      schema,
+      "instruction",
+      { claim: "PRIVATE_CLAIM" },
+      new AbortController().signal,
+    ),
+  ).rejects.toMatchObject({ code: "INVALID_MODEL_OUTPUT" });
+  const log = warning.mock.calls.map((call) => String(call[0])).join("\n");
+  expect(log).toContain('"responseStatus":"incomplete"');
+  expect(log).toContain('"path":"status"');
+  expect(log).not.toMatch(/PRIVATE_PROVIDER_TEXT|PRIVATE_CLAIM/);
 });
 
 it("retries a transient 503 once without mixing thoughts into the answer", async () => {

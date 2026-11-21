@@ -1,0 +1,663 @@
+{
+  "caseId": "T03",
+  "scope": "Separate diagnostic repeat, excluded from headline comparison",
+  "checkedAt": "2026-11-21T15:12:02.731Z",
+  "diagnostics": [
+    {
+      "basis": {
+        "kind": "confirmed",
+        "establishedPremise": "Organizacja Traktatu Północnoatlantyckiego (NATO) została formalnie utworzona na mocy Traktatu północnoatlantyckiego, podpisanego 4 kwietnia 1949 roku.",
+        "inferenceOrCorrection": "Brak – teza jest zgodna z faktami historycznymi.",
+        "premiseQuoteIds": [
+          "q2",
+          "q14",
+          "q40",
+          "q69"
+        ],
+        "decisiveQuoteIds": [
+          "q2",
+          "q14",
+          "q40",
+          "q69"
+        ]
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "Organizacja Traktatu Północnoatlantyckiego (NATO) została utworzona na mocy Traktatu północnoatlantyckiego, który został podpisany 4 kwietnia 1949 roku w Waszyngtonie.",
+          "quoteIds": [
+            "q2",
+            "q14",
+            "q31",
+            "q40",
+            "q69",
+            "q78"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92",
+        "q93",
+        "q94",
+        "q95",
+        "q96",
+        "q97",
+        "q98",
+        "q99",
+        "q100",
+        "q101",
+        "q102",
+        "q103",
+        "q104",
+        "q105",
+        "q106",
+        "q107",
+        "q108",
+        "q109",
+        "q110",
+        "q111",
+        "q112",
+        "q113",
+        "q114",
+        "q115",
+        "q116",
+        "q117",
+        "q118",
+        "q119",
+        "q120",
+        "q121",
+        "q122",
+        "q123",
+        "q124",
+        "q125",
+        "q126",
+        "q127",
+        "q128",
+        "q129",
+        "q130",
+        "q131",
+        "q132",
+        "q133",
+        "q134",
+        "q135",
+        "q136",
+        "q137",
+        "q138",
+        "q139",
+        "q140",
+        "q141",
+        "q142",
+        "q143",
+        "q144",
+        "q145",
+        "q146",
+        "q147",
+        "q148",
+        "q149",
+        "q150",
+        "q151",
+        "q152",
+        "q153",
+        "q154",
+        "q155",
+        "q156",
+        "q157",
+        "q158",
+        "q159",
+        "q160",
+        "q161",
+        "q162",
+        "q163",
+        "q164",
+        "q165",
+        "q166",
+        "q167",
+        "q168",
+        "q169",
+        "q170",
+        "q171",
+        "q172",
+        "q173",
+        "q174",
+        "q175",
+        "q176",
+        "q177",
+        "q178",
+        "q179",
+        "q180"
+      ],
+      "selectedIds": [
+        "q2",
+        "q14",
+        "q25",
+        "q40",
+        "q98"
+      ],
+      "issues": []
+    }
+  ],
+  "stages": [
+    {
+      "inputSummary": {
+        "claim": "NATO powstało w 1949 roku.",
+        "verificationDate": "2026-11-21"
+      },
+      "response": {
+        "checkable": true,
+        "needsClarification": false,
+        "clarificationKind": "none",
+        "outOfScope": false,
+        "explanation": "Teza dotyczy historycznego faktu powstania NATO, który można zweryfikować w dostępnych źródłach historycznych.",
+        "queries": [
+          "data powstania NATO",
+          "czy NATO powstało w 1949 roku"
+        ],
+        "wikipediaQuery": "NATO",
+        "sejmQuery": null,
+        "arxivQuery": null
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "NATO powstało w 1949 roku.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://pl.wikipedia.org/w/index.php?title=NATO&oldid=80921138"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.wojsko-polskie.pl/dgrsz/articles/aktualnosci-w/75-rocznica-powstania-nato"
+          },
+          {
+            "id": "s3",
+            "url": "https://wszystkoconajwazniejsze.pl/pepites/traktat-polnocnoatlantycki-jak-powstalo-nato"
+          },
+          {
+            "id": "s4",
+            "url": "https://www.gov.pl/web/nato/polska-w-nato-rp"
+          },
+          {
+            "id": "s5",
+            "url": "https://www.youtube.com/watch?v=HhgWDjnW2XE"
+          },
+          {
+            "id": "s6",
+            "url": "https://www.ebsco.com/research-starters/history/north-atlantic-treaty-organization-formed"
+          },
+          {
+            "id": "s7",
+            "url": "https://libguides.snhu.edu/c.php?g=1184812&p=8902757"
+          },
+          {
+            "id": "s8",
+            "url": "https://nato.usmission.gov/about-nato"
+          },
+          {
+            "id": "s9",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Nab%C3%B3j+5%2C56+%C3%97+45+mm&oldid=80991772"
+          },
+          {
+            "id": "s10",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Nab%C3%B3j+7%2C62+%C3%97+51+mm+NATO&oldid=75537439"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "supported",
+        "evidenceConflict": false,
+        "explanation": "Wszystkie dostarczone źródła potwierdzają, że NATO (Organizacja Traktatu Północnoatlantyckiego) powstało w 1949 roku na mocy Traktatu północnoatlantyckiego podpisanego 4 kwietnia 1949 roku w Waszyngtonie.",
+        "limitations": [],
+        "evidence": [
+          {
+            "relation": "supports",
+            "relevance": "Dokument potwierdza, że NATO zostało utworzone na mocy podpisanego 4 kwietnia 1949 roku traktatu północnoatlantyckiego.",
+            "quoteId": "q2"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Źródło wskazuje 4 kwietnia 1949 roku jako datę podpisania deklaracji dwunastu państw, co oznacza powstanie NATO.",
+            "quoteId": "q14"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Źródło podaje wprost, że 24 sierpnia 1949 roku wszedł w życie traktat północnoatlantycki, powołując do życia NATO.",
+            "quoteId": "q25"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Oficjalny portal rządowy potwierdza, że organizacja powstała w 1949 roku.",
+            "quoteId": "q40"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Dokument wskazuje rok 1949 jako datę powstania organizacji (Formed in 1949).",
+            "quoteId": "q98"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "Organizacja Traktatu Północnoatlantyckiego (NATO) została utworzona na mocy Traktatu północnoatlantyckiego, który został podpisany 4 kwietnia 1949 roku w Waszyngtonie.",
+            "quoteIds": [
+              "q2",
+              "q14",
+              "q31",
+              "q40",
+              "q69",
+              "q78"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "confirmed",
+          "establishedPremise": "Organizacja Traktatu Północnoatlantyckiego (NATO) została formalnie utworzona na mocy Traktatu północnoatlantyckiego, podpisanego 4 kwietnia 1949 roku.",
+          "inferenceOrCorrection": "Brak – teza jest zgodna z faktami historycznymi.",
+          "premiseQuoteIds": [
+            "q2",
+            "q14",
+            "q40",
+            "q69"
+          ],
+          "decisiveQuoteIds": [
+            "q2",
+            "q14",
+            "q40",
+            "q69"
+          ]
+        }
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "NATO powstało w 1949 roku.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://pl.wikipedia.org/w/index.php?title=NATO&oldid=80921138"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.wojsko-polskie.pl/dgrsz/articles/aktualnosci-w/75-rocznica-powstania-nato"
+          },
+          {
+            "id": "s3",
+            "url": "https://wszystkoconajwazniejsze.pl/pepites/traktat-polnocnoatlantycki-jak-powstalo-nato"
+          },
+          {
+            "id": "s4",
+            "url": "https://www.gov.pl/web/nato/polska-w-nato-rp"
+          },
+          {
+            "id": "s5",
+            "url": "https://www.youtube.com/watch?v=HhgWDjnW2XE"
+          },
+          {
+            "id": "s6",
+            "url": "https://www.ebsco.com/research-starters/history/north-atlantic-treaty-organization-formed"
+          },
+          {
+            "id": "s7",
+            "url": "https://libguides.snhu.edu/c.php?g=1184812&p=8902757"
+          },
+          {
+            "id": "s8",
+            "url": "https://nato.usmission.gov/about-nato"
+          },
+          {
+            "id": "s9",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Nab%C3%B3j+5%2C56+%C3%97+45+mm&oldid=80991772"
+          },
+          {
+            "id": "s10",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Nab%C3%B3j+7%2C62+%C3%97+51+mm+NATO&oldid=75537439"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "approved": true,
+        "reason": "Ocena jest poprawna i dobrze udokumentowana. Źródła potwierdzają, że NATO powstało w 1949 roku na mocy Traktatu Północnoatlantyckiego podpisanego 4 kwietnia 1949 roku.",
+        "findingChecks": [
+          {
+            "findingId": "f1",
+            "supported": true,
+            "atomic": true
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "verdict": "supported",
+    "evidenceConflict": false,
+    "explanation": "Organizacja Traktatu Północnoatlantyckiego (NATO) została utworzona na mocy Traktatu północnoatlantyckiego, który został podpisany 4 kwietnia 1949 roku w Waszyngtonie. [1] [2] [4]",
+    "limitations": [],
+    "evidence": [
+      {
+        "sourceId": "s1",
+        "chunkId": "s1:p17",
+        "quote": "Organizacja Traktatu Północnoatlantyckiego (ang. North Atlantic Treaty Organization – NATO; fr. Organisation du traité de l’Atlantique nord – OTAN, zwyczajowo NATO lub Sojusz Północnoatlantycki) – międzynarodowa organizacja polityczno-wojskowa utworzona na mocy podpisanego 4 kwietnia 1949 traktatu północnoatlantyckiego, obowiązującego od 24 sierpnia 1949.",
+        "id": "q2",
+        "relation": "supports",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s2",
+        "chunkId": "s2:p0",
+        "quote": "75 lat temu powstała Organizacja Traktatu Północnoatlantyckiego (pot. Sojusz Północnoatlantycki, ang. North Atlantic Treaty Organization – NATO).  4 kwietnia 1949r w Waszyngtonie podpisana została deklaracja dwunastu państw m.in. Stany Zjednoczone, Kanada, Wielka Brytania, Francja, Belgia i Włochy.  \nPaństwa wchodzące w skład #sojusz deklarowały, że będą walczyć o wolność , bezpieczeństwo , wspólne dziedzictwo cywilizacyjne państw członkowskich oparte na zasadach demokracji, indywidualnej wolności i poszanowania prawa.",
+        "id": "q14",
+        "relation": "supports",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s3",
+        "chunkId": "s3:p1",
+        "quote": "**24 sierpnia 1949 roku wszedł w życie traktat północnoatlantycki, zatwierdzony wcześniej przez dwanaście państw Europy i Ameryki Północnej. Tym samym powołana do życia została Organizacja Traktatu Północnoatlantyckiego (NATO). W przyspieszonym tempie rodził się międzynarodowy sojusz, dziś odgrywający jeszcze większą rolę niż w chwili powstania.**",
+        "id": "q25",
+        "relation": "supports",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s4",
+        "chunkId": "s4:p1",
+        "quote": "Organizacja Traktatu Północnoatlantyckiego (pot. Sojusz Północnoatlantycki, ang. North Atlantic Treaty Organization – NATO) powstała w 1949 r. na mocy podpisanego w Waszyngtonie przez 12 państw Traktatu Północnoatlantyckiego. Szczególną rolę w funkcjonowaniu NATO pełni, zapisana w art. 5 Traktatu, klauzula wzajemnej obrony. Przewiduje ona, że atak na jednego lub więcej sojuszników będzie oznaczał atak na wszystkich członków Sojuszu. Obecnie w skład NATO wchodzą 32 państwa.",
+        "id": "q40",
+        "relation": "supports",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s8",
+        "chunkId": "s8:p9",
+        "quote": "Formed in 1949 with the signing of the Washington Treaty, NATO is a security alliance of 32 countries from North America and Europe. NATO’s fundamental goal is to safeguard the Allies’ freedom and security by political and military means. NATO remains the principal security instrument of the transatlantic community and expression of its common democratic values. It is the practical means through which the security of North America and Europe are permanently tied together. NATO enlargement has furthered the U.S. goal of a Europe whole, free, and at peace.",
+        "id": "q98",
+        "relation": "supports",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      }
+    ],
+    "findings": [
+      {
+        "id": "f1",
+        "text": "Organizacja Traktatu Północnoatlantyckiego (NATO) została utworzona na mocy Traktatu północnoatlantyckiego, który został podpisany 4 kwietnia 1949 roku w Waszyngtonie.",
+        "evidenceIds": [
+          "q2",
+          "q14",
+          "q40"
+        ]
+      }
+    ],
+    "citationContract": "findings-v1",
+    "status": "completed",
+    "requestId": "diagnostic-T03",
+    "claim": "NATO powstało w 1949 roku.",
+    "statedAt": null,
+    "checkedAt": "2026-11-21T15:11:53.915Z",
+    "mode": "live",
+    "retrieval": [
+      {
+        "provider": "sejm",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "arxiv",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "corpus",
+        "documents": 0,
+        "status": "empty"
+      },
+      {
+        "provider": "wikipedia",
+        "documents": 3,
+        "status": "ok"
+      },
+      {
+        "provider": "web",
+        "documents": 12,
+        "status": "ok"
+      }
+    ],
+    "coverage": {
+      "citedSources": 5,
+      "publisherGroups": 5,
+      "reviewedSources": 10,
+      "minimumGroups": 2
+    },
+    "sources": [
+      {
+        "id": "s1",
+        "title": "NATO",
+        "url": "https://pl.wikipedia.org/w/index.php?title=NATO&oldid=80921138",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "wikipedia",
+        "sourceType": "encyclopedia",
+        "contentScope": "text",
+        "publisherGroup": "wikipedia.org",
+        "canonicalUrl": "https://pl.wikipedia.org/wiki/NATO",
+        "notes": [
+          "Artykuł encyklopedyczny, wersja 80921138. Weryfikuj również źródła pierwotne wskazane w artykule."
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "75 rocznica powstania NATO - DGRSZ",
+        "url": "https://www.wojsko-polskie.pl/dgrsz/articles/aktualnosci-w/75-rocznica-powstania-nato",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "wojsko-polskie.pl",
+        "canonicalUrl": "https://www.wojsko-polskie.pl/dgrsz/articles/aktualnosci-w/75-rocznica-powstania-nato",
+        "notes": []
+      },
+      {
+        "id": "s3",
+        "title": "Traktat północnoatlantycki – jak powstało NATO?",
+        "url": "https://wszystkoconajwazniejsze.pl/pepites/traktat-polnocnoatlantycki-jak-powstalo-nato",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "wszystkoconajwazniejsze.pl",
+        "canonicalUrl": "https://wszystkoconajwazniejsze.pl/pepites/traktat-polnocnoatlantycki-jak-powstalo-nato",
+        "notes": []
+      },
+      {
+        "id": "s4",
+        "title": "Polska w NATO - Polska w NATO - Portal Gov.pl",
+        "url": "https://www.gov.pl/web/nato/polska-w-nato-rp",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "official",
+        "contentScope": "text",
+        "publisherGroup": "gov.pl",
+        "canonicalUrl": "https://www.gov.pl/web/nato/polska-w-nato-rp",
+        "notes": []
+      },
+      {
+        "id": "s5",
+        "title": "Rocznica powstania NATO",
+        "url": "https://www.youtube.com/watch?v=HhgWDjnW2XE",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "youtube.com",
+        "canonicalUrl": "https://www.youtube.com/watch?v=HhgWDjnW2XE",
+        "notes": []
+      },
+      {
+        "id": "s6",
+        "title": "North Atlantic Treaty Organization Is Formed | History | Research Starters | EBSCOhost",
+        "url": "https://www.ebsco.com/research-starters/history/north-atlantic-treaty-organization-formed",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "ebsco.com",
+        "canonicalUrl": "https://www.ebsco.com/research-starters/history/north-atlantic-treaty-organization-formed",
+        "notes": []
+      },
+      {
+        "id": "s7",
+        "title": "Research Topic List: Founding of NATO - HIS 100 - Perspectives in History - Research Guides at Southern New Hampshire University",
+        "url": "https://libguides.snhu.edu/c.php?g=1184812&p=8902757",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "snhu.edu",
+        "canonicalUrl": "https://libguides.snhu.edu/c.php?g=1184812&p=8902757",
+        "notes": []
+      },
+      {
+        "id": "s8",
+        "title": "About NATO - U.S. Mission to the North Atlantic Treaty Organization",
+        "url": "https://nato.usmission.gov/about-nato",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "usmission.gov",
+        "canonicalUrl": "https://nato.usmission.gov/about-nato",
+        "notes": []
+      },
+      {
+        "id": "s9",
+        "title": "Nabój 5,56 × 45 mm",
+        "url": "https://pl.wikipedia.org/w/index.php?title=Nab%C3%B3j+5%2C56+%C3%97+45+mm&oldid=80991772",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "wikipedia",
+        "sourceType": "encyclopedia",
+        "contentScope": "text",
+        "publisherGroup": "wikipedia.org",
+        "canonicalUrl": "https://pl.wikipedia.org/wiki/Nab%C3%B3j_5%2C56_%C3%97_45_mm",
+        "notes": [
+          "Artykuł encyklopedyczny, wersja 80991772. Weryfikuj również źródła pierwotne wskazane w artykule."
+        ]
+      },
+      {
+        "id": "s10",
+        "title": "Nabój 7,62 × 51 mm NATO",
+        "url": "https://pl.wikipedia.org/w/index.php?title=Nab%C3%B3j+7%2C62+%C3%97+51+mm+NATO&oldid=75537439",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:57.724Z",
+        "provider": "wikipedia",
+        "sourceType": "encyclopedia",
+        "contentScope": "text",
+        "publisherGroup": "wikipedia.org",
+        "canonicalUrl": "https://pl.wikipedia.org/wiki/Nab%C3%B3j_7%2C62_%C3%97_51_mm_NATO",
+        "notes": [
+          "Artykuł encyklopedyczny, wersja 75537439. Weryfikuj również źródła pierwotne wskazane w artykule."
+        ]
+      }
+    ]
+  },
+  "repositoryExport": "Source catalogs omitted; full local diagnostics remain under .runtime. Published result quotations and structural validation traces retained."
+}

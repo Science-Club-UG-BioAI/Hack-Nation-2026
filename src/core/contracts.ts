@@ -56,11 +56,17 @@ export const planSchema = z.object({
   arxivQuery: z.string().min(3).max(150).nullable().default(null),
 });
 export const evidenceSchema = z.object({
+  id: z.string().min(1).optional(),
   sourceId: z.string().min(1),
   chunkId: z.string().min(1),
   quote: z.string().trim().min(12).max(1000),
   relation: z.enum(["supports", "contradicts", "context"]),
   relevance: z.string().min(1).max(700),
+});
+export const findingSchema = z.object({
+  id: z.string().min(1).max(40),
+  text: z.string().trim().min(1).max(700),
+  evidenceIds: z.array(z.string().min(1)).min(1).max(10),
 });
 export const assessmentSchema = z.object({
   verdict: verdictSchema,
@@ -68,10 +74,23 @@ export const assessmentSchema = z.object({
   explanation: z.string().min(1).max(2500),
   limitations: z.array(z.string().min(1).max(600)).max(8),
   evidence: z.array(evidenceSchema).max(10),
+  // Optional only for historical results/demo compatibility. Live publication
+  // requires the inventory, including an explicit empty list for abstention.
+  findings: z.array(findingSchema).max(12).optional(),
 });
 export const auditSchema = z.object({
   approved: z.boolean(),
   reason: z.string().min(1).max(1200),
+  findingChecks: z
+    .array(
+      z.object({
+        findingId: z.string().min(1),
+        supported: z.boolean(),
+        atomic: z.boolean(),
+      }),
+    )
+    .max(12)
+    .default([]),
 });
 export type VerifyInput = z.infer<typeof verifyInputSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
@@ -106,6 +125,7 @@ export type Source = {
 } & SourceMetadata;
 export type Document = Source & { chunks: { id: string; text: string }[] };
 type ResultBase = {
+  citationContract?: "findings-v1";
   requestId: string;
   claim: string;
   checkedClaim?: string;

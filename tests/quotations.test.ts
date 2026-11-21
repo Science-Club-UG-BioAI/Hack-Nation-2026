@@ -1,5 +1,9 @@
 import { expect, it } from "vitest";
-import { quotationCatalog, resolveSelection } from "@/core/quotations";
+import {
+  quotationCatalog,
+  resolveSelection,
+  reasonedSelectionSchema,
+} from "@/core/quotations";
 import type { Document } from "@/core/contracts";
 
 const text =
@@ -83,4 +87,252 @@ it("bounds passages and preserves substrings for long text and long sentences", 
     expect(quote.quote.length).toBeGreaterThanOrEqual(12);
     expect(long.includes(quote.quote)).toBe(true);
   }
+});
+
+const publication = {
+  ...selected,
+  findings: [
+    {
+      id: "f1",
+      text: "Polska przystąpiła do NATO 12 marca 1999 roku.",
+      quoteIds: ["q1"],
+    },
+  ],
+};
+it("publishes only evidence-linked findings, never free-form model prose", () => {
+  const result = resolveSelection(
+    {
+      ...publication,
+      explanation: "UNCITED fact in explanation",
+      limitations: ["UNCITED fact in caveat"],
+      evidence: [
+        { ...selected.evidence[0], relevance: "UNCITED fact in relevance" },
+      ],
+    },
+    quotationCatalog(docs),
+    docs,
+    true,
+  );
+  expect(result.findings).toEqual([
+    { id: "f1", text: publication.findings[0].text, evidenceIds: ["q1"] },
+  ]);
+  expect(result.explanation).toBe(`${publication.findings[0].text} [1]`);
+  expect(result.evidence[0].id).toBe("q1");
+  expect(JSON.stringify(result)).not.toContain("UNCITED");
+});
+it.each(
+  [
+    undefined,
+    [],
+    [{ id: "f1", text: "An unsupported fact.", quoteIds: [] }],
+    [{ id: "f1", text: "An unsupported fact.", quoteIds: ["q999"] }],
+    [{ id: "f1", text: "A fact.", quoteIds: ["q1", "q1"] }],
+    [
+      publication.findings[0],
+      { id: "f1", text: "Another fact.", quoteIds: ["q1"] },
+    ],
+    [publication.findings[0], { ...publication.findings[0], id: "f2" }],
+  ].map((findings) => ({ findings })),
+)(
+  "rejects missing, empty, dangling and duplicated publication mappings: %j",
+  ({ findings }) => {
+    expect(() =>
+      resolveSelection(
+        { ...publication, findings },
+        quotationCatalog(docs),
+        docs,
+        true,
+      ),
+    ).toThrow();
+  },
+);
+it("materializes a quotation explicitly selected by a finding, without inventing its relation", () => {
+  const extra = {
+    ...docs[0],
+    id: "s2",
+    chunks: [{ id: "s2:p0", text: "An unrelated event happened in 2004." }],
+  };
+  const documents = [...docs, extra];
+  const result = resolveSelection(
+    {
+      ...publication,
+      findings: [{ ...publication.findings[0], quoteIds: ["q2"] }],
+    },
+    quotationCatalog(documents),
+    documents,
+    true,
+  );
+  expect(result.evidence[1]).toMatchObject({
+    id: "q2",
+    quote: extra.chunks[0].text,
+    relation: "context",
+  });
+  expect(result.findings?.[0].evidenceIds).toEqual(["q2"]);
+});
+it("allows multiple distinct findings to share a quotation without merging their identities", () => {
+  const result = resolveSelection(
+    {
+      ...publication,
+      findings: [
+        publication.findings[0],
+        {
+          id: "f2",
+          text: "Drugie ustalenie wymagające osobnego audytu znaczenia.",
+          quoteIds: ["q1"],
+        },
+      ],
+    },
+    quotationCatalog(docs),
+    docs,
+    true,
+  );
+  expect(result.findings).toHaveLength(2);
+  expect(result.explanation.match(/\[1\]/g)).toHaveLength(2);
+});
+it("preserves all selected references and the whole finding for semantic audit", () => {
+  const documents = [
+    ...docs,
+    {
+      ...docs[0],
+      id: "s2",
+      chunks: [
+        {
+          id: "s2:p0",
+          text: "An additional historical record with another date.",
+        },
+      ],
+    },
+  ];
+  const result = resolveSelection(
+    {
+      ...publication,
+      findings: [{ ...publication.findings[0], quoteIds: ["q1", "q2"] }],
+    },
+    quotationCatalog(documents),
+    documents,
+    true,
+  );
+  expect(result.findings).toEqual([
+    { id: "f1", text: publication.findings[0].text, evidenceIds: ["q1", "q2"] },
+  ]);
+  expect(result.evidence).toHaveLength(2);
+  expect(result.explanation).toBe(`${publication.findings[0].text} [1] [2]`);
+  expect(() =>
+    resolveSelection(
+      {
+        ...publication,
+        findings: [{ ...publication.findings[0], quoteIds: ["q1", "q999"] }],
+      },
+      quotationCatalog(documents),
+      documents,
+      true,
+    ),
+  ).toThrow();
+});
+it("never promotes finding references to direct support without an explicit relation", () => {
+  expect(() =>
+    resolveSelection(
+      { ...publication, evidence: [] },
+      quotationCatalog(docs),
+      docs,
+      true,
+    ),
+  ).toThrow();
+});
+it("bounds the union of explicit and finding selections, including references selected only once", () => {
+  const documents = Array.from({ length: 11 }, (_, i) => ({
+    ...docs[0],
+    id: `s${i + 1}`,
+    chunks: [
+      {
+        id: `s${i + 1}:p0`,
+        text: `Distinct evidence passage number ${i + 1} describing a historical event.`,
+      },
+    ],
+  }));
+  const catalog = quotationCatalog(documents);
+  expect(() =>
+    resolveSelection(
+      {
+        ...publication,
+        findings: [
+          {
+            id: "f1",
+            text: "First assertion.",
+            quoteIds: [...catalog.quotes.keys()].slice(0, 6),
+          },
+          {
+            id: "f2",
+            text: "Second assertion.",
+            quoteIds: [...catalog.quotes.keys()].slice(6),
+          },
+        ],
+      },
+      catalog,
+      documents,
+      true,
+    ),
+  ).toThrow();
+});
+it("does not turn invented citations in an unresolved response into successful abstention", () => {
+  expect(() =>
+    resolveSelection(
+      {
+        ...selected,
+        findings: [],
+        evidence: [{ ...selected.evidence[0], quoteId: "invented" }],
+        basis: {
+          kind: "unresolved",
+          establishedPremise: "",
+          inferenceOrCorrection: "",
+          premiseQuoteIds: [],
+          decisiveQuoteIds: [],
+        },
+      },
+      quotationCatalog(docs),
+      docs,
+      true,
+    ),
+  ).toThrow();
+});
+it("does not require factual prose for an unresolved decision with no findings", () => {
+  const result = resolveSelection(
+    {
+      ...selected,
+      findings: [],
+      basis: {
+        kind: "unresolved",
+        establishedPremise: "Unrelated search match",
+        inferenceOrCorrection: "No adequate evidence",
+        premiseQuoteIds: ["q1"],
+        decisiveQuoteIds: [],
+      },
+    },
+    quotationCatalog(docs),
+    docs,
+    true,
+  );
+  expect(result).toMatchObject({
+    verdict: "insufficient",
+    findings: [],
+    evidence: [],
+  });
+  expect(result.explanation).not.toContain("Unrelated");
+});
+it("requires a finding inventory in live generation but can read legacy saved selections", () => {
+  expect(
+    reasonedSelectionSchema.safeParse({
+      ...selected,
+      basis: {
+        kind: "confirmed",
+        establishedPremise: "",
+        inferenceOrCorrection: "",
+        premiseQuoteIds: [],
+        decisiveQuoteIds: ["q1"],
+      },
+    }).success,
+  ).toBe(false);
+  expect(
+    resolveSelection(selected, quotationCatalog(docs), docs).findings,
+  ).toBeUndefined();
 });

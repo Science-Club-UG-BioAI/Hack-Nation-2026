@@ -55,6 +55,7 @@ export async function verify(
     instruction: string,
     payload: unknown,
     operationSignal: AbortSignal,
+    outputTokenLimit?: number,
   ): Promise<T> => {
     const start = Date.now();
     const reserveMs =
@@ -73,11 +74,12 @@ export async function verify(
       return await generate(schema, instruction, payload, operationSignal, {
         deadlineAt: operationDeadline,
         maxOutputTokens:
-          currentStage === "planning"
+          outputTokenLimit ??
+          (currentStage === "planning"
             ? 1600
             : currentStage === "auditing"
               ? 1600
-              : 4500,
+              : 4500),
       });
     } finally {
       console.info(
@@ -137,6 +139,8 @@ export async function verify(
     signal.throwIfAborted();
     return {
       ...assessment,
+      citationContract: "findings-v1",
+      findings: assessment.findings ?? [],
       limitations: [...assessment.limitations, ...securityWarnings],
       ...(guarded.removed ? { checkedClaim: analysisInput.claim } : {}),
       status: "completed",
@@ -201,10 +205,21 @@ export async function verify(
     throw invalidOutput([
       "Search queries must not contain model-control commands.",
     ]);
-  if (plan.outOfScope) return noDecision("out_of_scope", plan.explanation);
+  if (plan.outOfScope)
+    return noDecision(
+      "out_of_scope",
+      "To zgłoszenie wykracza poza tekstową weryfikację publicznie dostępnych informacji. Podaj pojedynczą tezę do sprawdzenia.",
+    );
   if (plan.needsClarification)
-    return noDecision("needs_clarification", plan.explanation);
-  if (!plan.checkable) return simple("not_checkable", plan.explanation);
+    return noDecision(
+      "needs_clarification",
+      "Doprecyzuj podmiot, okres i zakres twierdzenia. Nie możemy jednoznacznie ustalić, co mamy sprawdzić.",
+    );
+  if (!plan.checkable)
+    return simple(
+      "not_checkable",
+      "Wypowiedź została rozpoznana jako opinia lub nierozstrzygalna prognoza. Nie oceniamy jej jako prawdziwej ani fałszywej.",
+    );
   if (plan.queries.length !== 2 || plan.queries[0] === plan.queries[1])
     throw invalidOutput();
   stage("searching");
@@ -246,6 +261,9 @@ export async function verify(
   };
   const instruction =
     ASSESS_PROMPT +
+    ` ADEKWATNOŚĆ: podobna nazwa, słowo kluczowe lub zbieżna data nie oznaczają tego samego obiektu i zdarzenia. Materiał o innym podmiocie nie potwierdza ani nie obala tezy. Jeśli nie ma adekwatnego dowodu, zwróć basis.kind=unresolved, findings=[], evidence=[], premiseQuoteIds=[] i decisiveQuoteIds=[]; nie opisuj niepowiązanych zdarzeń ani nie twierdź, że wskazany podmiot lub zdarzenie nie istnieje. ` +
+    ` PUBLIKACJA: findings to pełna lista ustaleń faktograficznych odpowiedzi, także korekt i istotnych zastrzeżeń. Każdy element: unikalne id, jedno atomowe ustalenie w text, quoteIds z dostarczonego katalogu quotations. Rozdziel niezależne fakty na osobne elementy; każdy cytat musi uzasadniać całe przypisane ustalenie. Nie powtarzaj ustaleń, nie przypisuj cytatu tylko dlatego, że dotyczy podobnego tematu. Przy sprzeczności opisz osobno, co podaje każde źródło, bez przyjmowania jego twierdzenia za ustalony fakt. Gdy nie ma ustaleń, findings=[]. Pola explanation, limitations i relevance nie będą publikowane; wszystkie fakty potrzebne użytkownikowi umieść wyłącznie w findings. ` +
+    ` Oszczędzaj szczegóły: ustalenia mają rozstrzygnąć tezę, a nie opisywać cały temat. Dla tezy mieszanej podaj osobno potwierdzoną przesłankę i korektę błędnego wniosku; każde ustalenie opatrz tylko cytatami dowodzącymi go w całości. Serwer dołącza dokładny tekst każdego quoteId wskazanego w findings. W evidence określ jawne relacje cytatów do tezy; brak określonej relacji oznacza jedynie context, nigdy automatyczne potwierdzenie lub zaprzeczenie. ` +
     ` Dąż do 3–5 trafnych dowodów z różnych źródeł, uwzględniając kontrdowody. supported/refuted wymaga co najmniej dwóch różnych publisherGroup z bezpośrednim dowodem w tym samym kierunku. Nie dodawaj nieistotnych cytatów, aby osiągnąć liczbę. Kilka stron lub cytatów jednego wydawcy nie jest niezależnym potwierdzeniem. contentScope=metadata to wyłącznie metadane, nie treść przepisów; abstract to wyłącznie abstrakt, nie pełna praca ani konsensus naukowy. Respektuj notes i zakres pobranego materiału. Preferuj źródła pierwotne, ale oceniaj adekwatność, nie samą etykietę API.`;
   let assessment: Assessment;
   let draft: unknown;
@@ -253,10 +271,18 @@ export async function verify(
   stage("assessing");
   try {
     draft = await model(reasonedSelectionSchema, instruction, payload, signal);
-    assessment = resolveSelection(draft, catalog, documents);
+    assessment = resolveSelection(draft, catalog, documents, true);
   } catch (error) {
     if (!(error instanceof AppError) || error.code !== "INVALID_MODEL_OUTPUT")
       throw error;
+    console.warn(
+      JSON.stringify({
+        requestId,
+        event: "assessment_validation_failed",
+        validationIssues:
+          error instanceof InvalidModelOutput ? error.validationIssues : [],
+      }),
+    );
     if (deadlineAt - Date.now() < 18_000) throw error;
     // At most one repair, sharing the original deadline. No fabricated replacement citations.
     stage("repairing_citations");
@@ -278,6 +304,7 @@ export async function verify(
       ),
       catalog,
       documents,
+      true,
     );
   }
   // An empty evidence selection after successful retrieval can safely end in
@@ -322,6 +349,7 @@ export async function verify(
       ),
       catalog,
       documents,
+      true,
     );
   }
   assessment = requireCorroboration(assessment, documents);
@@ -329,19 +357,71 @@ export async function verify(
   console.info(
     JSON.stringify({ requestId, proposedVerdict: assessment.verdict }),
   );
-  const audit = await model(
-    auditSchema,
+  const auditInstruction =
     AUDIT_PROMPT +
-      " Sprawdź wszystkie cytaty i nie przekraczaj contentScope: metadane nie dowodzą treści przepisów, abstrakt nie dowodzi naukowego konsensusu. Sprawdź, czy źródła nie są przedrukami tej samej informacji.",
-    { ...analysisInput, documents, retrievalWarnings, assessment },
-    signal,
-  );
-  if (!audit.approved) {
+    " Brak wzmianki nie jest dowodem fałszu. Nie wolno żądać refuted tylko dlatego, że wyszukiwarka znalazła inne zdarzenie o podobnej nazwie lub dacie. Sprawdź tożsamość obiektu i zdarzenia; nie zakładaj fikcyjności nieudokumentowanego podmiotu. Dla unresolved bez adekwatnych źródeł insufficient jest właściwe. " +
+    " Dla KAŻDEGO findings zwróć dokładnie jeden findingChecks z jego findingId. supported=true tylko jeśli przypisane evidenceIds (nie inne cytaty) uzasadniają całe ustalenie, jego liczby, podmiot, okres i negacje. atomic=true tylko dla pojedynczego ustalenia, bez doklejonych niezależnych faktów. Sprawdź również kompletność: ustalenia mają wyjaśniać ocenę, nie pomijać istotnego kontekstu. Każdy nieuzasadniony lub nieatomowy element wymaga approved=false. " +
+    " Sprawdź wszystkie cytaty i nie przekraczaj contentScope: metadane nie dowodzą treści przepisów, abstrakt nie dowodzi naukowego konsensusu. Sprawdź, czy źródła nie są przedrukami tej samej informacji. Opisz reason zwięźle w najwyżej dwóch zdaniach.";
+  const auditPayload = {
+    ...analysisInput,
+    documents,
+    retrievalWarnings,
+    assessment,
+  };
+  let audit: Awaited<ReturnType<typeof auditSchema.parseAsync>>;
+  try {
+    audit = await model(auditSchema, auditInstruction, auditPayload, signal);
+  } catch (error) {
+    // Retry only an explicitly unfinished provider response, never an adverse
+    // semantic judgment. Both attempts share the original deadline; no partial
+    // JSON or first-attempt findings are accepted as an audit.
+    if (
+      !(error instanceof InvalidModelOutput) ||
+      !error.validationIssues.includes("interaction_incomplete") ||
+      deadlineAt - Date.now() < 10_000
+    )
+      throw error;
+    console.warn(
+      JSON.stringify({ requestId, event: "audit_incomplete_retry" }),
+    );
+    audit = await model(
+      auditSchema,
+      auditInstruction,
+      auditPayload,
+      signal,
+      3200,
+    );
+  }
+
+  const findings = assessment.findings ?? [];
+  const checks = audit.findingChecks ?? [];
+  const findingsApproved =
+    checks.length === findings.length &&
+    new Set(checks.map((c) => c.findingId)).size === checks.length &&
+    findings.every((f) =>
+      checks.some((c) => c.findingId === f.id && c.supported && c.atomic),
+    );
+  if (!audit.approved || !findingsApproved) {
+    console.warn(
+      JSON.stringify({
+        requestId,
+        event: "semantic_audit_rejected",
+        approved: audit.approved,
+        findingsApproved,
+        findings: findings.length,
+        checks: checks.length,
+        unsupported: checks.filter((c) => !c.supported).length,
+        nonatomic: checks.filter((c) => !c.atomic).length,
+      }),
+    );
     return noDecision(
       "unable_to_verify",
       "Kontrola zgodności dowodów z wnioskiem nie pozwoliła ukończyć sprawdzenia. Nie publikujemy niezatwierdzonej oceny.",
       documents,
-      [audit.reason, ...retrievalWarnings],
+      [
+        "Nie potwierdzono zgodności wszystkich ustaleń i przypisanych cytatów z proponowaną oceną.",
+        ...retrievalWarnings,
+      ],
     );
   }
   return finish(

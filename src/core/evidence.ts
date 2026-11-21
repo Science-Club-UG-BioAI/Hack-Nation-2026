@@ -206,7 +206,8 @@ export function requireCorroboration(
     ...assessment,
     verdict: "insufficient",
     explanation:
-      "Znaleziono dowody odnoszące się do tezy, ale zabrakło potwierdzenia oceny w co najmniej dwóch różnych grupach źródeł. Poniżej pokazujemy dostępne materiały.",
+      "Znaleziono dowody odnoszące się do tezy, ale zabrakło potwierdzenia oceny w co najmniej dwóch różnych grupach źródeł. Poniżej pokazujemy dostępne materiały.\n\n" +
+      assessment.explanation,
     limitations: [
       ...assessment.limitations,
       "Ograniczona podstawa oceny: kilka cytatów lub stron jednego wydawcy nie stanowi dodatkowego potwierdzenia. Różne domeny również nie gwarantują niezależności informacji.",

@@ -1,0 +1,961 @@
+{
+  "caseId": "M01",
+  "scope": "Separate diagnostic repeat, excluded from headline comparison",
+  "checkedAt": "2026-11-21T15:08:16.419Z",
+  "diagnostics": [
+    {
+      "basis": {
+        "kind": "mixed_context",
+        "establishedPremise": "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+        "inferenceOrCorrection": "Przystąpienie do Unii Europejskiej nie jest tożsame z natychmiastowym przyjęciem waluty euro; Polska pozostaje poza strefą euro i używa własnej waluty.",
+        "premiseQuoteIds": [
+          "q4"
+        ],
+        "decisiveQuoteIds": [
+          "q87",
+          "q123"
+        ]
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+          "quoteIds": [
+            "q4"
+          ]
+        },
+        {
+          "id": "f2",
+          "text": "Polska nie używa euro jako oficjalnej waluty i wciąż posługuje się własną walutą krajową.",
+          "quoteIds": [
+            "q87",
+            "q123"
+          ]
+        },
+        {
+          "id": "f3",
+          "text": "Polska nie spełnia obecnie kryteriów konwergencji, które są wymagane do wejścia do strefy euro.",
+          "quoteIds": [
+            "q140",
+            "q141"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92",
+        "q93",
+        "q94",
+        "q95",
+        "q96",
+        "q97",
+        "q98",
+        "q99",
+        "q100",
+        "q101",
+        "q102",
+        "q103",
+        "q104",
+        "q105",
+        "q106",
+        "q107",
+        "q108",
+        "q109",
+        "q110",
+        "q111",
+        "q112",
+        "q113",
+        "q114",
+        "q115",
+        "q116",
+        "q117",
+        "q118",
+        "q119",
+        "q120",
+        "q121",
+        "q122",
+        "q123",
+        "q124",
+        "q125",
+        "q126",
+        "q127",
+        "q128",
+        "q129",
+        "q130",
+        "q131",
+        "q132",
+        "q133",
+        "q134",
+        "q135",
+        "q136",
+        "q137",
+        "q138",
+        "q139",
+        "q140",
+        "q141",
+        "q142",
+        "q143",
+        "q144",
+        "q145",
+        "q146"
+      ],
+      "selectedIds": [
+        "q4",
+        "q87",
+        "q140",
+        "q123"
+      ],
+      "issues": [
+        "Findings require unique IDs/text and unique references to selected evidence, not just available quotations."
+      ]
+    },
+    {
+      "basis": {
+        "kind": "mixed_context",
+        "establishedPremise": "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+        "inferenceOrCorrection": "Przystąpienie do Unii Europejskiej nie oznacza automatycznego przyjęcia wspólnej waluty euro; Polska zachowała własną walutę i nie spełnia warunków konwergencji niezbędnych do wejścia do strefy euro.",
+        "premiseQuoteIds": [
+          "q4"
+        ],
+        "decisiveQuoteIds": [
+          "q87",
+          "q140"
+        ]
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "Polska stała się pełnoprawnym członkiem Unii Europejskiej 1 maja 2004 roku.",
+          "quoteIds": [
+            "q4"
+          ]
+        },
+        {
+          "id": "f2",
+          "text": "Polska nie używa euro jako oficjalnej waluty, lecz posługuje się własną walutą krajową.",
+          "quoteIds": [
+            "q87"
+          ]
+        },
+        {
+          "id": "f3",
+          "text": "Polska nie spełnia obecnie czterech głównych kryteriów konwergencji niezbędnych do przyjęcia waluty euro.",
+          "quoteIds": [
+            "q140",
+            "q141"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92",
+        "q93",
+        "q94",
+        "q95",
+        "q96",
+        "q97",
+        "q98",
+        "q99",
+        "q100",
+        "q101",
+        "q102",
+        "q103",
+        "q104",
+        "q105",
+        "q106",
+        "q107",
+        "q108",
+        "q109",
+        "q110",
+        "q111",
+        "q112",
+        "q113",
+        "q114",
+        "q115",
+        "q116",
+        "q117",
+        "q118",
+        "q119",
+        "q120",
+        "q121",
+        "q122",
+        "q123",
+        "q124",
+        "q125",
+        "q126",
+        "q127",
+        "q128",
+        "q129",
+        "q130",
+        "q131",
+        "q132",
+        "q133",
+        "q134",
+        "q135",
+        "q136",
+        "q137",
+        "q138",
+        "q139",
+        "q140",
+        "q141",
+        "q142",
+        "q143",
+        "q144",
+        "q145",
+        "q146"
+      ],
+      "selectedIds": [
+        "q4",
+        "q87",
+        "q140",
+        "q141"
+      ],
+      "issues": []
+    }
+  ],
+  "stages": [
+    {
+      "inputSummary": {
+        "claim": "Polska jest w Unii Europejskiej od 2004 roku, więc od 2004 roku obowiązującą w Polsce walutą jest euro.",
+        "verificationDate": "2026-11-21"
+      },
+      "response": {
+        "checkable": true,
+        "needsClarification": false,
+        "clarificationKind": "none",
+        "outOfScope": false,
+        "explanation": "Teza zawiera dwa stwierdzenia dotyczące faktów historycznych i prawnych: datę przystąpienia Polski do UE oraz moment wprowadzenia waluty euro w Polsce. Obydwa te elementy są weryfikowalne w oficjalnych dokumentach i aktach prawnych.",
+        "queries": [
+          "data przystąpienia Polski do Unii Europejskiej",
+          "czy Polska przyjęła euro jako walutę"
+        ],
+        "wikipediaQuery": "Polska w Unii Europejskiej",
+        "sejmQuery": "o przystąpieniu Rzeczypospolitej Polskiej do Unii Europejskiej",
+        "arxivQuery": null
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Polska jest w Unii Europejskiej od 2004 roku, więc od 2004 roku obowiązującą w Polsce walutą jest euro.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://www.senat.gov.pl/aktualnoscilista/art,14725,18-rocznica-przystapienia-polski-do-unii-europejskiej.html"
+          },
+          {
+            "id": "s2",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Polska+w+Unii+Europejskiej&oldid=81244137"
+          },
+          {
+            "id": "s3",
+            "url": "https://historiadladzieci.pl/w-ktorym-roku-polska-weszla-do-unii"
+          },
+          {
+            "id": "s4",
+            "url": "https://wgospodarce.pl/informacje/111270-18-rocznica-przystapienia-polski-do-unii-europejskiej"
+          },
+          {
+            "id": "s5",
+            "url": "http://www.eds-fundacja.pl/10lat/historia.php"
+          },
+          {
+            "id": "s6",
+            "url": "https://muzhp.pl/kalendarium/przystapienie-polski-do-unii-europejskiej"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.bbc.com/polska/articles/cly1klelrlko"
+          },
+          {
+            "id": "s8",
+            "url": "https://demagog.org.pl/fake_news/euro-w-polsce-jeszcze-w-tym-roku-nie-ma-takiej-decyzji"
+          },
+          {
+            "id": "s9",
+            "url": "https://kursnaeuro.pl/historia-euro"
+          },
+          {
+            "id": "s10",
+            "url": "https://www.rp.pl/waluty/art44688471-polska-wciaz-daleko-od-euro-komisja-europejska-nie-spelniacie-warunkow"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "misleading",
+        "evidenceConflict": false,
+        "explanation": "Twierdzenie zawiera prawdziwy element historyczny (Polska przystąpiła do UE 1 maja 2004 roku), jednak błędnie łączy ten fakt z konkluzją, że od tego momentu obowiązującą walutą w Polsce stało się euro. Polska jako członek UE jest zobowiązana do przyjęcia euro w przyszłości, lecz dotychczas tego nie uczyniła i walutą krajową pozostaje złoty polski.",
+        "limitations": [
+          "Brak danych o przyszłych decyzjach rządu, artykuł analizuje stan na rok 2026."
+        ],
+        "evidence": [
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza datę przystąpienia Polski do UE.",
+            "quoteId": "q4"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wskazuje, że Polska wciąż używa własnej waluty i nie przyjęła euro.",
+            "quoteId": "q87"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wyjaśnia, że Polska nie spełnia kryteriów konwergencji niezbędnych do przyjęcia euro.",
+            "quoteId": "q140"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Potwierdza, że choć istnieje zobowiązanie traktatowe do przyjęcia euro, Polska go nie zrealizowała.",
+            "quoteId": "q123"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+            "quoteIds": [
+              "q4"
+            ]
+          },
+          {
+            "id": "f2",
+            "text": "Polska nie używa euro jako oficjalnej waluty i wciąż posługuje się własną walutą krajową.",
+            "quoteIds": [
+              "q87",
+              "q123"
+            ]
+          },
+          {
+            "id": "f3",
+            "text": "Polska nie spełnia obecnie kryteriów konwergencji, które są wymagane do wejścia do strefy euro.",
+            "quoteIds": [
+              "q140",
+              "q141"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "mixed_context",
+          "establishedPremise": "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+          "inferenceOrCorrection": "Przystąpienie do Unii Europejskiej nie jest tożsame z natychmiastowym przyjęciem waluty euro; Polska pozostaje poza strefą euro i używa własnej waluty.",
+          "premiseQuoteIds": [
+            "q4"
+          ],
+          "decisiveQuoteIds": [
+            "q87",
+            "q123"
+          ]
+        }
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Polska jest w Unii Europejskiej od 2004 roku, więc od 2004 roku obowiązującą w Polsce walutą jest euro.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://www.senat.gov.pl/aktualnoscilista/art,14725,18-rocznica-przystapienia-polski-do-unii-europejskiej.html"
+          },
+          {
+            "id": "s2",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Polska+w+Unii+Europejskiej&oldid=81244137"
+          },
+          {
+            "id": "s3",
+            "url": "https://historiadladzieci.pl/w-ktorym-roku-polska-weszla-do-unii"
+          },
+          {
+            "id": "s4",
+            "url": "https://wgospodarce.pl/informacje/111270-18-rocznica-przystapienia-polski-do-unii-europejskiej"
+          },
+          {
+            "id": "s5",
+            "url": "http://www.eds-fundacja.pl/10lat/historia.php"
+          },
+          {
+            "id": "s6",
+            "url": "https://muzhp.pl/kalendarium/przystapienie-polski-do-unii-europejskiej"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.bbc.com/polska/articles/cly1klelrlko"
+          },
+          {
+            "id": "s8",
+            "url": "https://demagog.org.pl/fake_news/euro-w-polsce-jeszcze-w-tym-roku-nie-ma-takiej-decyzji"
+          },
+          {
+            "id": "s9",
+            "url": "https://kursnaeuro.pl/historia-euro"
+          },
+          {
+            "id": "s10",
+            "url": "https://www.rp.pl/waluty/art44688471-polska-wciaz-daleko-od-euro-komisja-europejska-nie-spelniacie-warunkow"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "misleading",
+        "evidenceConflict": false,
+        "explanation": "Twierdzenie zawiera prawdziwą informację o przystąpieniu Polski do Unii Europejskiej w 2004 roku, jednak wyprowadza z niej błędny wniosek, jakoby Polska przyjęła wtedy euro jako swoją walutę. Polska, mimo członkostwa w UE, zachowała własną walutę (złoty) i dotychczas nie weszła do strefy euro, co potwierdzają liczne raporty i aktualna sytuacja gospodarcza.",
+        "limitations": [
+          "Weryfikacja opiera się na informacjach dostępnych do listopada 2026 roku."
+        ],
+        "evidence": [
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza datę przystąpienia Polski do Unii Europejskiej (1 maja 2004 r.).",
+            "quoteId": "q4"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wskazuje, że Polska (wraz z kilkoma innymi krajami UE) wciąż używa własnej waluty i nie przyjęła euro.",
+            "quoteId": "q87"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wyjaśnia, że Polska nie spełnia kryteriów konwergencji wymaganych do przyjęcia wspólnej waluty.",
+            "quoteId": "q140"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wskazuje na fakt, że Polska nie uczestniczy w mechanizmie ERM II i formalnie nie rozpoczęła końcowego etapu drogi do euro.",
+            "quoteId": "q141"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "Polska stała się pełnoprawnym członkiem Unii Europejskiej 1 maja 2004 roku.",
+            "quoteIds": [
+              "q4"
+            ]
+          },
+          {
+            "id": "f2",
+            "text": "Polska nie używa euro jako oficjalnej waluty, lecz posługuje się własną walutą krajową.",
+            "quoteIds": [
+              "q87"
+            ]
+          },
+          {
+            "id": "f3",
+            "text": "Polska nie spełnia obecnie czterech głównych kryteriów konwergencji niezbędnych do przyjęcia waluty euro.",
+            "quoteIds": [
+              "q140",
+              "q141"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "mixed_context",
+          "establishedPremise": "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+          "inferenceOrCorrection": "Przystąpienie do Unii Europejskiej nie oznacza automatycznego przyjęcia wspólnej waluty euro; Polska zachowała własną walutę i nie spełnia warunków konwergencji niezbędnych do wejścia do strefy euro.",
+          "premiseQuoteIds": [
+            "q4"
+          ],
+          "decisiveQuoteIds": [
+            "q87",
+            "q140"
+          ]
+        }
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Polska jest w Unii Europejskiej od 2004 roku, więc od 2004 roku obowiązującą w Polsce walutą jest euro.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://www.senat.gov.pl/aktualnoscilista/art,14725,18-rocznica-przystapienia-polski-do-unii-europejskiej.html"
+          },
+          {
+            "id": "s2",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Polska+w+Unii+Europejskiej&oldid=81244137"
+          },
+          {
+            "id": "s3",
+            "url": "https://historiadladzieci.pl/w-ktorym-roku-polska-weszla-do-unii"
+          },
+          {
+            "id": "s4",
+            "url": "https://wgospodarce.pl/informacje/111270-18-rocznica-przystapienia-polski-do-unii-europejskiej"
+          },
+          {
+            "id": "s5",
+            "url": "http://www.eds-fundacja.pl/10lat/historia.php"
+          },
+          {
+            "id": "s6",
+            "url": "https://muzhp.pl/kalendarium/przystapienie-polski-do-unii-europejskiej"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.bbc.com/polska/articles/cly1klelrlko"
+          },
+          {
+            "id": "s8",
+            "url": "https://demagog.org.pl/fake_news/euro-w-polsce-jeszcze-w-tym-roku-nie-ma-takiej-decyzji"
+          },
+          {
+            "id": "s9",
+            "url": "https://kursnaeuro.pl/historia-euro"
+          },
+          {
+            "id": "s10",
+            "url": "https://www.rp.pl/waluty/art44688471-polska-wciaz-daleko-od-euro-komisja-europejska-nie-spelniacie-warunkow"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "approved": true,
+        "reason": "Ocena jest poprawna. Teza łączy prawdziwą przesłankę (przystąpienie do UE w 2004 r.) z fałszywym wnioskiem dotyczącym waluty (euro), co w pełni uzasadnia zaklasyfikowanie jej jako misleading. Ustalenia są atomowe i trafnie odnoszą się do argumentacji.",
+        "findingChecks": [
+          {
+            "findingId": "f1",
+            "supported": true,
+            "atomic": true
+          },
+          {
+            "findingId": "f2",
+            "supported": true,
+            "atomic": true
+          },
+          {
+            "findingId": "f3",
+            "supported": true,
+            "atomic": true
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "verdict": "misleading",
+    "evidenceConflict": false,
+    "explanation": "Polska stała się pełnoprawnym członkiem Unii Europejskiej 1 maja 2004 roku. [1]\n\nPolska nie używa euro jako oficjalnej waluty, lecz posługuje się własną walutą krajową. [2]\n\nPolska nie spełnia obecnie czterech głównych kryteriów konwergencji niezbędnych do przyjęcia waluty euro. [3] [4]",
+    "limitations": [],
+    "evidence": [
+      {
+        "sourceId": "s1",
+        "chunkId": "s1:p21",
+        "quote": "O północy 1 maja 2004 r. Polska stała się pełnoprawnym członkiem Unii Europejskiej. Tego dnia unijne członkostwo uzyskały także: Cypr, Czechy, Estonia, Litwa, Łotwa, Malta, Słowacja, Słowenia i Węgry. Było to największe w historii rozszerzenie UE. Oficjalne unijne uroczystości odbyły się w Dublinie (Irlandia pełniła wówczas półroczne przewodnictwo UE). Przed siedzibą prezydent Irlandii Mary McAleese przy dźwiękach „Ody do radości” Beethovena na maszty wciągnięto 25 flag państw Unii. Państwowe uroczystości odbyły się również na placu Piłsudskiego w Warszawie.",
+        "id": "q4",
+        "relation": "supports",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s7",
+        "chunkId": "s7:p4",
+        "quote": "Pięć innych krajów UE - Czechy, Węgry, Szwecja, Rumunia i Polska - wciąż używają własnych walut, ale mają przyjąć euro po spełnieniu niezbędnych warunków.",
+        "id": "q87",
+        "relation": "contradicts",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s10",
+        "chunkId": "s10:p10",
+        "quote": "Również Polska wciąż pozostaje daleko od przyjęcia euro. Komisja Europejska wylicza, że nasz kraj nie spełnia kryteriów dotyczących stabilności cen, finansów publicznych, długoterminowych stóp procentowych oraz uczestnictwa w mechanizmie ERM II. Dodatkowo polskie prawo, w tym ustawa o NBP i Konstytucja RP, nadal nie jest w pełni dostosowane do wymogów unijnych dotyczących funkcjonowania banku centralnego w Eurosystemie.",
+        "id": "q140",
+        "relation": "contradicts",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      },
+      {
+        "sourceId": "s10",
+        "chunkId": "s10:p12",
+        "quote": "Polska nie spełnia także kryterium inflacyjnego – średnia inflacja w ciągu 12 miesięcy do maja 2026 r. wyniosła 2,9 proc., wobec wartości referencyjnej na poziomie 2,7 proc. – ani kryterium długoterminowych stóp procentowych, które przy średnim poziomie 5,4 proc. również nieznacznie przekroczyły dopuszczalny próg 5,1 proc. Ponadto złoty nie uczestniczy w mechanizmie ERM II, czyli dwuletniej „poczekalni” przed przyjęciem wspólnej waluty, co oznacza, że Polska formalnie nie rozpoczęła jeszcze końcowego etapu drogi do euro.",
+        "id": "q141",
+        "relation": "contradicts",
+        "relevance": "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+      }
+    ],
+    "findings": [
+      {
+        "id": "f1",
+        "text": "Polska stała się pełnoprawnym członkiem Unii Europejskiej 1 maja 2004 roku.",
+        "evidenceIds": [
+          "q4"
+        ]
+      },
+      {
+        "id": "f2",
+        "text": "Polska nie używa euro jako oficjalnej waluty, lecz posługuje się własną walutą krajową.",
+        "evidenceIds": [
+          "q87"
+        ]
+      },
+      {
+        "id": "f3",
+        "text": "Polska nie spełnia obecnie czterech głównych kryteriów konwergencji niezbędnych do przyjęcia waluty euro.",
+        "evidenceIds": [
+          "q140",
+          "q141"
+        ]
+      }
+    ],
+    "citationContract": "findings-v1",
+    "status": "completed",
+    "requestId": "diagnostic-M01",
+    "claim": "Polska jest w Unii Europejskiej od 2004 roku, więc od 2004 roku obowiązującą w Polsce walutą jest euro.",
+    "statedAt": null,
+    "checkedAt": "2026-11-21T15:08:00.603Z",
+    "mode": "live",
+    "retrieval": [
+      {
+        "provider": "arxiv",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "corpus",
+        "documents": 3,
+        "status": "ok"
+      },
+      {
+        "provider": "wikipedia",
+        "documents": 3,
+        "status": "ok"
+      },
+      {
+        "provider": "sejm",
+        "documents": 0,
+        "status": "empty"
+      },
+      {
+        "provider": "web",
+        "documents": 12,
+        "status": "ok"
+      }
+    ],
+    "coverage": {
+      "citedSources": 3,
+      "publisherGroups": 3,
+      "reviewedSources": 10,
+      "minimumGroups": 2
+    },
+    "sources": [
+      {
+        "id": "s1",
+        "title": "Senat Rzeczypospolitej Polskiej / Aktualności / 18. rocznica przystąpienia Polski do Unii Europejskiej",
+        "url": "https://www.senat.gov.pl/aktualnoscilista/art,14725,18-rocznica-przystapienia-polski-do-unii-europejskiej.html",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "corpus",
+        "sourceType": "official",
+        "contentScope": "text",
+        "publisherGroup": "gov.pl",
+        "canonicalUrl": "https://www.senat.gov.pl/aktualnoscilista/art,14725,18-rocznica-przystapienia-polski-do-unii-europejskiej.html",
+        "notes": [
+          "Korpus: a81b633692a643c4; wydawca: Administracja publiczna RP. Tekst pobrano ponownie przy analizie.",
+          "Nie ustalono daty publikacji; nie jest zastępowana datą pobrania."
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "Polska w Unii Europejskiej",
+        "url": "https://pl.wikipedia.org/w/index.php?title=Polska+w+Unii+Europejskiej&oldid=81244137",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "wikipedia",
+        "sourceType": "encyclopedia",
+        "contentScope": "text",
+        "publisherGroup": "wikipedia.org",
+        "canonicalUrl": "https://pl.wikipedia.org/wiki/Polska_w_Unii_Europejskiej",
+        "notes": [
+          "Artykuł encyklopedyczny, wersja 81244137. Weryfikuj również źródła pierwotne wskazane w artykule."
+        ]
+      },
+      {
+        "id": "s3",
+        "title": "Rocznica Przystąpienia Polski do Unii Europejskiej",
+        "url": "https://historiadladzieci.pl/w-ktorym-roku-polska-weszla-do-unii",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "historiadladzieci.pl",
+        "canonicalUrl": "https://historiadladzieci.pl/w-ktorym-roku-polska-weszla-do-unii",
+        "notes": []
+      },
+      {
+        "id": "s4",
+        "title": "18. rocznica przystąpienia Polski do Unii Europejskiej - wGospodarce.pl",
+        "url": "https://wgospodarce.pl/informacje/111270-18-rocznica-przystapienia-polski-do-unii-europejskiej",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "wgospodarce.pl",
+        "canonicalUrl": "https://wgospodarce.pl/informacje/111270-18-rocznica-przystapienia-polski-do-unii-europejskiej",
+        "notes": []
+      },
+      {
+        "id": "s5",
+        "title": "10 lat w Unii Europejskiej",
+        "url": "http://www.eds-fundacja.pl/10lat/historia.php",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "eds-fundacja.pl",
+        "canonicalUrl": "http://www.eds-fundacja.pl/10lat/historia.php",
+        "notes": []
+      },
+      {
+        "id": "s6",
+        "title": "Przystąpienie Polski do Unii Europejskiej - Muzeum Historii Polski w Warszawie",
+        "url": "https://muzhp.pl/kalendarium/przystapienie-polski-do-unii-europejskiej",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "muzhp.pl",
+        "canonicalUrl": "https://muzhp.pl/kalendarium/przystapienie-polski-do-unii-europejskiej",
+        "notes": []
+      },
+      {
+        "id": "s7",
+        "title": "Pięć powodów, dla których Polska nie przyjęła Euro - BBC News Polska",
+        "url": "https://www.bbc.com/polska/articles/cly1klelrlko",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "bbc.com",
+        "canonicalUrl": "https://www.bbc.com/polska/articles/cly1klelrlko",
+        "notes": []
+      },
+      {
+        "id": "s8",
+        "title": "Euro w Polsce jeszcze w tym roku? Nie ma takiej decyzji",
+        "url": "https://demagog.org.pl/fake_news/euro-w-polsce-jeszcze-w-tym-roku-nie-ma-takiej-decyzji",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "demagog.org.pl",
+        "canonicalUrl": "https://demagog.org.pl/fake_news/euro-w-polsce-jeszcze-w-tym-roku-nie-ma-takiej-decyzji",
+        "notes": []
+      },
+      {
+        "id": "s9",
+        "title": "Historia euro - Kurs na euro",
+        "url": "https://kursnaeuro.pl/historia-euro",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "kursnaeuro.pl",
+        "canonicalUrl": "https://kursnaeuro.pl/historia-euro",
+        "notes": []
+      },
+      {
+        "id": "s10",
+        "title": "Komisja Europejska oceniła, czy Polska spełnia kryteriów przyjęcia euro w 2026 roku - rp.pl",
+        "url": "https://www.rp.pl/waluty/art44688471-polska-wciaz-daleko-od-euro-komisja-europejska-nie-spelniacie-warunkow",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:05.321Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "rp.pl",
+        "canonicalUrl": "https://www.rp.pl/waluty/art44688471-polska-wciaz-daleko-od-euro-komisja-europejska-nie-spelniacie-warunkow",
+        "notes": []
+      }
+    ]
+  },
+  "repositoryExport": "Source catalogs omitted; full local diagnostics remain under .runtime. Published result quotations and structural validation traces retained."
+}

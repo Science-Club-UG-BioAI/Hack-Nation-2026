@@ -1,0 +1,677 @@
+{
+  "caseId": "T03",
+  "scope": "Separate diagnostic repeat, excluded from headline comparison",
+  "checkedAt": "2026-11-21T15:07:21.145Z",
+  "diagnostics": [
+    {
+      "basis": {
+        "kind": "confirmed",
+        "establishedPremise": "NATO zostało formalnie powołane do życia w 1949 roku (podpisanie traktatu w kwietniu, wejście w życie w sierpniu).",
+        "inferenceOrCorrection": "Twierdzenie jest w pełni zgodne z faktami historycznymi.",
+        "premiseQuoteIds": [
+          "q2",
+          "q14",
+          "q25",
+          "q40",
+          "q116"
+        ],
+        "decisiveQuoteIds": [
+          "q2",
+          "q25",
+          "q87"
+        ]
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "Organizacja Traktatu Północnoatlantyckiego (NATO) została utworzona na mocy Traktatu Północnoatlantyckiego (traktatu waszyngtońskiego), który został podpisany 4 kwietnia 1949 roku.",
+          "quoteIds": [
+            "q2",
+            "q14",
+            "q31",
+            "q40",
+            "q116"
+          ]
+        },
+        {
+          "id": "f2",
+          "text": "Traktat Północnoatlantycki wszedł formalnie w życie 24 sierpnia 1949 roku, co stanowiło ostateczne ustanowienie organizacji.",
+          "quoteIds": [
+            "q2",
+            "q9",
+            "q25",
+            "q87",
+            "q143"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92",
+        "q93",
+        "q94",
+        "q95",
+        "q96",
+        "q97",
+        "q98",
+        "q99",
+        "q100",
+        "q101",
+        "q102",
+        "q103",
+        "q104",
+        "q105",
+        "q106",
+        "q107",
+        "q108",
+        "q109",
+        "q110",
+        "q111",
+        "q112",
+        "q113",
+        "q114",
+        "q115",
+        "q116",
+        "q117",
+        "q118",
+        "q119",
+        "q120",
+        "q121",
+        "q122",
+        "q123",
+        "q124",
+        "q125",
+        "q126",
+        "q127",
+        "q128",
+        "q129",
+        "q130",
+        "q131",
+        "q132",
+        "q133",
+        "q134",
+        "q135",
+        "q136",
+        "q137",
+        "q138",
+        "q139",
+        "q140",
+        "q141",
+        "q142",
+        "q143"
+      ],
+      "selectedIds": [
+        "q2",
+        "q14",
+        "q25",
+        "q40",
+        "q116"
+      ],
+      "issues": [
+        "Findings require unique IDs/text and unique references to selected evidence, not just available quotations."
+      ]
+    },
+    {
+      "basis": {
+        "kind": "confirmed",
+        "establishedPremise": "Traktat Północnoatlantycki został podpisany 4 kwietnia 1949 r. i wszedł w życie 24 sierpnia 1949 r., co czyni 1949 rokiem powstania sojuszu.",
+        "inferenceOrCorrection": "Teza o powstaniu NATO w 1949 roku jest w pełni prawdziwa i zgodna ze źródłami.",
+        "premiseQuoteIds": [
+          "q2",
+          "q14",
+          "q25",
+          "q40"
+        ],
+        "decisiveQuoteIds": [
+          "q2",
+          "q9",
+          "q25",
+          "q116"
+        ]
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "NATO (Organizacja Traktatu Północnoatlantyckiego) zostało utworzone na mocy Traktatu Północnoatlantyckiego, który został podpisany 4 kwietnia 1949 roku.",
+          "quoteIds": [
+            "q2",
+            "q14",
+            "q31",
+            "q40"
+          ]
+        },
+        {
+          "id": "f2",
+          "text": "Formalne ustanowienie NATO i wejście w życie traktatu założycielskiego nastąpiło 24 sierpnia 1949 roku.",
+          "quoteIds": [
+            "q2",
+            "q25",
+            "q87",
+            "q143"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92",
+        "q93",
+        "q94",
+        "q95",
+        "q96",
+        "q97",
+        "q98",
+        "q99",
+        "q100",
+        "q101",
+        "q102",
+        "q103",
+        "q104",
+        "q105",
+        "q106",
+        "q107",
+        "q108",
+        "q109",
+        "q110",
+        "q111",
+        "q112",
+        "q113",
+        "q114",
+        "q115",
+        "q116",
+        "q117",
+        "q118",
+        "q119",
+        "q120",
+        "q121",
+        "q122",
+        "q123",
+        "q124",
+        "q125",
+        "q126",
+        "q127",
+        "q128",
+        "q129",
+        "q130",
+        "q131",
+        "q132",
+        "q133",
+        "q134",
+        "q135",
+        "q136",
+        "q137",
+        "q138",
+        "q139",
+        "q140",
+        "q141",
+        "q142",
+        "q143"
+      ],
+      "selectedIds": [
+        "q2",
+        "q14",
+        "q25",
+        "q40",
+        "q116"
+      ],
+      "issues": [
+        "Findings require unique IDs/text and unique references to selected evidence, not just available quotations."
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "inputSummary": {
+        "claim": "NATO powstało w 1949 roku.",
+        "verificationDate": "2026-11-21"
+      },
+      "response": {
+        "checkable": true,
+        "needsClarification": false,
+        "clarificationKind": "none",
+        "outOfScope": false,
+        "explanation": "Teza dotyczy historycznego faktu powstania organizacji międzynarodowej i jest sprawdzalna w dostępnych źródłach historycznych.",
+        "queries": [
+          "data powstania NATO",
+          "kiedy założono NATO"
+        ],
+        "wikipediaQuery": "NATO",
+        "sejmQuery": null,
+        "arxivQuery": null
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "NATO powstało w 1949 roku.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://pl.wikipedia.org/w/index.php?title=NATO&oldid=80921138"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.wojsko-polskie.pl/dgrsz/articles/aktualnosci-w/75-rocznica-powstania-nato"
+          },
+          {
+            "id": "s3",
+            "url": "https://wszystkoconajwazniejsze.pl/pepites/traktat-polnocnoatlantycki-jak-powstalo-nato"
+          },
+          {
+            "id": "s4",
+            "url": "https://www.gov.pl/web/nato/polska-w-nato-rp"
+          },
+          {
+            "id": "s5",
+            "url": "https://www.youtube.com/watch?v=HhgWDjnW2XE"
+          },
+          {
+            "id": "s6",
+            "url": "https://libguides.snhu.edu/c.php?g=1184812&p=8902757"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.cfr.org/ten-best-ten-worst-us-foreign-policy-decisions/creation-of-nato"
+          },
+          {
+            "id": "s8",
+            "url": "https://www.iwm.org.uk/history/cold-war/nato"
+          },
+          {
+            "id": "s9",
+            "url": "https://nato.usmission.gov/about-nato"
+          },
+          {
+            "id": "s10",
+            "url": "https://adst.org/2014/10/the-birth-of-nato"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "supported",
+        "evidenceConflict": false,
+        "explanation": "Wszystkie dostarczone źródła zgodnie potwierdzają, że NATO (Organizacja Traktatu Północnoatlantyckiego) powstało w 1949 roku. Traktat północnoatlantycki (traktat waszyngtoński), będący podstawą organizacji, został podpisany 4 kwietnia 1949 roku, a wszedł w życie 24 sierpnia 1949 roku.",
+        "limitations": [
+          "Nie ma rozbieżności w źródłach dotyczących roku powstania sojuszu, choć źródła precyzują, że proces ten obejmował podpisanie traktatu w kwietniu oraz jego wejście w życie w sierpniu 1949 roku."
+        ],
+        "evidence": [
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza, że NATO zostało utworzone na mocy traktatu z 1949 roku.",
+            "quoteId": "q2"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Wskazuje 4 kwietnia 1949 r. jako datę podpisania deklaracji o powstaniu NATO.",
+            "quoteId": "q14"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza, że traktat wszedł w życie 24 sierpnia 1949 roku, powołując do życia NATO.",
+            "quoteId": "q25"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Stwierdza, że organizacja powstała w 1949 roku na mocy Traktatu Północnoatlantyckiego.",
+            "quoteId": "q40"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza powstanie organizacji w 1949 roku.",
+            "quoteId": "q116"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "Organizacja Traktatu Północnoatlantyckiego (NATO) została utworzona na mocy Traktatu Północnoatlantyckiego (traktatu waszyngtońskiego), który został podpisany 4 kwietnia 1949 roku.",
+            "quoteIds": [
+              "q2",
+              "q14",
+              "q31",
+              "q40",
+              "q116"
+            ]
+          },
+          {
+            "id": "f2",
+            "text": "Traktat Północnoatlantycki wszedł formalnie w życie 24 sierpnia 1949 roku, co stanowiło ostateczne ustanowienie organizacji.",
+            "quoteIds": [
+              "q2",
+              "q9",
+              "q25",
+              "q87",
+              "q143"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "confirmed",
+          "establishedPremise": "NATO zostało formalnie powołane do życia w 1949 roku (podpisanie traktatu w kwietniu, wejście w życie w sierpniu).",
+          "inferenceOrCorrection": "Twierdzenie jest w pełni zgodne z faktami historycznymi.",
+          "premiseQuoteIds": [
+            "q2",
+            "q14",
+            "q25",
+            "q40",
+            "q116"
+          ],
+          "decisiveQuoteIds": [
+            "q2",
+            "q25",
+            "q87"
+          ]
+        }
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "NATO powstało w 1949 roku.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://pl.wikipedia.org/w/index.php?title=NATO&oldid=80921138"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.wojsko-polskie.pl/dgrsz/articles/aktualnosci-w/75-rocznica-powstania-nato"
+          },
+          {
+            "id": "s3",
+            "url": "https://wszystkoconajwazniejsze.pl/pepites/traktat-polnocnoatlantycki-jak-powstalo-nato"
+          },
+          {
+            "id": "s4",
+            "url": "https://www.gov.pl/web/nato/polska-w-nato-rp"
+          },
+          {
+            "id": "s5",
+            "url": "https://www.youtube.com/watch?v=HhgWDjnW2XE"
+          },
+          {
+            "id": "s6",
+            "url": "https://libguides.snhu.edu/c.php?g=1184812&p=8902757"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.cfr.org/ten-best-ten-worst-us-foreign-policy-decisions/creation-of-nato"
+          },
+          {
+            "id": "s8",
+            "url": "https://www.iwm.org.uk/history/cold-war/nato"
+          },
+          {
+            "id": "s9",
+            "url": "https://nato.usmission.gov/about-nato"
+          },
+          {
+            "id": "s10",
+            "url": "https://adst.org/2014/10/the-birth-of-nato"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "supported",
+        "evidenceConflict": false,
+        "explanation": "Wszystkie dostarczone źródła zgodnie potwierdzają, że NATO (Organizacja Traktatu Północnoatlantyckiego) zostało powołane do życia w 1949 roku. Traktat waszyngtoński (północnoatlantycki) podpisano 4 kwietnia 1949 r., a wszedł on w życie 24 sierpnia 1949 r., co oficjalnie ustanowiło sojusz.",
+        "limitations": [
+          "Choć data powstania NATO (1949) jest bezsporna, źródła różnicują moment podpisania traktatu założycielskiego (kwiecień) oraz moment jego wejścia w życie (sierpień)."
+        ],
+        "evidence": [
+          {
+            "relation": "supports",
+            "relevance": "Źródło podaje, że NATO zostało utworzone na mocy traktatu podpisanego 4 kwietnia 1949 roku.",
+            "quoteId": "q2"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Źródło potwierdza, że 4 kwietnia 1949 roku w Waszyngtonie podpisano deklarację założycielską.",
+            "quoteId": "q14"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Źródło podaje, że 24 sierpnia 1949 roku weszło w życie porozumienie i tym samym powołano do życia NATO.",
+            "quoteId": "q25"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Oficjalny rządowy portal potwierdza datę powstania organizacji w 1949 roku.",
+            "quoteId": "q40"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Źródło wskazuje, że organizacja została założona w 1949 roku.",
+            "quoteId": "q116"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "NATO (Organizacja Traktatu Północnoatlantyckiego) zostało utworzone na mocy Traktatu Północnoatlantyckiego, który został podpisany 4 kwietnia 1949 roku.",
+            "quoteIds": [
+              "q2",
+              "q14",
+              "q31",
+              "q40"
+            ]
+          },
+          {
+            "id": "f2",
+            "text": "Formalne ustanowienie NATO i wejście w życie traktatu założycielskiego nastąpiło 24 sierpnia 1949 roku.",
+            "quoteIds": [
+              "q2",
+              "q25",
+              "q87",
+              "q143"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "confirmed",
+          "establishedPremise": "Traktat Północnoatlantycki został podpisany 4 kwietnia 1949 r. i wszedł w życie 24 sierpnia 1949 r., co czyni 1949 rokiem powstania sojuszu.",
+          "inferenceOrCorrection": "Teza o powstaniu NATO w 1949 roku jest w pełni prawdziwa i zgodna ze źródłami.",
+          "premiseQuoteIds": [
+            "q2",
+            "q14",
+            "q25",
+            "q40"
+          ],
+          "decisiveQuoteIds": [
+            "q2",
+            "q9",
+            "q25",
+            "q116"
+          ]
+        }
+      }
+    }
+  ],
+  "result": {
+    "status": "technical_error",
+    "code": "INVALID_MODEL_OUTPUT",
+    "verdict": null
+  },
+  "repositoryExport": "Source catalogs omitted; full local diagnostics remain under .runtime. Published result quotations and structural validation traces retained."
+}

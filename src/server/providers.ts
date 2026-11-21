@@ -73,13 +73,35 @@ export async function generate<T>(
   );
   const parsed = interactionSchema.safeParse(response);
   if (!parsed.success) {
+    const status =
+      response && typeof response === "object" && "status" in response
+        ? response.status
+        : null;
     console.warn(
       JSON.stringify({
         provider: "gemini",
         invalidOutput: "interaction_schema",
+        responseStatus:
+          typeof status === "string" &&
+          [
+            "completed",
+            "in_progress",
+            "incomplete",
+            "failed",
+            "requires_action",
+            "cancelled",
+          ].includes(status)
+            ? status
+            : "unknown",
+        issues: parsed.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          code: issue.code,
+        })),
       }),
     );
-    throw invalidOutput();
+    throw invalidOutput([
+      status === "incomplete" ? "interaction_incomplete" : "interaction_schema",
+    ]);
   }
   const body = parsed.data;
   const text = body.steps
@@ -90,12 +112,19 @@ export async function generate<T>(
     .join("");
   try {
     return schema.parse(JSON.parse(text));
-  } catch {
+  } catch (error) {
     console.warn(
       JSON.stringify({
         provider: "gemini",
         invalidOutput: "json_or_schema",
         outputCharacters: text.length,
+        issues:
+          error instanceof z.ZodError
+            ? error.issues.map((issue) => ({
+                path: issue.path.join("."),
+                code: issue.code,
+              }))
+            : [{ code: "invalid_json" }],
       }),
     );
     throw invalidOutput();

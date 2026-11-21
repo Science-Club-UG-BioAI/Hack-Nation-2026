@@ -16,6 +16,7 @@
     "corpus:check": "node scripts/check-corpus.mjs",
     "benchmark": "node --experimental-strip-types --env-file=.env.local scripts/benchmark.mjs",
     "benchmark:report": "node --experimental-strip-types scripts/benchmark-report.mjs",
+    "benchmark:evaluate": "node --experimental-strip-types scripts/evaluate-run.mjs",
     "benchmark:compare": "node --experimental-strip-types scripts/compare-benchmarks.mjs"
   },
   "engines": {

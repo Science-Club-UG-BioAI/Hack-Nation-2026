@@ -1,7 +1,11 @@
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile, access } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
-import { benchmarkMetrics } from "../src/core/benchmark.ts";
+import {
+  benchmarkMetrics,
+  findingCoverageForResult,
+  sameVerificationSnapshot,
+} from "../src/core/benchmark.ts";
 
 const base = process.env.BENCHMARK_URL || "http://127.0.0.1:3000";
 if (!["127.0.0.1", "localhost"].includes(new URL(base).hostname))
@@ -10,6 +14,14 @@ const datasetText = await readFile("data/benchmark/cases.json", "utf8");
 const dataset = JSON.parse(datasetText);
 const out = process.env.BENCHMARK_OUTPUT || "reports/benchmark/latest";
 await mkdir(out, { recursive: true });
+try {
+  await access(out + "/results.json");
+  throw new Error(
+    "Benchmark output exists; choose a new BENCHMARK_OUTPUT directory.",
+  );
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
 const rows = [],
   outputs = [];
 const startedAt = new Date().toISOString();
@@ -65,12 +77,7 @@ for (const item of dataset.cases) {
       channelResult = reply;
       channelMatch =
         response.ok &&
-        reply.result.requestId === body.requestId &&
-        reply.result.verdict === body.verdict &&
-        reply.result.status === body.status &&
-        JSON.stringify(reply.result.evidence) ===
-          JSON.stringify(body.evidence) &&
-        JSON.stringify(reply.result.sources) === JSON.stringify(body.sources) &&
+        sameVerificationSnapshot(body, reply.result) &&
         reply.messages.length > 0;
     } catch {
       channelMatch = false;
@@ -87,6 +94,7 @@ for (const item of dataset.cases) {
     durationMs,
     httpStatus: status,
     evidenceCount: body.evidence?.length ?? 0,
+    findingCoverage: findingCoverageForResult(body),
     factual: item.factual,
     abstention: item.abstention ?? false,
     injection: item.injection ?? false,

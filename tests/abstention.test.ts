@@ -19,6 +19,7 @@ beforeEach(() => {
     })
     .mockResolvedValueOnce({
       verdict: "insufficient",
+      findings: [],
       explanation: "UNVERIFIED MODEL TEXT",
       limitations: ["UNVERIFIED LIMITATION"],
       evidence: [],
@@ -65,6 +66,46 @@ it("does not turn incomplete retrieval into successful abstention", async () => 
   expect(
     await verify(input, "partial", new AbortController().signal),
   ).toMatchObject({ status: "unable_to_verify", verdict: null });
+});
+it("discards incidental evidence when the model explicitly establishes no facts", async () => {
+  vi.mocked(generate)
+    .mockReset()
+    .mockResolvedValueOnce({
+      checkable: true,
+      needsClarification: false,
+      clarificationKind: "missing_evidence",
+      queries: ["Projekt Koral pomiar", "Projekt Koral dokument"],
+      explanation: "Szukaj dokumentu.",
+    })
+    .mockResolvedValueOnce({
+      verdict: "insufficient",
+      findings: [],
+      explanation: "UNVERIFIED",
+      limitations: [],
+      evidence: [
+        { quoteId: "q1", relation: "context", relevance: "Podobna nazwa." },
+      ],
+      basis: {
+        kind: "unresolved",
+        establishedPremise: "UNRELATED",
+        inferenceOrCorrection: "UNVERIFIED",
+        premiseQuoteIds: ["q1"],
+        decisiveQuoteIds: [],
+      },
+    });
+  const result = await verify(
+    input,
+    "incidental",
+    new AbortController().signal,
+  );
+  expect(result).toMatchObject({
+    status: "completed",
+    verdict: "insufficient",
+    evidence: [],
+    findings: [],
+  });
+  expect(JSON.stringify(result)).not.toMatch(/UNRELATED|UNVERIFIED/);
+  expect(generate).toHaveBeenCalledTimes(2);
 });
 it("propagates model outages instead of using abstention as a fallback", async () => {
   vi.mocked(generate).mockReset().mockRejectedValue(new Error("outage"));

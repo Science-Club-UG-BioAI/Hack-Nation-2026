@@ -29,6 +29,8 @@ export function demoResult(id: string): VerificationResult | null {
     statedAt: null,
     checkedAt,
     mode: "demo" as const,
+    citationContract: "findings-v1" as const,
+    findings: [],
   };
   if (id === "context")
     return {
@@ -54,9 +56,18 @@ export function demoResult(id: string): VerificationResult | null {
       minimumGroups: 2,
     },
     verdict: nato ? "supported" : "refuted",
+    findings: [
+      {
+        id: "f1",
+        text: nato
+          ? "Polska przystąpiła do NATO 12 marca 1999 roku."
+          : "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku.",
+        evidenceIds: ["q1", "q2"],
+      },
+    ],
     explanation: nato
-      ? "Materiały NATO i Ministerstwa Obrony Narodowej wskazują 12 marca 1999 roku jako datę przystąpienia Polski do Sojuszu."
-      : "Oficjalny profil Polski w Unii Europejskiej i polski portal rządowy wskazują 1 maja 2004 roku, a nie 1999 rok.",
+      ? "Polska przystąpiła do NATO 12 marca 1999 roku. [1] [2]"
+      : "Polska przystąpiła do Unii Europejskiej 1 maja 2004 roku. [1] [2]",
     limitations: [
       "Przykład przygotowany ręcznie na podstawie wskazanych źródeł. Nie jest bieżącą analizą AI. Różni wydawcy nie gwarantują niezależnego pochodzenia informacji.",
     ],
@@ -90,6 +101,7 @@ export function demoResult(id: string): VerificationResult | null {
     ],
     evidence: [
       {
+        id: "q1",
         sourceId: "s1",
         chunkId: "s1:p0",
         quote: nato
@@ -101,6 +113,7 @@ export function demoResult(id: string): VerificationResult | null {
           : "Źródło podaje inną datę niż sprawdzana teza.",
       },
       {
+        id: "q2",
         sourceId: "s2",
         chunkId: "s2:p0",
         quote: nato

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyInputSchema, channelInputSchema } from "@/core/contracts";
-import { AppError } from "@/core/errors";
+import { AppError, InvalidModelOutput } from "@/core/errors";
 import { numberSetting, requireConfiguration } from "@/server/config";
 import { runVerification } from "./verification-service";
 import { channelReply } from "@/core/channel";
@@ -122,6 +122,7 @@ export async function handleVerification(
       requestId,
       signal,
       onProgress,
+      channel,
     );
     const delivered = { ...result, delivery: { channel, reused } };
     signal.throwIfAborted();
@@ -211,6 +212,10 @@ export async function handleVerification(
       JSON.stringify({
         requestId,
         code: failure.code,
+        validationIssues:
+          failure instanceof InvalidModelOutput
+            ? failure.validationIssues
+            : undefined,
         durationMs: Date.now() - start,
       }),
     );

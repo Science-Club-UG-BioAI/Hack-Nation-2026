@@ -1,0 +1,610 @@
+{
+  "caseId": "N02",
+  "scope": "Separate diagnostic repeat, excluded from headline comparison",
+  "checkedAt": "2026-11-21T15:08:47.931Z",
+  "diagnostics": [
+    {
+      "basis": {
+        "kind": "unresolved",
+        "establishedPremise": "Dnia 18 listopada 2026 r. prom Bursztyn Unity odbył swój pierwszy rejs pasażerski z Ystad.",
+        "inferenceOrCorrection": "Teza mylnie łączy datę pierwszego rejsu promu Bursztyn z niepotwierdzonym wydarzeniem (spotkanie projektu Bursztyn-KV482) i wynikiem głosowania, co nie znajduje oparcia w faktach dotyczących jednostki morskiej.",
+        "premiseQuoteIds": [
+          "q8",
+          "q19"
+        ],
+        "decisiveQuoteIds": []
+      },
+      "findings": [],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86"
+      ],
+      "selectedIds": [
+        "q8",
+        "q19",
+        "q11"
+      ],
+      "issues": [
+        "Provide a complete inventory of factual findings, each with selected quoteIds."
+      ]
+    },
+    {
+      "basis": {
+        "kind": "unresolved",
+        "establishedPremise": "18 listopada 2026 r. odbył się pierwszy rejs pasażerski promu Bursztyn Unity.",
+        "inferenceOrCorrection": "Brak dowodów na istnienie projektu \"Bursztyn-KV482\" oraz przeprowadzenie głosowania, co czyni tezę niezweryfikowalną w oparciu o dostępne dane.",
+        "premiseQuoteIds": [
+          "q8",
+          "q19",
+          "q38"
+        ],
+        "decisiveQuoteIds": []
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "18 listopada 2026 r. prom Bursztyn Unity rozpoczął eksploatację komercyjną, wykonując pierwszy rejs pasażerski z Ystad.",
+          "quoteIds": [
+            "q8",
+            "q19",
+            "q38"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86"
+      ],
+      "selectedIds": [
+        "q8",
+        "q19",
+        "q38"
+      ],
+      "issues": []
+    }
+  ],
+  "stages": [
+    {
+      "inputSummary": {
+        "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+        "verificationDate": "2026-11-21"
+      },
+      "response": {
+        "checkable": true,
+        "needsClarification": false,
+        "clarificationKind": "missing_evidence",
+        "outOfScope": false,
+        "explanation": "Twierdzenie odnosi się do konkretnego, sprawdzalnego zdarzenia w przeszłości (spotkanie w Gdańsku w dniu 18 listopada 2026 r.). Choć protokół może być niepublikowany, sam fakt odbycia spotkania oraz jego przebieg są kwestiami, które można próbować zweryfikować za pomocą dostępnych źródeł informacji publicznej lub raportów medialnych.",
+        "queries": [
+          "spotkanie projekt Bursztyn-KV482 Gdańsk 18 listopada 2026",
+          "głosowanie 17 do 9 projekt Bursztyn-KV482 Gdańsk"
+        ],
+        "wikipediaQuery": null,
+        "sejmQuery": null,
+        "arxivQuery": null
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://londynek.net/wiadomosci/The%20%27Bursztyn%27%20ferry%20to%20make%20its%20first%20voyage%20with%20passengers%20on%20November%2018%2Cwiadomosci%2Cnews,/wiadomosci/en/article?jdnews_id=113089"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.gospodarkamorska.pl/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia"
+          },
+          {
+            "id": "s3",
+            "url": "https://www.wnp.pl/rynki/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia,1116182.html"
+          },
+          {
+            "id": "s4",
+            "url": "https://pulsgdanska.pl/wiadomosci-gdansk/gdansk-szykuje-wielkie-swieto-bursztynu-w-programie-znalazla-sie-niezwykla-proba/VEb3EN7QE7OyFQCEgH7z"
+          },
+          {
+            "id": "s5",
+            "url": "https://radiogdansk.pl/wiadomosci/trojmiasto/2026/10/23/najnowoczesniejszy-prom-na-baltyku-gotowy"
+          },
+          {
+            "id": "s6",
+            "url": "https://media.gdansk.pl/konferencje-prasowe/876213/glosowanie-w-budzecie-obywatelskim-2027-konferencja-prasowa"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.gov.pl/web/po-gdansk/przedstawienie-zarzutow-czlonkom-obwodowej-komisji-wyborczej-nr-17-w-gdansku"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "insufficient",
+        "evidenceConflict": false,
+        "explanation": "W dostępnych dokumentach brak jest jakichkolwiek informacji o spotkaniu projektu \"Bursztyn-KV482\" w Gdańsku 18 listopada 2026 roku, ani o głosowaniu w stosunku 17 do 9. Dostępne źródła wskazują natomiast, że 18 listopada 2026 roku był dniem pierwszego komercyjnego rejsu pasażerskiego promu \"Bursztyn Unity\" (z Ystad), a nie datą zamkniętego spotkania projektowego w Gdańsku. Brak dowodów na istnienie projektu o nazwie \"Bursztyn-KV482\".",
+        "limitations": [
+          "W dostarczonych dokumentach brak jest wzmianki o projekcie \"Bursztyn-KV482\".",
+          "Brak jakichkolwiek danych potwierdzających lub negujących fakt zamkniętego spotkania w dniu 18 listopada 2026 r.",
+          "Dokumenty koncentrują się na eksploatacji promu o nazwie Bursztyn, co sugeruje możliwą pomyłkę w opisie tezy.",
+          "Brak źródeł umożliwiających weryfikację wyniku głosowania (17 do 9) w jakimkolwiek kontekście dla wymienionej daty i miejsca."
+        ],
+        "evidence": [
+          {
+            "relation": "contradicts",
+            "relevance": "Wskazuje, że 18 listopada 2026 r. prom Bursztyn Unity rozpoczął eksploatację komercyjną (pierwszy rejs z pasażerami z Ystad), co przeczy tezie o zamkniętym spotkaniu projektowym w Gdańsku tego dnia.",
+            "quoteId": "q8"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Potwierdza, że 18 listopada 2026 r. odbywał się rejs pasażerski promu Bursztyn Unity, a nie spotkanie dotyczące projektu KV482.",
+            "quoteId": "q19"
+          },
+          {
+            "relation": "context",
+            "relevance": "Dostarcza informacji o programie rządowym dotyczącym promów, w tym promu Bursztyn Unity, co wyjaśnia kontekst użycia słowa \"Bursztyn\" w tezie, nie znajdując jednak potwierdzenia dla numeru \"KV482\".",
+            "quoteId": "q11"
+          }
+        ],
+        "findings": [],
+        "basis": {
+          "kind": "unresolved",
+          "establishedPremise": "Dnia 18 listopada 2026 r. prom Bursztyn Unity odbył swój pierwszy rejs pasażerski z Ystad.",
+          "inferenceOrCorrection": "Teza mylnie łączy datę pierwszego rejsu promu Bursztyn z niepotwierdzonym wydarzeniem (spotkanie projektu Bursztyn-KV482) i wynikiem głosowania, co nie znajduje oparcia w faktach dotyczących jednostki morskiej.",
+          "premiseQuoteIds": [
+            "q8",
+            "q19"
+          ],
+          "decisiveQuoteIds": []
+        }
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://londynek.net/wiadomosci/The%20%27Bursztyn%27%20ferry%20to%20make%20its%20first%20voyage%20with%20passengers%20on%20November%2018%2Cwiadomosci%2Cnews,/wiadomosci/en/article?jdnews_id=113089"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.gospodarkamorska.pl/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia"
+          },
+          {
+            "id": "s3",
+            "url": "https://www.wnp.pl/rynki/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia,1116182.html"
+          },
+          {
+            "id": "s4",
+            "url": "https://pulsgdanska.pl/wiadomosci-gdansk/gdansk-szykuje-wielkie-swieto-bursztynu-w-programie-znalazla-sie-niezwykla-proba/VEb3EN7QE7OyFQCEgH7z"
+          },
+          {
+            "id": "s5",
+            "url": "https://radiogdansk.pl/wiadomosci/trojmiasto/2026/10/23/najnowoczesniejszy-prom-na-baltyku-gotowy"
+          },
+          {
+            "id": "s6",
+            "url": "https://media.gdansk.pl/konferencje-prasowe/876213/glosowanie-w-budzecie-obywatelskim-2027-konferencja-prasowa"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.gov.pl/web/po-gdansk/przedstawienie-zarzutow-czlonkom-obwodowej-komisji-wyborczej-nr-17-w-gdansku"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "insufficient",
+        "evidenceConflict": false,
+        "explanation": "Dostępne materiały nie potwierdzają istnienia projektu \"Bursztyn-KV482\" ani żadnego spotkania w Gdańsku 18 listopada 2026 r. Data ta jest w dokumentach przypisana wyłącznie do rozpoczęcia eksploatacji komercyjnej promu \"Bursztyn Unity\". Brak źródeł pozwala jedynie na zweryfikowanie aktywności promu, a nie na potwierdzenie lub obalenie tezy o tajnym głosowaniu.",
+        "limitations": [
+          "Brak w dokumentach jakichkolwiek wzmianek o projekcie o nazwie Bursztyn-KV482.",
+          "Brak źródeł dotyczących głosowania w stosunku 17 do 9 w Gdańsku w dniu 18 listopada 2026 roku.",
+          "Dokumenty jednoznacznie wskazują, że 18 listopada 2026 r. był dniem pierwszego komercyjnego rejsu pasażerskiego promu Bursztyn, co wyklucza inne wydarzenia pod tą samą nazwą w tym samym terminie."
+        ],
+        "evidence": [
+          {
+            "relation": "contradicts",
+            "relevance": "Wskazuje, że 18 listopada 2026 r. prom Bursztyn rozpoczął eksploatację komercyjną (rejs pasażerski), co zajmuje czas i kontekst wydarzenia opisanego w tezie.",
+            "quoteId": "q8"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Potwierdza, że 18 listopada 2026 r. to data pierwszego pasażerskiego rejsu promu Bursztyn Unity z Ystad.",
+            "quoteId": "q19"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Potwierdza, że 18 listopada 2026 r. przypada pierwszy rejs pasażerski promu.",
+            "quoteId": "q38"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "18 listopada 2026 r. prom Bursztyn Unity rozpoczął eksploatację komercyjną, wykonując pierwszy rejs pasażerski z Ystad.",
+            "quoteIds": [
+              "q8",
+              "q19",
+              "q38"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "unresolved",
+          "establishedPremise": "18 listopada 2026 r. odbył się pierwszy rejs pasażerski promu Bursztyn Unity.",
+          "inferenceOrCorrection": "Brak dowodów na istnienie projektu \"Bursztyn-KV482\" oraz przeprowadzenie głosowania, co czyni tezę niezweryfikowalną w oparciu o dostępne dane.",
+          "premiseQuoteIds": [
+            "q8",
+            "q19",
+            "q38"
+          ],
+          "decisiveQuoteIds": []
+        }
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://londynek.net/wiadomosci/The%20%27Bursztyn%27%20ferry%20to%20make%20its%20first%20voyage%20with%20passengers%20on%20November%2018%2Cwiadomosci%2Cnews,/wiadomosci/en/article?jdnews_id=113089"
+          },
+          {
+            "id": "s2",
+            "url": "https://www.gospodarkamorska.pl/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia"
+          },
+          {
+            "id": "s3",
+            "url": "https://www.wnp.pl/rynki/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia,1116182.html"
+          },
+          {
+            "id": "s4",
+            "url": "https://pulsgdanska.pl/wiadomosci-gdansk/gdansk-szykuje-wielkie-swieto-bursztynu-w-programie-znalazla-sie-niezwykla-proba/VEb3EN7QE7OyFQCEgH7z"
+          },
+          {
+            "id": "s5",
+            "url": "https://radiogdansk.pl/wiadomosci/trojmiasto/2026/10/23/najnowoczesniejszy-prom-na-baltyku-gotowy"
+          },
+          {
+            "id": "s6",
+            "url": "https://media.gdansk.pl/konferencje-prasowe/876213/glosowanie-w-budzecie-obywatelskim-2027-konferencja-prasowa"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.gov.pl/web/po-gdansk/przedstawienie-zarzutow-czlonkom-obwodowej-komisji-wyborczej-nr-17-w-gdansku"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "approved": false,
+        "reason": "Werdykt insufficient jest błędny, ponieważ dostępne źródła pozwalają na obalenie tezy (refuted). Teza dotyczy fikcyjnego spotkania projektu 'Bursztyn-KV482', podczas gdy źródła potwierdzają, że 18 listopada 2026 r. prom 'Bursztyn Unity' rozpoczął rejsy pasażerskie, co czyni tezę o spotkaniu w Gdańsku zmyśloną informacją (ang. fabrication). Werdykt powinien brzmieć refuted, gdyż twierdzenia o spotkaniu i głosowaniu są nieprawdziwe w świetle dostępnych danych o działalności promu w tym terminie, a nie jedynie nieweryfikowalne.",
+        "findingChecks": [
+          {
+            "findingId": "f1",
+            "supported": true,
+            "atomic": true
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "verdict": null,
+    "explanation": "Kontrola zgodności dowodów z wnioskiem nie pozwoliła ukończyć sprawdzenia. Nie publikujemy niezatwierdzonej oceny.",
+    "limitations": [
+      "Nie potwierdzono zgodności wszystkich ustaleń i przypisanych cytatów z proponowaną oceną."
+    ],
+    "evidence": [],
+    "citationContract": "findings-v1",
+    "findings": [],
+    "status": "unable_to_verify",
+    "evidenceConflict": false,
+    "requestId": "diagnostic-N02",
+    "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+    "statedAt": null,
+    "checkedAt": "2026-11-21T15:08:27.263Z",
+    "mode": "live",
+    "retrieval": [
+      {
+        "provider": "wikipedia",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "sejm",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "arxiv",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "corpus",
+        "documents": 0,
+        "status": "empty"
+      },
+      {
+        "provider": "web",
+        "documents": 12,
+        "status": "ok"
+      }
+    ],
+    "coverage": {
+      "citedSources": 0,
+      "publisherGroups": 0,
+      "reviewedSources": 7,
+      "minimumGroups": 2
+    },
+    "sources": [
+      {
+        "id": "s1",
+        "title": "Pierwszy rejs promu Bursztyn z pasażerami 18 listopada z Ystad do Świnoujścia",
+        "url": "https://londynek.net/wiadomosci/The%20%27Bursztyn%27%20ferry%20to%20make%20its%20first%20voyage%20with%20passengers%20on%20November%2018%2Cwiadomosci%2Cnews,/wiadomosci/en/article?jdnews_id=113089",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "londynek.net",
+        "canonicalUrl": "https://londynek.net/wiadomosci/The%20%27Bursztyn%27%20ferry%20to%20make%20its%20first%20voyage%20with%20passengers%20on%20November%2018%2Cwiadomosci%2Cnews,/wiadomosci/en/article?jdnews_id=113089",
+        "notes": []
+      },
+      {
+        "id": "s2",
+        "title": "Pierwszy rejs promu Bursztyn Unity z pasażerami 18 listopada - GospodarkaMorska.pl",
+        "url": "https://www.gospodarkamorska.pl/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "gospodarkamorska.pl",
+        "canonicalUrl": "https://www.gospodarkamorska.pl/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia",
+        "notes": []
+      },
+      {
+        "id": "s3",
+        "title": "Pierwszy rejs promu Bursztyn z pasażerami 18 listopada z Ystad do Świnoujścia",
+        "url": "https://www.wnp.pl/rynki/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia,1116182.html",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "wnp.pl",
+        "canonicalUrl": "https://www.wnp.pl/rynki/pierwszy-rejs-promu-bursztyn-z-pasazerami-18-listopada-z-ystad-do-swinoujscia,1116182.html",
+        "notes": []
+      },
+      {
+        "id": "s4",
+        "title": "Gdańsk szykuje wielkie święto bursztynu. W programie znalazła się niezwykła próba - Gdańsk, Trójmiasto - Portal miasta Gdańska - PulsGdanska.pl",
+        "url": "https://pulsgdanska.pl/wiadomosci-gdansk/gdansk-szykuje-wielkie-swieto-bursztynu-w-programie-znalazla-sie-niezwykla-proba/VEb3EN7QE7OyFQCEgH7z",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "pulsgdanska.pl",
+        "canonicalUrl": "https://pulsgdanska.pl/wiadomosci-gdansk/gdansk-szykuje-wielkie-swieto-bursztynu-w-programie-znalazla-sie-niezwykla-proba/VEb3EN7QE7OyFQCEgH7z",
+        "notes": []
+      },
+      {
+        "id": "s5",
+        "title": "Najnowocześniejszy prom na Bałtyku gotowy - Radio Gdańsk",
+        "url": "https://radiogdansk.pl/wiadomosci/trojmiasto/2026/10/23/najnowoczesniejszy-prom-na-baltyku-gotowy",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "radiogdansk.pl",
+        "canonicalUrl": "https://radiogdansk.pl/wiadomosci/trojmiasto/2026/10/23/najnowoczesniejszy-prom-na-baltyku-gotowy",
+        "notes": []
+      },
+      {
+        "id": "s6",
+        "title": "Głosowanie w Budżecie Obywatelskim 2027 – konferencja prasowa | Konferencje prasowe | Referat prasowy Urzędu Miejskiego w Gdańsku",
+        "url": "https://media.gdansk.pl/konferencje-prasowe/876213/glosowanie-w-budzecie-obywatelskim-2027-konferencja-prasowa",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "gdansk.pl",
+        "canonicalUrl": "https://media.gdansk.pl/konferencje-prasowe/876213/glosowanie-w-budzecie-obywatelskim-2027-konferencja-prasowa",
+        "notes": []
+      },
+      {
+        "id": "s7",
+        "title": "Przedstawienie zarzutów członkom Obwodowej Komisji Wyborczej nr 17 w Gdańsku - Prokuratura Okręgowa w Gdańsku - Portal Gov.pl",
+        "url": "https://www.gov.pl/web/po-gdansk/przedstawienie-zarzutow-czlonkom-obwodowej-komisji-wyborczej-nr-17-w-gdansku",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:08:33.209Z",
+        "provider": "web",
+        "sourceType": "official",
+        "contentScope": "text",
+        "publisherGroup": "gov.pl",
+        "canonicalUrl": "https://www.gov.pl/web/po-gdansk/przedstawienie-zarzutow-czlonkom-obwodowej-komisji-wyborczej-nr-17-w-gdansku",
+        "notes": []
+      }
+    ]
+  },
+  "repositoryExport": "Source catalogs omitted; full local diagnostics remain under .runtime. Published result quotations and structural validation traces retained."
+}

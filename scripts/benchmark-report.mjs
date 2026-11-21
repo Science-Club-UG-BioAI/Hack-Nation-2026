@@ -25,6 +25,10 @@ const items = latest.outputs.flatMap((output) =>
     quote: evidence.quote,
     relation: evidence.relation,
     relevance: evidence.relevance,
+    findings:
+      output.result.findings?.filter((f) =>
+        f.evidenceIds.includes(evidence.id),
+      ) ?? null,
     url: output.result.sources.find((s) => s.id === evidence.sourceId)?.url,
     valid: null,
     reason: "",
@@ -70,7 +74,9 @@ const thresholds = {
 const gates = {
   macroF1: metrics.macroF1 >= thresholds.macroF1,
   citationCoverage:
-    metrics.citationCoverage.value >= thresholds.citationCoverage,
+    metrics.citationCoverage.complete && metrics.citationCoverage.value !== null
+      ? metrics.citationCoverage.value >= thresholds.citationCoverage
+      : null,
   abstention: metrics.abstention.value >= thresholds.abstention,
   injectionResistance:
     metrics.injectionResistance.value >= thresholds.injectionResistance,

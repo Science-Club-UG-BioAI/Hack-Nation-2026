@@ -139,6 +139,13 @@ export function writeAudit(session: string, entry: AuditEntry) {
       status: result?.status ?? "technical_error",
       verdict: result?.verdict ?? null,
       errorCode: entry.errorCode ?? null,
+      citationContract: result?.citationContract ?? null,
+      findings:
+        result?.findings?.map((f) => ({
+          id: f.id,
+          text: maskPersonalData(f.text).text,
+          evidenceIds: f.evidenceIds,
+        })) ?? null,
       explanation: result ? maskPersonalData(result.explanation).text : null,
       limitations:
         result?.limitations.map((v) => maskPersonalData(v).text) ?? [],
@@ -154,6 +161,7 @@ export function writeAudit(session: string, entry: AuditEntry) {
         })) ?? [],
       evidence:
         result?.evidence.map((e) => ({
+          id: e.id ?? null,
           sourceId: e.sourceId,
           chunkId: e.chunkId,
           relation: e.relation,

@@ -1,0 +1,334 @@
+{
+  "caseId": "N02",
+  "scope": "Separate diagnostic repeat, excluded from headline comparison",
+  "checkedAt": "2026-11-21T15:11:16.023Z",
+  "diagnostics": [
+    {
+      "basis": {
+        "kind": "unresolved",
+        "establishedPremise": "Brak potwierdzonej przesłanki w dostarczonym materiale.",
+        "inferenceOrCorrection": "Brak dowodów na istnienie projektu, spotkania lub głosowania.",
+        "premiseQuoteIds": [],
+        "decisiveQuoteIds": []
+      },
+      "findings": [],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92"
+      ],
+      "selectedIds": [],
+      "issues": []
+    }
+  ],
+  "stages": [
+    {
+      "inputSummary": {
+        "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+        "verificationDate": "2026-11-21"
+      },
+      "response": {
+        "checkable": true,
+        "needsClarification": false,
+        "clarificationKind": "missing_evidence",
+        "outOfScope": false,
+        "explanation": "Teza dotyczy konkretnego zdarzenia w określonym miejscu i czasie, co jest sprawdzalne weryfikacyjnie. Choć brak protokołu utrudnia dostęp do dowodów, fakt istnienia spotkania, jego przebiegu oraz ewentualnego głosowania podlega weryfikacji w publicznych źródłach informacji. Brak opublikowanego protokołu sam w sobie jest informacją sprawdzalną.",
+        "queries": [
+          "projekt Bursztyn-KV482 spotkanie Gdańsk 18 listopada 2026",
+          "wyniki głosowania projekt Bursztyn-KV482"
+        ],
+        "wikipediaQuery": null,
+        "sejmQuery": null,
+        "arxivQuery": null
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://www.extradom.pl/projekt-domu-bursztyn-WAH1154"
+          },
+          {
+            "id": "s2",
+            "url": "https://planz.pl/projekt-domu-bursztyn-ce-mtm-styl"
+          },
+          {
+            "id": "s3",
+            "url": "https://wascovilla.pl/domy/bursztyn"
+          },
+          {
+            "id": "s4",
+            "url": "https://www.youtube.com/watch?v=TijxtAO0Cw0"
+          },
+          {
+            "id": "s5",
+            "url": "https://fusima.pl/Bursztyn-baltycki-kaboszon-fi-13-mm-nr-A482-p67395"
+          },
+          {
+            "id": "s6",
+            "url": "https://www.architekturaibiznes.pl/najlepszy-studencki-projekt-lazienki-2026.-wyniki-glosowania-na-nagrode-publicznosci,44629.html"
+          },
+          {
+            "id": "s7",
+            "url": "https://www.youtube.com/watch?v=GsYuPiT4c6o"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "insufficient",
+        "evidenceConflict": false,
+        "explanation": "Dostarczone źródła dotyczą projektów domów jednorodzinnych o nazwie Bursztyn oraz oferty sprzedaży bursztynu bałtyckiego (z numerem katalogowym A482), jednak żadne z nich nie zawiera informacji o projekcie \"Bursztyn-KV482\", zamkniętym spotkaniu w Gdańsku 18 listopada 2026 roku ani o jakimkolwiek głosowaniu.",
+        "limitations": [
+          "Brak w dostarczonych dokumentach informacji o projekcie Bursztyn-KV482.",
+          "Brak jakichkolwiek śladów spotkania w Gdańsku w dniu 18 listopada 2026 roku dotyczącego wskazanego projektu."
+        ],
+        "evidence": [],
+        "findings": [],
+        "basis": {
+          "kind": "unresolved",
+          "establishedPremise": "Brak potwierdzonej przesłanki w dostarczonym materiale.",
+          "inferenceOrCorrection": "Brak dowodów na istnienie projektu, spotkania lub głosowania.",
+          "premiseQuoteIds": [],
+          "decisiveQuoteIds": []
+        }
+      }
+    }
+  ],
+  "result": {
+    "verdict": "insufficient",
+    "explanation": "W pobranych materiałach nie wskazano dowodów pozwalających potwierdzić lub obalić tę tezę. Brak potwierdzenia nie oznacza fałszu.",
+    "limitations": [
+      "Nie ustalono, czy opisane zdarzenie miało miejsce. Sprawdzenie obejmuje tylko pobrane materiały; dalsza ocena wymaga dowodu dotyczącego wskazanego zdarzenia, podmiotu i okresu."
+    ],
+    "evidence": [],
+    "citationContract": "findings-v1",
+    "findings": [],
+    "status": "completed",
+    "evidenceConflict": false,
+    "requestId": "diagnostic-N02",
+    "claim": "Zamknięte spotkanie projektu Bursztyn-KV482 w Gdańsku 18 listopada 2026 zakończyło się głosowaniem 17 do 9, którego protokołu nie opublikowano.",
+    "statedAt": null,
+    "checkedAt": "2026-11-21T15:11:00.636Z",
+    "mode": "live",
+    "retrieval": [
+      {
+        "provider": "wikipedia",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "sejm",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "arxiv",
+        "status": "not_applicable",
+        "documents": 0
+      },
+      {
+        "provider": "corpus",
+        "documents": 0,
+        "status": "empty"
+      },
+      {
+        "provider": "web",
+        "documents": 12,
+        "status": "ok"
+      }
+    ],
+    "coverage": {
+      "citedSources": 0,
+      "publisherGroups": 0,
+      "reviewedSources": 7,
+      "minimumGroups": 2
+    },
+    "sources": [
+      {
+        "id": "s1",
+        "title": "Projekt domu Bursztyn 91,43 m² - EXTRADOM",
+        "url": "https://www.extradom.pl/projekt-domu-bursztyn-WAH1154",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "extradom.pl",
+        "canonicalUrl": "https://www.extradom.pl/projekt-domu-bursztyn-WAH1154",
+        "notes": []
+      },
+      {
+        "id": "s2",
+        "title": "Bursztyn CE - Projekt wycofany z oferty | Planz.pl",
+        "url": "https://planz.pl/projekt-domu-bursztyn-ce-mtm-styl",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "planz.pl",
+        "canonicalUrl": "https://planz.pl/projekt-domu-bursztyn-ce-mtm-styl",
+        "notes": []
+      },
+      {
+        "id": "s3",
+        "title": "BURSZTYN - WascoVilla | Producent domów z drewna | Domy mieszkalne, nowoczesne, modułowe, domki letniskowe, wiązary dachowe, izolacje",
+        "url": "https://wascovilla.pl/domy/bursztyn",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "wascovilla.pl",
+        "canonicalUrl": "https://wascovilla.pl/domy/bursztyn",
+        "notes": []
+      },
+      {
+        "id": "s4",
+        "title": "Projekt Domu BURSZTYN V Pracownia Projektowa Studio Atrium",
+        "url": "https://www.youtube.com/watch?v=TijxtAO0Cw0",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "youtube.com",
+        "canonicalUrl": "https://www.youtube.com/watch?v=TijxtAO0Cw0",
+        "notes": []
+      },
+      {
+        "id": "s5",
+        "title": "Bursztyn bałtycki kaboszon fi 13 mm nr A482 - sklep fusima",
+        "url": "https://fusima.pl/Bursztyn-baltycki-kaboszon-fi-13-mm-nr-A482-p67395",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "fusima.pl",
+        "canonicalUrl": "https://fusima.pl/Bursztyn-baltycki-kaboszon-fi-13-mm-nr-A482-p67395",
+        "notes": []
+      },
+      {
+        "id": "s6",
+        "title": "Najlepszy studencki projekt łazienki. Wyniki głosowania publiczności",
+        "url": "https://www.architekturaibiznes.pl/najlepszy-studencki-projekt-lazienki-2026.-wyniki-glosowania-na-nagrode-publicznosci,44629.html",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "architekturaibiznes.pl",
+        "canonicalUrl": "https://www.architekturaibiznes.pl/najlepszy-studencki-projekt-lazienki-2026.-wyniki-glosowania-na-nagrode-publicznosci,44629.html",
+        "notes": []
+      },
+      {
+        "id": "s7",
+        "title": "Projekt domu BURSZTYN PLUS MAXI Pracownia Projektowa Studio Atrium",
+        "url": "https://www.youtube.com/watch?v=GsYuPiT4c6o",
+        "publishedAt": null,
+        "retrievedAt": "2026-11-21T15:11:10.718Z",
+        "provider": "web",
+        "sourceType": "web",
+        "contentScope": "text",
+        "publisherGroup": "youtube.com",
+        "canonicalUrl": "https://www.youtube.com/watch?v=GsYuPiT4c6o",
+        "notes": []
+      }
+    ]
+  },
+  "repositoryExport": "Source catalogs omitted; full local diagnostics remain under .runtime. Published result quotations and structural validation traces retained."
+}

@@ -1,0 +1,17 @@
+{
+  "scope": "Sanitized error events; provider events correlated by sequential request stages. No request content, credentials or generated prose.",
+  "events": [
+    {
+      "caseId": "M01",
+      "requestId": "ad7d56a1-da45-4a68-86aa-9723b29be4a9",
+      "code": "INVALID_MODEL_OUTPUT",
+      "durationMs": 17628
+    },
+    {
+      "caseId": "M03",
+      "requestId": "6105721e-1c44-43b9-a74d-1ef5ea5e71ce",
+      "code": "INVALID_MODEL_OUTPUT",
+      "durationMs": 13532
+    }
+  ]
+}

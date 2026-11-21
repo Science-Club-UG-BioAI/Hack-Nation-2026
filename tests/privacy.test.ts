@@ -192,6 +192,13 @@ it("does not persist source quotations, credentials, tracking or encoded contact
     result,
   });
   const record = sessionAudit(session)[0];
+  expect(record.citationContract).toBe("findings-v1");
+  expect(record.findings).toEqual(result.findings);
+  expect(record.evidence).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ id: "q1", sourceId: "s1" }),
+    ]),
+  );
   const json = JSON.stringify(record);
   expect(json).not.toContain("password");
   expect(json).not.toContain("token");

@@ -50,9 +50,14 @@ beforeEach(() => {
         queries: ["Poland NATO date", "Poland NATO alternative date"],
       } as never;
     if (schema === auditSchema)
-      return { approved: true, reason: "Wniosek uzasadniony." } as never;
+      return {
+        approved: true,
+        findingChecks: [{ findingId: "f1", supported: true, atomic: true }],
+        reason: "Wniosek uzasadniony.",
+      } as never;
     return {
       verdict: "supported",
+      findings: [{ id: "f1", text: claim, quoteIds: ["q1", "q2"] }],
       explanation: "Oba źródła podają tę samą datę.",
       limitations: [],
       evidence: ["q1", "q2"].map((quoteId) => ({
@@ -87,6 +92,7 @@ it.each(["web", "discord"])(
     expect(initial).toMatchObject({
       status: "completed",
       verdict: "supported",
+      findings: [{ id: "f1", text: claim, evidenceIds: ["q1", "q2"] }],
       mode: "live",
       delivery: { reused: false },
     });
@@ -94,6 +100,7 @@ it.each(["web", "discord"])(
       requestId: initial.requestId,
       verdict: initial.verdict,
       evidence: initial.evidence,
+      findings: initial.findings,
       sources: initial.sources,
       checkedAt: initial.checkedAt,
       delivery: { reused: true },
@@ -102,6 +109,7 @@ it.each(["web", "discord"])(
     expect(channel.delivery).toBe("simulated");
     const reply = channel.messages.join("\n");
     expect(reply).toContain("Ocena: Potwierdzone");
+    expect(reply).toContain(`${claim} [1] [2]`);
     for (const item of initial.evidence) expect(reply).toContain(item.quote);
     for (const source of initial.sources) expect(reply).toContain(source.url);
     expect(generate).toHaveBeenCalledTimes(3);
@@ -114,6 +122,47 @@ it("does not share results across browser sessions", async () => {
   await discord(request({ content: claim }));
   expect(generate).toHaveBeenCalledTimes(6);
 });
+it.each(["web", "discord"])(
+  "shares an unapproved attempt from %s once across channels but permits retry",
+  async (first) => {
+    const original = vi.mocked(generate).getMockImplementation()!;
+    vi.mocked(generate).mockImplementation(async (...args) =>
+      args[0] === auditSchema
+        ? ({
+            approved: false,
+            findingChecks: [],
+            reason: "Nieuzasadniony wniosek.",
+          } as never)
+        : original(...args),
+    );
+    const session = randomUUID();
+    const invoke = async (which: string) => {
+      const response = await (which === "web"
+        ? web(request({ claim }, session))
+        : discord(request({ content: claim }, session)));
+      const body = await response.json();
+      return which === "web" ? body : body.result;
+    };
+    const initial = await invoke(first);
+    const other = first === "web" ? "discord" : "web";
+    const shared = await invoke(other);
+    expect(initial).toMatchObject({
+      status: "unable_to_verify",
+      verdict: null,
+      evidence: [],
+      findings: [],
+    });
+    expect(shared).toMatchObject({
+      ...initial,
+      delivery: { ...shared.delivery, reused: true },
+    });
+    expect(generate).toHaveBeenCalledTimes(3);
+    const retried = await invoke(other);
+    expect(retried.requestId).not.toBe(initial.requestId);
+    expect(retried.delivery.reused).toBe(false);
+    expect(generate).toHaveBeenCalledTimes(6);
+  },
+);
 it("coalesces simultaneous messages in both channels into one live analysis", async () => {
   const session = randomUUID();
   let release!: () => void;

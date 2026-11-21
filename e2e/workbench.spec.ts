@@ -220,6 +220,10 @@ test("demo result, evidence, changed claim and mobile layout", async ({
   await expect(
     page.getByRole("link", { name: "Poland and NATO" }),
   ).toHaveAttribute("href", /nato.int/);
+  const citation = page.getByRole("link", { name: "Dowód 2", exact: true });
+  await expect(citation).toHaveAttribute("href", "#evidence-2");
+  await citation.click();
+  await expect(page.locator("#evidence-2 blockquote")).toBeVisible();
   await page.screenshot({ path: "test-results/desktop.png", fullPage: true });
   await page
     .getByLabel("Twierdzenie do sprawdzenia")

@@ -74,6 +74,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
           if (modelCalls === 2)
             return geminiResponse({
               verdict: "supported",
+              findings: [{ id: "f1", text: claim, quoteIds: ["q1", "q2"] }],
               basis: {
                 kind: "confirmed",
                 establishedPremise: "",
@@ -98,6 +99,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
             });
           return geminiResponse({
             approved: true,
+            findingChecks: [{ findingId: "f1", supported: true, atomic: true }],
             reason: "Zgodne z dowodem.",
           });
         },
@@ -143,6 +145,11 @@ describe("real route and adapters with controlled HTTP provider responses", () =
       } else body = await response.json();
       expect(body.verdict).toBe("supported");
       expect(body.mode).toBe("live");
+      expect(body.citationContract).toBe("findings-v1");
+      expect(body.findings).toEqual([
+        { id: "f1", text: claim, evidenceIds: ["q1", "q2"] },
+      ]);
+      expect(body.explanation).toBe(`${claim} [1] [2]`);
       expect(fetcher).toHaveBeenCalledTimes(5);
       expect(JSON.stringify(body)).not.toContain("test-key-not-real");
       expect(response.headers.get("cache-control")).toContain("no-store");

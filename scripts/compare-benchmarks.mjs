@@ -104,7 +104,10 @@ const result = {
   delta: {
     macroF1: a.macroF1 - b.macroF1,
     medianMs: a.latency.medianMs - b.latency.medianMs,
-    citationCoverage: a.citationCoverage.value - b.citationCoverage.value,
+    citationCoverage:
+      a.citationCoverage.value !== null && b.citationCoverage.value !== null
+        ? a.citationCoverage.value - b.citationCoverage.value
+        : null,
   },
   improved: cases.filter((c) => c.improved).map((c) => c.id),
   regressed: cases.filter((c) => c.regressed).map((c) => c.id),

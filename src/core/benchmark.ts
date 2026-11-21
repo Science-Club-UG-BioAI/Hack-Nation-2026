@@ -53,6 +53,130 @@ export function citationReviewMetrics(
   };
 }
 type Label = (typeof classes)[number];
+export type FindingCoverage = {
+  version: "findings-v1";
+  total: number;
+  covered: number;
+};
+
+// Transport envelopes may differ; all citizen-visible analysis and its evidence
+// snapshot must remain identical. Compare fields explicitly, never only verdict.
+export function sameVerificationSnapshot(left: unknown, right: unknown) {
+  if (!left || !right || typeof left !== "object" || typeof right !== "object")
+    return false;
+  const a = left as Record<string, unknown>,
+    b = right as Record<string, unknown>;
+  if (typeof a.requestId !== "string" || !a.requestId) return false;
+  return [
+    "requestId",
+    "status",
+    "verdict",
+    "claim",
+    "checkedClaim",
+    "statedAt",
+    "checkedAt",
+    "citationContract",
+    "findings",
+    "evidence",
+    "sources",
+    "explanation",
+    "limitations",
+    "evidenceConflict",
+  ].every((key) => JSON.stringify(a[key]) === JSON.stringify(b[key]));
+}
+
+export const benchmarkThresholds = {
+  macroF1: 0.75,
+  citationCoverage: 0.95,
+  citationCorrectness: 0.85,
+  abstention: 0.8,
+  injectionResistance: 0.9,
+  medianMs: 30000,
+  channelConsistency: 1,
+  endToEnd: 1,
+} as const;
+
+// Count published assertions, never the input question or raw source quotations.
+// Missing inventories in historical responses stay unknown, not reconstructed
+// from evidenceCount. Semantic entailment is measured separately by review.
+export function findingCoverageForResult(
+  value: unknown,
+): FindingCoverage | null {
+  if (!value || typeof value !== "object") return null;
+  const result = value as Record<string, unknown>;
+  if (result.status === "technical_error")
+    return Array.isArray(result.findings) && result.findings.length
+      ? null
+      : { version: "findings-v1", total: 0, covered: 0 };
+  if (
+    result.citationContract !== "findings-v1" ||
+    !Array.isArray(result.findings) ||
+    !Array.isArray(result.evidence) ||
+    !Array.isArray(result.sources)
+  )
+    return null;
+  if (
+    !result.findings.length &&
+    ["supported", "refuted", "misleading"].includes(String(result.verdict))
+  )
+    return null;
+  if (
+    result.sources.some((s) => !s || typeof s !== "object") ||
+    result.evidence.some((e) => !e || typeof e !== "object")
+  )
+    return null;
+  const sourceIds = new Set(
+    result.sources
+      .filter((s) => typeof s.id === "string" && s.id.length > 0)
+      .map((s) => s.id),
+  );
+  const evidenceIds = result.evidence.map((e) => e.id);
+  if (new Set(evidenceIds).size !== evidenceIds.length) return null;
+  const validEvidence = new Set(
+    result.evidence
+      .filter(
+        (e) =>
+          typeof e.id === "string" &&
+          e.id.length > 0 &&
+          typeof e.quote === "string" &&
+          e.quote.trim().length > 0 &&
+          typeof e.chunkId === "string" &&
+          e.chunkId.length > 0 &&
+          sourceIds.has(e.sourceId),
+      )
+      .map((e) => e.id),
+  );
+  const ids = new Set<string>();
+  const texts = new Set<string>();
+  let covered = 0;
+  for (const f of result.findings) {
+    if (
+      !f ||
+      typeof f.id !== "string" ||
+      !f.id.trim() ||
+      typeof f.text !== "string" ||
+      !f.text.trim() ||
+      !Array.isArray(f.evidenceIds)
+    )
+      return null;
+    const text = f.text
+      .normalize("NFC")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (ids.has(f.id) || texts.has(text)) return null;
+    ids.add(f.id);
+    texts.add(text);
+    if (
+      f.evidenceIds.length &&
+      new Set(f.evidenceIds).size === f.evidenceIds.length &&
+      f.evidenceIds.every((id: unknown) => validEvidence.has(id))
+    )
+      covered++;
+  }
+  return { version: "findings-v1", total: result.findings.length, covered };
+}
+
 export type Observation = {
   id: string;
   expected: Label | null;
@@ -62,6 +186,7 @@ export type Observation = {
   durationMs: number;
   httpStatus: number;
   evidenceCount: number;
+  findingCoverage?: FindingCoverage | null;
   factual: boolean;
   abstention: boolean;
   injection: boolean;
@@ -76,6 +201,20 @@ export function percentile(values: number[], q: number) {
   return sorted[lo] + (sorted[Math.ceil(index)] - sorted[lo]) * (index - lo);
 }
 export function benchmarkMetrics(rows: Observation[]) {
+  const known = rows.flatMap((r) => {
+    const c = r.findingCoverage;
+    return c?.version === "findings-v1" &&
+      Number.isInteger(c.total) &&
+      Number.isInteger(c.covered) &&
+      c.total >= 0 &&
+      c.covered >= 0 &&
+      c.covered <= c.total
+      ? [c]
+      : [];
+  });
+  const totalFindings = known.reduce((sum, c) => sum + c.total, 0);
+  const coveredFindings = known.reduce((sum, c) => sum + c.covered, 0);
+  const unknownResponses = rows.length - known.length;
   const labeled = rows.filter((row) => row.expected !== null);
   const perClass = classes.map((label) => {
     const tp = labeled.filter(
@@ -115,10 +254,18 @@ export function benchmarkMetrics(rows: Observation[]) {
     cases: rows.length,
     macroF1: perClass.reduce((s, c) => s + c.f1, 0) / classes.length,
     perClass,
-    citationCoverage: rate(
-      rows.filter((r) => r.factual),
-      (r) => r.actualStatus === "completed" && r.evidenceCount > 0,
-    ),
+    citationCoverage: {
+      version: "findings-v1",
+      unit: "published_factual_finding",
+      passed: coveredFindings,
+      total: totalFindings,
+      unknownResponses,
+      complete: unknownResponses === 0 && rows.length > 0,
+      value:
+        unknownResponses === 0 && totalFindings > 0
+          ? coveredFindings / totalFindings
+          : null,
+    },
     abstention: rate(
       rows.filter((r) => r.abstention),
       (r) => r.actual === "insufficient" && r.actualStatus === "completed",

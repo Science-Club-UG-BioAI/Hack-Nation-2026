@@ -11,6 +11,7 @@ type Entry = {
   result: VerificationResult;
   expires: number;
   timer: ReturnType<typeof setTimeout>;
+  channels: Set<string>;
 };
 type State = {
   cache: Map<string, Entry>;
@@ -20,13 +21,14 @@ type State = {
       session: string;
       controller: AbortController;
       promise: Promise<VerificationResult>;
+      channels: Set<string>;
     }
   >;
 };
 const globals = globalThis as typeof globalThis & {
-  prawdowidVerificationsV3?: State;
+  prawdowidVerificationsV4?: State;
 };
-const state = (globals.prawdowidVerificationsV3 ??= {
+const state = (globals.prawdowidVerificationsV4 ??= {
   cache: new Map(),
   pending: new Map(),
 });
@@ -49,7 +51,7 @@ function keyFor(input: VerifyInput, session: string) {
   return createHash("sha256")
     .update(
       JSON.stringify([
-        "reasoned-guard-v2",
+        "findings-v1-p02",
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,
@@ -79,12 +81,19 @@ export async function runVerification(
   requestId: string,
   signal: AbortSignal,
   onProgress?: ProgressListener,
+  channel: "web" | "discord_demo" = "web",
 ) {
   signal.throwIfAborted();
   assertSessionActive(session);
   const key = keyFor(input, session);
   const cached = state.cache.get(key);
-  if (cached && cached.expires > Date.now()) {
+  if (
+    cached &&
+    cached.expires > Date.now() &&
+    (cached.result.status !== "unable_to_verify" ||
+      !cached.channels.has(channel))
+  ) {
+    cached.channels.add(channel);
     onProgress?.({ type: "stage", stage: "reused" });
     return { result: structuredClone(cached.result), reused: true };
   }
@@ -94,6 +103,7 @@ export async function runVerification(
   }
   const pending = state.pending.get(key);
   if (pending) {
+    pending.channels.add(channel);
     onProgress?.({ type: "stage", stage: "waiting" });
     return {
       result: structuredClone(await waiting(pending.promise, signal)),
@@ -103,32 +113,34 @@ export async function runVerification(
   const release = acquire(session);
   const controller = new AbortController();
   const combined = AbortSignal.any([signal, controller.signal]);
+  const channels = new Set([channel]);
   const task = verify(input, requestId, combined, onProgress)
     .then((result) => {
       combined.throwIfAborted();
       assertSessionActive(session);
-      // Failures to perform verification must be retried against the services, not cached.
-      if (result.status !== "unable_to_verify") {
-        if (state.cache.size >= 100) {
-          const oldest = state.cache.keys().next().value!;
-          clearTimeout(state.cache.get(oldest)!.timer);
-          state.cache.delete(oldest);
-        }
-        const timer = setTimeout(() => state.cache.delete(key), TTL);
-        timer.unref();
-        state.cache.set(key, {
-          session,
-          result: structuredClone(result),
-          expires: Date.now() + TTL,
-          timer,
-        });
+      // The other channel may display the same failed attempt. Retrying from a
+      // channel that already received it performs a fresh verification. Exceptions
+      // (provider/transport errors) never enter this snapshot store.
+      if (state.cache.size >= 100) {
+        const oldest = state.cache.keys().next().value!;
+        clearTimeout(state.cache.get(oldest)!.timer);
+        state.cache.delete(oldest);
       }
+      const timer = setTimeout(() => state.cache.delete(key), TTL);
+      timer.unref();
+      state.cache.set(key, {
+        session,
+        result: structuredClone(result),
+        expires: Date.now() + TTL,
+        timer,
+        channels,
+      });
       return result;
     })
     .finally(() => {
       state.pending.delete(key);
       release();
     });
-  state.pending.set(key, { session, controller, promise: task });
+  state.pending.set(key, { session, controller, promise: task, channels });
   return { result: await task, reused: false };
 }

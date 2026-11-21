@@ -1,0 +1,354 @@
+{
+  "caseId": "M04",
+  "scope": "Separate diagnostic repeat, excluded from headline comparison",
+  "checkedAt": "2026-11-21T15:11:42.970Z",
+  "diagnostics": [
+    {
+      "basis": {
+        "kind": "mixed_context",
+        "establishedPremise": "W 1995 roku przeprowadzono denominację złotego w stosunku 10 000 starych złotych na 1 nowego złotego.",
+        "inferenceOrCorrection": "Denominacja była technicznym zabiegiem ułatwiającym obrót pieniężny, a nie bezpośrednią przyczyną utraty wartości oszczędności; utrata siły nabywczej była skutkiem hiperinflacji z poprzednich lat.",
+        "premiseQuoteIds": [
+          "q1"
+        ],
+        "decisiveQuoteIds": [
+          "q53",
+          "q96"
+        ]
+      },
+      "findings": [
+        {
+          "id": "f1",
+          "text": "Denominacja złotego w 1995 roku polegała na przeliczeniu 10 000 starych złotych na 1 nowego złotego.",
+          "quoteIds": [
+            "q1"
+          ]
+        },
+        {
+          "id": "f2",
+          "text": "Denominacja z 1995 roku była operacją techniczną, która zmieniała zapis liczbowy na banknotach, ale nie wpływała na siłę nabywczą oszczędności.",
+          "quoteIds": [
+            "q46",
+            "q53"
+          ]
+        },
+        {
+          "id": "f3",
+          "text": "Denominacja w 1995 roku miała charakter ekwiwalentny, co odróżnia ją od wcześniejszej, konfiskacyjnej reformy walutowej z 1950 roku.",
+          "quoteIds": [
+            "q96"
+          ]
+        }
+      ],
+      "availableIds": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+        "q11",
+        "q12",
+        "q13",
+        "q14",
+        "q15",
+        "q16",
+        "q17",
+        "q18",
+        "q19",
+        "q20",
+        "q21",
+        "q22",
+        "q23",
+        "q24",
+        "q25",
+        "q26",
+        "q27",
+        "q28",
+        "q29",
+        "q30",
+        "q31",
+        "q32",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40",
+        "q41",
+        "q42",
+        "q43",
+        "q44",
+        "q45",
+        "q46",
+        "q47",
+        "q48",
+        "q49",
+        "q50",
+        "q51",
+        "q52",
+        "q53",
+        "q54",
+        "q55",
+        "q56",
+        "q57",
+        "q58",
+        "q59",
+        "q60",
+        "q61",
+        "q62",
+        "q63",
+        "q64",
+        "q65",
+        "q66",
+        "q67",
+        "q68",
+        "q69",
+        "q70",
+        "q71",
+        "q72",
+        "q73",
+        "q74",
+        "q75",
+        "q76",
+        "q77",
+        "q78",
+        "q79",
+        "q80",
+        "q81",
+        "q82",
+        "q83",
+        "q84",
+        "q85",
+        "q86",
+        "q87",
+        "q88",
+        "q89",
+        "q90",
+        "q91",
+        "q92",
+        "q93",
+        "q94",
+        "q95",
+        "q96",
+        "q97",
+        "q98",
+        "q99",
+        "q100",
+        "q101",
+        "q102",
+        "q103",
+        "q104",
+        "q105",
+        "q106",
+        "q107",
+        "q108",
+        "q109",
+        "q110",
+        "q111",
+        "q112",
+        "q113",
+        "q114",
+        "q115",
+        "q116",
+        "q117",
+        "q118",
+        "q119",
+        "q120",
+        "q121",
+        "q122",
+        "q123",
+        "q124",
+        "q125",
+        "q126",
+        "q127",
+        "q128",
+        "q129",
+        "q130",
+        "q131",
+        "q132",
+        "q133",
+        "q134",
+        "q135",
+        "q136",
+        "q137",
+        "q138",
+        "q139",
+        "q140",
+        "q141",
+        "q142",
+        "q143",
+        "q144",
+        "q145",
+        "q146",
+        "q147",
+        "q148",
+        "q149",
+        "q150",
+        "q151",
+        "q152",
+        "q153",
+        "q154",
+        "q155",
+        "q156"
+      ],
+      "selectedIds": [
+        "q1",
+        "q46",
+        "q53",
+        "q96"
+      ],
+      "issues": []
+    }
+  ],
+  "stages": [
+    {
+      "inputSummary": {
+        "claim": "W 1995 roku usunięto cztery zera ze złotego, co dowodzi, że oszczędności Polaków straciły wtedy 99,99 procent wartości wyłącznie wskutek denominacji.",
+        "verificationDate": "2026-11-21"
+      },
+      "response": {
+        "checkable": true,
+        "needsClarification": false,
+        "clarificationKind": "none",
+        "outOfScope": false,
+        "explanation": "Teza zawiera twierdzenie o skutkach ekonomicznych denominacji złotego w 1995 roku, które można zweryfikować poprzez analizę mechanizmu denominacji. Sama denominacja (zmiana jednostki monetarnej, zamiana starych złotych na nowe w stosunku 10 000:1) jest faktem historycznym, natomiast twierdzenie, że operacja ta spowodowała utratę 99,99% wartości oszczędności, jest interpretacją ekonomiczną, którą można skonfrontować z wiedzą na temat mechanizmów tej reformy walutowej.",
+        "queries": [
+          "skutki ekonomiczne denominacji złotego 1995",
+          "czy denominacja złotego w 1995 roku powodowała utratę wartości oszczędności"
+        ],
+        "wikipediaQuery": "Denominacja złotego (1995)",
+        "sejmQuery": "Ustawa o denominacji złotego",
+        "arxivQuery": null
+      }
+    },
+    {
+      "inputSummary": {
+        "claim": "W 1995 roku usunięto cztery zera ze złotego, co dowodzi, że oszczędności Polaków straciły wtedy 99,99 procent wartości wyłącznie wskutek denominacji.",
+        "verificationDate": "2026-11-21",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://pl.wikipedia.org/w/index.php?title=Denominacja+z%C5%82otego+w+1995+roku&oldid=80492169"
+          },
+          {
+            "id": "s2",
+            "url": "https://api.sejm.gov.pl/eli/acts/DU/1995/79/text.html"
+          },
+          {
+            "id": "s3",
+            "url": "https://swidnica24.pl/2026/04/denominacja-zlotego-1995-co-stalo-sie-z-pieniedzmi-prl-i-czy-sa-cos-warte"
+          },
+          {
+            "id": "s4",
+            "url": "https://www.youtube.com/watch?v=nrS32j3mF2w"
+          },
+          {
+            "id": "s5",
+            "url": "https://historia.interia.pl/kartka-z-kalendarza/news-7-lipca-1995-r-denominacja-zlotego,nId,1847693"
+          },
+          {
+            "id": "s6",
+            "url": "https://dzieje.pl/aktualnosci/25-lat-temu-weszla-w-zycie-ustawa-o-denominacji-zlotego"
+          },
+          {
+            "id": "s7",
+            "url": "https://internetowykantor.pl/aktualnosci/2022/04/15/co-to-jest-i-na-czym-polega-denominacja-przeszla-przez-to-nie-tylko-polska"
+          },
+          {
+            "id": "s8",
+            "url": "https://tvn24.pl/polska/denominacja-w-polsce-kiedy-byla-i-na-czym-polegala-st5487296"
+          },
+          {
+            "id": "s9",
+            "url": "https://www.careersinpoland.com/article/finance-and-housing/money-in-poland-a-quick-guide-to-polish-currency"
+          },
+          {
+            "id": "s10",
+            "url": "https://www.leftovercurrency.com/exchange/polish-zloty/old-polish-zloty-banknotes"
+          }
+        ],
+        "retrievalWarnings": []
+      },
+      "response": {
+        "verdict": "misleading",
+        "evidenceConflict": false,
+        "explanation": "Twierdzenie zawiera prawdziwy element historyczny dotyczący usunięcia czterech zer podczas denominacji w 1995 roku, jednak błędnie interpretuje naturę tej operacji. Denominacja była zabiegiem technicznym, a nie procesem utraty wartości oszczędności. Utrata siły nabywczej pieniądza była wynikiem wcześniejszej hiperinflacji, a nie samej wymiany waluty; denominacja była jedynie ujednoliceniem zapisu cen i nominałów do rzeczywistej wartości rynkowej.",
+        "limitations": [
+          "Teza błędnie utożsamia operację denominacji z utratą kapitału.",
+          "Brak rozróżnienia między denominacją ekwiwalentną (1995) a konfiskacyjną (1950) prowadzi do błędnych wniosków co do wpływu na oszczędności."
+        ],
+        "evidence": [
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza techniczny wymiar denominacji 10 000:1.",
+            "quoteId": "q1"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wyjaśnia, że denominacja to zmiana zapisu, a nie wartości siły nabywczej.",
+            "quoteId": "q46"
+          },
+          {
+            "relation": "contradicts",
+            "relevance": "Wprost zaprzecza, by denominacja zmieniała wartość oszczędności; milion starych złotych po denominacji miał tę samą siłę nabywczą co 100 nowych złotych.",
+            "quoteId": "q53"
+          },
+          {
+            "relation": "supports",
+            "relevance": "Potwierdza, że denominacja z 1995 roku była ekwiwalentna, co oznacza brak straty wartości oszczędności w wyniku tego konkretnego aktu.",
+            "quoteId": "q96"
+          }
+        ],
+        "findings": [
+          {
+            "id": "f1",
+            "text": "Denominacja złotego w 1995 roku polegała na przeliczeniu 10 000 starych złotych na 1 nowego złotego.",
+            "quoteIds": [
+              "q1"
+            ]
+          },
+          {
+            "id": "f2",
+            "text": "Denominacja z 1995 roku była operacją techniczną, która zmieniała zapis liczbowy na banknotach, ale nie wpływała na siłę nabywczą oszczędności.",
+            "quoteIds": [
+              "q46",
+              "q53"
+            ]
+          },
+          {
+            "id": "f3",
+            "text": "Denominacja w 1995 roku miała charakter ekwiwalentny, co odróżnia ją od wcześniejszej, konfiskacyjnej reformy walutowej z 1950 roku.",
+            "quoteIds": [
+              "q96"
+            ]
+          }
+        ],
+        "basis": {
+          "kind": "mixed_context",
+          "establishedPremise": "W 1995 roku przeprowadzono denominację złotego w stosunku 10 000 starych złotych na 1 nowego złotego.",
+          "inferenceOrCorrection": "Denominacja była technicznym zabiegiem ułatwiającym obrót pieniężny, a nie bezpośrednią przyczyną utraty wartości oszczędności; utrata siły nabywczej była skutkiem hiperinflacji z poprzednich lat.",
+          "premiseQuoteIds": [
+            "q1"
+          ],
+          "decisiveQuoteIds": [
+            "q53",
+            "q96"
+          ]
+        }
+      }
+    }
+  ],
+  "result": {
+    "status": "technical_error",
+    "code": "INVALID_MODEL_OUTPUT",
+    "verdict": null
+  },
+  "repositoryExport": "Source catalogs omitted; full local diagnostics remain under .runtime. Published result quotations and structural validation traces retained."
+}
