@@ -82,6 +82,7 @@ function keyFor(input: VerifyInput, session: string) {
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,
+        input.imageContext ?? null,
         process.env.GEMINI_MODEL ?? "default",
         process.env.GEMINI_FALLBACK_MODEL ?? "default",
       ]),

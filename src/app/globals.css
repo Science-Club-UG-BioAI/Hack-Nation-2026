@@ -1461,10 +1461,19 @@ blockquote {
   cursor: pointer;
   font-weight: 600;
 }
-.image-input label,
 .image-input [role="status"]:not(:empty) {
   display: block;
   margin-top: 12px;
+}
+.image-input details {
+  margin: 8px 0;
+}
+.image-input small {
+  display: block;
+  color: var(--muted);
+}
+.image-input .input-privacy-hint {
+  margin: 4px 0;
 }
 .image-input input {
   max-width: 100%;

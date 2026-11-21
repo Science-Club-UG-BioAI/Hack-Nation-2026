@@ -111,10 +111,17 @@ export async function verify(
   ) => Pick<VerificationResult, "evidenceGraph" | "graphStatus">,
 ): Promise<VerificationResult> {
   const masked = maskPersonalData(input.claim);
+  const maskedContext = maskPersonalData(input.imageContext ?? "");
+  const context = guardClaim(maskedContext.text).claim;
   const startedAt = Date.now();
   const checkedAt = new Date(startedAt).toISOString();
   const today = verificationDate(startedAt);
-  input = { ...input, claim: masked.text, statedAt: input.statedAt || today };
+  input = {
+    ...input,
+    claim: masked.text,
+    imageContext: context || undefined,
+    statedAt: input.statedAt || today,
+  };
   const deadlineAt =
     startedAt + numberSetting("VERIFY_TIMEOUT_MS", 60_000, 60_000);
   let currentStage: ProgressStage = "planning";
@@ -138,10 +145,19 @@ export async function verify(
       start + budget.durationMs,
     );
     try {
-      return await generate(schema, instruction, payload, signal, {
-        deadlineAt: operationDeadline,
-        maxOutputTokens: outputTokenLimit ?? budget.maxOutputTokens,
-      });
+      return await generate(
+        schema,
+        context
+          ? instruction +
+              " Pole imageContext to pomocniczy opis grafiki wygenerowany przez model. Użyj go do ustalenia, czego dotyczy teza i jakich źródeł szukać. Zachowaj zakres tezy użytkownika. Podpis mema nie potwierdza wypowiedzi osoby na zdjęciu. Ustalenia i werdykt uzasadniaj wyłącznie niezależnymi źródłami."
+          : instruction,
+        payload,
+        signal,
+        {
+          deadlineAt: operationDeadline,
+          maxOutputTokens: outputTokenLimit ?? budget.maxOutputTokens,
+        },
+      );
     } finally {
       console.info(
         JSON.stringify({
@@ -160,11 +176,12 @@ export async function verify(
     claim: guarded.removed ? guarded.claim : input.claim,
     verificationDate: today,
   };
-  const securityWarnings: string[] = masked.count
-    ? [
-        "Przed analizą zamaskowano rozpoznane dane osobowe. Wynik dotyczy treści po maskowaniu; jeśli usunięte dane są niezbędne do sprawdzenia, potrzebne będzie doprecyzowanie bez danych poufnych.",
-      ]
-    : [];
+  const securityWarnings: string[] =
+    masked.count || maskedContext.count
+      ? [
+          "Przed analizą zamaskowano rozpoznane dane osobowe. Wynik dotyczy treści po maskowaniu; jeśli usunięte dane są niezbędne do sprawdzenia, potrzebne będzie doprecyzowanie bez danych poufnych.",
+        ]
+      : [];
   const recordGuard = (location: string, count: number) => {
     if (!count) return;
     console.warn(

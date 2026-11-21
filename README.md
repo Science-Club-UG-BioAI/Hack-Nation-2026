@@ -5,7 +5,7 @@
 Prototyp HackNation 2026: **teza → wyszukiwanie → ocena → kontrola cytatów → wynik z dowodami**.
 Ta wersja przyjmuje jedną tezę (20–500 znaków), nie cały artykuł. Obsługuje WWW i działający adapter demonstracyjny wiadomości Discord, zgodnie z pierwszym etapem dostosowania do opisu wyzwania.
 
-W panelu WWW opcja **Dodaj obraz** przyjmuje JPG, PNG i WebP do 4 MiB. **Opisz obraz** wysyła plik do skonfigurowanego modelu Gemini i wyświetla opis oraz ewentualną propozycję tezy. Po wstawieniu tezy do formularza można ją poprawić i sprawdzić w źródłach. Sam opis wymaga tylko klucza Gemini i zużywa jedną próbę ze wspólnego limitu analiz.
+W panelu WWW można dołączyć JPG, PNG lub WebP do 4 MiB. Po wyborze pliku Gemini automatycznie przygotowuje opis, który staje się kontekstem tezy. Jeśli pole tezy jest puste, pojawi się w nim propozycja z obrazu, o ile grafika zawiera sprawdzalne twierdzenie. Tezę można edytować przed wybraniem **Sprawdź dowody**. Odczyt obrazu wymaga klucza Gemini i zużywa jedną próbę ze wspólnego limitu analiz.
 
 ## Uruchomienie
 

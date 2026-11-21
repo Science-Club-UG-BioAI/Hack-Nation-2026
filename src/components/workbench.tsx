@@ -13,11 +13,15 @@ import { SessionControls, ensureSession } from "./session-controls";
 import { AnalysisProgress, type TimedProgress } from "./analysis-progress";
 import { readVerificationStream } from "@/core/progress";
 import { Icon } from "./icon";
-import { ImageInput } from "./image-input";
+import { ImageInput, type ImageAttachment } from "./image-input";
 
 export function Workbench() {
   const [mounted, setMounted] = useState(false);
-  const [claim, setClaim] = useState("");
+  const [draftClaim, setClaim] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<ImageAttachment>(null);
+  const imageUnread = attachment === "unread";
+  const imageResult = imageUnread ? null : attachment;
+  const claim = draftClaim ?? imageResult?.suggestedClaim ?? "";
   const [imageSession, setImageSession] = useState(0);
   const [statedAt, setStatedAt] = useState("");
   const [ready, setReady] = useState<boolean | null>(null);
@@ -56,6 +60,8 @@ export function Workbench() {
     setCancelled(false);
   };
   async function run(demoId?: string) {
+    if (!demoId && imageUnread) return;
+    if (demoId) resetImage();
     clearResult();
     setElapsed(0);
     setDemo(Boolean(demoId));
@@ -80,6 +86,9 @@ export function Workbench() {
                 body: JSON.stringify({
                   claim,
                   evidenceGraph: true,
+                  ...(imageResult
+                    ? { imageContext: imageResult.description }
+                    : {}),
                   ...(statedAt ? { statedAt } : {}),
                 }),
                 signal,
@@ -138,6 +147,10 @@ export function Workbench() {
         });
       },
     );
+  }
+  function resetImage() {
+    setAttachment(null);
+    setImageSession((previous) => previous + 1);
   }
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -205,18 +218,9 @@ export function Workbench() {
               </div>
               <h2 id="input-title">Zacznij od jednej tezy</h2>
               <p className="muted">
-                Wpisz twierdzenie. My znajdziemy źródła, sprawdzimy dowody i
-                pokażemy kontekst.
+                Wpisz własną tezę lub dołącz obraz, z którego możemy ją
+                odczytać.
               </p>
-              <ImageInput
-                key={imageSession}
-                disabled={!mounted || busy}
-                onUseClaim={(value) => {
-                  setClaim(value);
-                  clearResult();
-                  claimRef.current?.focus();
-                }}
-              />
               <form onSubmit={submit}>
                 <label htmlFor="claim">Twierdzenie do sprawdzenia</label>
                 <textarea
@@ -236,9 +240,25 @@ export function Workbench() {
                   aria-describedby="claim-hint"
                 />
                 <div className="input-meta" id="claim-hint">
-                  <span>Jedna teza · 20–500 znaków</span>
+                  <span>
+                    {draftClaim === null && imageResult?.suggestedClaim
+                      ? "Teza z obrazu · możesz ją edytować"
+                      : "Jedna teza · 20–500 znaków"}
+                  </span>
                   <span>{claim.length}/500</span>
                 </div>
+                <ImageInput
+                  key={imageSession}
+                  disabled={!mounted || busy}
+                  attachment={attachment}
+                  hasClaim={Boolean(claim.trim())}
+                  onChange={(value) => {
+                    setAttachment(value);
+                    if (value && value !== "unread")
+                      setClaim((draft) => (draft?.trim() ? draft : null));
+                    clearResult();
+                  }}
+                />
                 <div className="date-row">
                   <label htmlFor="statedAt">
                     Data wypowiedzi{" "}
@@ -268,7 +288,9 @@ export function Workbench() {
                 <button
                   className="primary-button"
                   type="submit"
-                  disabled={!mounted || busy || claim.trim().length < 20}
+                  disabled={
+                    !mounted || busy || imageUnread || claim.trim().length < 20
+                  }
                 >
                   {busy ? (
                     <>
@@ -323,8 +345,8 @@ export function Workbench() {
             <SessionControls
               onClear={() => {
                 cancel();
-                setClaim("");
-                setImageSession((previous) => previous + 1);
+                setClaim(null);
+                resetImage();
                 setStatedAt("");
                 clearResult();
               }}

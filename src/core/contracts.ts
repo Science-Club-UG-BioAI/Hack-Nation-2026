@@ -22,6 +22,7 @@ export const statusLabels = {
   unable_to_verify: "Nie można ukończyć sprawdzenia",
 } as const;
 export type VerificationStatus = keyof typeof statusLabels;
+export const imageContextSchema = z.string().trim().min(1).max(2000);
 export const verifyInputSchema = z
   .object({
     claim: z
@@ -30,6 +31,7 @@ export const verifyInputSchema = z
       .min(20, "Wpisz przynajmniej 20 znaków.")
       .max(500, "Teza może mieć najwyżej 500 znaków."),
     evidenceGraph: z.boolean().optional(),
+    imageContext: imageContextSchema.optional(),
     statedAt: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)

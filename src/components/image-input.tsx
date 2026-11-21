@@ -9,17 +9,23 @@ import {
 import { ensureSession } from "./session-controls";
 import { useVerificationRequest } from "./use-verification-request";
 
+export type ImageAttachment = ImageDescription | "unread" | null;
+
 export function ImageInput({
   disabled,
-  onUseClaim,
+  attachment,
+  hasClaim,
+  onChange,
 }: {
   disabled: boolean;
-  onUseClaim: (claim: string) => void;
+  attachment: ImageAttachment;
+  hasClaim: boolean;
+  onChange: (value: ImageAttachment) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState("");
-  const [result, setResult] = useState<ImageDescription | null>(null);
+  const result = attachment === "unread" ? null : attachment;
   const [error, setError] = useState("");
   const { busy, cancel, runRequest } = useVerificationRequest();
 
@@ -32,7 +38,7 @@ export function ImageInput({
 
   function select(next: File | undefined) {
     cancel();
-    setResult(null);
+    onChange(null);
     setPreview("");
     setError("");
     setFile(null);
@@ -43,10 +49,14 @@ export function ImageInput({
       setError("Wybierz niepusty obraz o rozmiarze do 4 MiB.");
     } else {
       setFile(next);
+      void describe(next);
+      return;
     }
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   async function describe(image: File) {
+    onChange("unread");
     setError("");
     await runRequest(
       async (signal) => {
@@ -58,7 +68,7 @@ export function ImageInput({
         });
         const data: unknown = await response.json();
         signal.throwIfAborted();
-        if (response.ok) setResult(imageDescriptionSchema.parse(data));
+        if (response.ok) onChange(imageDescriptionSchema.parse(data));
         else setError(apiErrorSchema.parse(data).message);
       },
       (timedOut) =>
@@ -70,13 +80,15 @@ export function ImageInput({
     );
   }
 
-  const suggestedClaim = result?.suggestedClaim;
   return (
-    <details className="image-input">
-      <summary>Dodaj obraz</summary>
+    <div className="image-input">
       <label htmlFor="claim-image">
-        Wybierz obraz (JPG, PNG lub WebP, do 4 MiB)
+        Dołącz obraz <span className="optional">opcjonalnie</span>
       </label>
+      <p className="input-privacy-hint" id="image-privacy">
+        Wybór pliku wysyła obraz do Google Gemini bez maskowania. Jego opis
+        zostanie dołączony do tezy.
+      </p>
       <input
         ref={inputRef}
         id="claim-image"
@@ -84,8 +96,9 @@ export function ImageInput({
         accept={imageMimeSchema.options.join(",")}
         disabled={disabled}
         onChange={(event) => select(event.target.files?.[0])}
-        aria-describedby="image-privacy"
+        aria-describedby="image-privacy image-formats"
       />
+      <small id="image-formats">JPG, PNG lub WebP · do 4 MiB</small>
       {file && preview && (
         <img
           className="image-preview"
@@ -93,29 +106,37 @@ export function ImageInput({
           src={preview}
         />
       )}
-      <p className="input-privacy-hint" id="image-privacy">
-        Po kliknięciu „Opisz obraz” plik trafi do Google Gemini. Dane widoczne
-        na obrazie są przesyłane bez maskowania.
-      </p>
-      {!result && (
+      <div role="status" aria-label="Odczyt obrazu" hidden={!file}>
+        {busy
+          ? "Odczytywanie obrazu…"
+          : result && "Kontekst obrazu dołączony do tezy."}
+        {result &&
+          !hasClaim &&
+          !result.suggestedClaim &&
+          " Wpisz tezę, którą chcesz sprawdzić."}
+      </div>
+      {result && (
+        <details>
+          <summary>Pokaż opis obrazu</summary>
+          <p>{result.description}</p>
+        </details>
+      )}
+      {error && <p role="alert">{error}</p>}
+      {file && error && (
         <button
           type="button"
           className="example-button"
-          disabled={disabled || busy || !file}
-          onClick={() => file && void describe(file)}
+          disabled={disabled || busy}
+          onClick={() => void describe(file)}
         >
-          Opisz obraz
-        </button>
-      )}
-      {busy && (
-        <button type="button" className="text-button" onClick={cancel}>
-          Anuluj opis
+          Ponów odczyt
         </button>
       )}
       {file && (
         <button
           type="button"
           className="text-button"
+          disabled={disabled}
           onClick={() => {
             if (inputRef.current) inputRef.current.value = "";
             select(undefined);
@@ -125,37 +146,6 @@ export function ImageInput({
           Usuń obraz
         </button>
       )}
-      {error && <p role="alert">{error}</p>}
-      <div role="status">
-        {busy && "Odczytywanie obrazu…"}
-        {result && (
-          <>
-            <strong>Opis obrazu</strong>
-            <p>{result.description}</p>
-            {suggestedClaim ? (
-              <>
-                <strong>Proponowana teza</strong>
-                <p>{suggestedClaim}</p>
-              </>
-            ) : (
-              <p>
-                Model nie odczytał sprawdzalnej tezy. Możesz wpisać własną
-                poniżej.
-              </p>
-            )}
-          </>
-        )}
-      </div>
-      {suggestedClaim && (
-        <button
-          type="button"
-          className="example-button"
-          disabled={disabled}
-          onClick={() => onUseClaim(suggestedClaim)}
-        >
-          Wstaw tezę do formularza
-        </button>
-      )}
-    </details>
+    </div>
   );
 }

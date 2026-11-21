@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { verifyInputSchema } from "./contracts";
+import { imageContextSchema, verifyInputSchema } from "./contracts";
 
 export const imageMimeSchema = z.enum([
   "image/jpeg",
@@ -8,7 +8,7 @@ export const imageMimeSchema = z.enum([
 ]);
 export const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 export const imageDescriptionSchema = z.object({
-  description: z.string().trim().min(1).max(2000),
+  description: imageContextSchema,
   suggestedClaim: verifyInputSchema.shape.claim.nullable(),
 });
 export type ImageDescription = z.infer<typeof imageDescriptionSchema>;

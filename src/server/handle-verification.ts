@@ -47,7 +47,7 @@ async function readVerificationInput(
   if (!request.body) throw new AppError("INPUT_INVALID", "Brak danych.", 400);
   const text = await readBoundedText(
     request.body,
-    8000,
+    channel === "web" ? 16_000 : 8000,
     new AppError("INPUT_INVALID", "Żądanie jest zbyt duże.", 400),
     signal,
   );
