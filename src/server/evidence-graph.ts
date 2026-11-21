@@ -57,6 +57,7 @@ const claimsSchema = z
             wikipediaQuery: planSchema.shape.wikipediaQuery,
             sejmQuery: planSchema.shape.sejmQuery,
             arxivQuery: planSchema.shape.arxivQuery,
+            euvsdisinfoQuery: planSchema.shape.euvsdisinfoQuery,
           })
           .strict(),
       )
@@ -577,7 +578,7 @@ export async function buildEvidenceGraph(
   const claims = claimsSchema.parse(
     await model(
       claimsSchema,
-      "Wydziel wszystkie twierdzenia atomowe zachowując podmioty, daty, negacje i zakres. Nie dodawaj faktów. single tylko dla jednej równoważnej tezy; conjunction tylko gdy wszystkie elementy są łącznie równoważne wypowiedzi; dla alternatyw, implikacji i niepewnego podziału użyj complex. Gdy ponad 6 elementów użyj complex i podaj maksymalnie 6. Dla sprawdzalnych twierdzeń podaj dwa różne zapytania: neutralne i celowo szukające kontrdowodów. Dla pozostałych podaj puste queries. Dobierz wikipediaQuery jako nazwę polskiego hasła, sejmQuery jako fragment tytułu aktu i arxivQuery jako angielskie słowa kluczowe tylko gdy właściwe; inaczej null.",
+      "Wydziel wszystkie twierdzenia atomowe zachowując podmioty, daty, negacje i zakres. Nie dodawaj faktów. single tylko dla jednej równoważnej tezy; conjunction tylko gdy wszystkie elementy są łącznie równoważne wypowiedzi; dla alternatyw, implikacji i niepewnego podziału użyj complex. Gdy ponad 6 elementów użyj complex i podaj maksymalnie 6. Dla sprawdzalnych twierdzeń podaj dwa różne zapytania: neutralne i celowo szukające kontrdowodów. Dla pozostałych podaj puste queries. Dobierz wikipediaQuery jako nazwę polskiego hasła, sejmQuery jako fragment tytułu aktu i arxivQuery jako angielskie słowa kluczowe, euvsdisinfoQuery jako angielskie słowa kluczowe tylko gdy twierdzenie może dotyczyć prokremlowskiej lub zagranicznej dezinformacji; tylko gdy właściwe, inaczej null.",
       context,
     ),
   );
@@ -594,6 +595,7 @@ export async function buildEvidenceGraph(
           claim.wikipediaQuery,
           claim.sejmQuery,
           claim.arxivQuery,
+          claim.euvsdisinfoQuery,
         ].some((query) => query && untrusted(query)),
     )
   )
@@ -743,6 +745,7 @@ export async function buildEvidenceGraph(
         wikipediaQuery: null,
         sejmQuery: null,
         arxivQuery: null,
+        euvsdisinfoQuery: null,
       },
       roundSignal,
     );

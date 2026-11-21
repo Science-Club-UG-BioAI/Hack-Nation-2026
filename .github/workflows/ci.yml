@@ -30,6 +30,28 @@ jobs:
       - run: npm run corpus:check
       - run: npm run build
 
+  euvsdisinfo:
+    name: EUvsDisinfo adapter (unit + live API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RUN_SOURCE_LIVE_TESTS: "1"
+      EUVSDISINFO_API_KEY: ${{ secrets.EUVSDISINFO_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Require EUVSDISINFO_API_KEY secret
+        run: |
+          if [ -z "$EUVSDISINFO_API_KEY" ]; then
+            echo "::error::Repository secret EUVSDISINFO_API_KEY is not set"
+            exit 1
+          fi
+      - run: npx vitest run tests/euvsdisinfo.test.ts
+
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
