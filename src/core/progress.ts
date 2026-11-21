@@ -60,7 +60,8 @@ export async function readVerificationStream(
     if (!terminal)
       throw new Error("Verification stream ended without a result");
   } finally {
-    await reader.cancel().catch(() => {});
+    // A terminal event is sufficient even if the sender stalls during cleanup.
+    void reader.cancel().catch(() => {});
     reader.releaseLock();
   }
 }

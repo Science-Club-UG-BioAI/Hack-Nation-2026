@@ -69,7 +69,9 @@ export function recordModelUsage(call: UsageCall, body: unknown) {
     output !== null && thoughts !== null ? output + thoughts : null;
   call.cachedTokens = cached;
   const model = call.model ?? "";
-  const rates = Object.hasOwn(modelRates, model) ? modelRates[model] : undefined;
+  const rates = Object.hasOwn(modelRates, model)
+    ? modelRates[model]
+    : undefined;
   if (
     rates &&
     input !== null &&
@@ -92,10 +94,15 @@ export function summarizeUsage(
   const sum = (
     items: UsageCall[],
     key: "inputTokens" | "outputTokens" | "costUsd",
-  ) =>
-    items.some((c) => c[key] === null)
-      ? null
-      : items.reduce((total, c) => total + c[key]!, 0);
+  ) => {
+    let total = 0;
+    for (const item of items) {
+      const value = item[key];
+      if (value === null) return null;
+      total += value;
+    }
+    return total;
+  };
   return {
     inputTokens: sum(models, "inputTokens"),
     outputTokens: sum(models, "outputTokens"),

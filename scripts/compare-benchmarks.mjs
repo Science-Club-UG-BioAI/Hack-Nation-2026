@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { benchmarkMetrics } from "../src/core/benchmark.ts";
+import { benchmarkMetrics, isCompleteRun } from "../src/core/benchmark.ts";
 const before = JSON.parse(
   await readFile(
     process.env.COMPARE_BEFORE ||
@@ -49,10 +49,8 @@ const summarizeControlled = (run) =>
 if (before.datasetSha256 !== after.datasetSha256)
   throw new Error("Cannot compare different reference datasets");
 for (const run of [before, after]) {
-  if (run.unexecuted?.length || run.rows.length !== (run.plannedCases ?? 30))
-    throw new Error("Cannot compare incomplete case sets");
-  if (new Set(run.rows.map((row) => row.id)).size !== run.rows.length)
-    throw new Error("Duplicate benchmark case IDs");
+  if (!isCompleteRun(run))
+    throw new Error("Cannot compare incomplete or duplicate case sets");
 }
 if (before.rows.length !== after.rows.length)
   throw new Error("Cannot compare incomplete case sets");
@@ -91,7 +89,7 @@ const paired = cases.filter(
 );
 const result = {
   datasetSha256: after.datasetSha256,
-  complete: before.rows.length === 30 && after.rows.length === 30,
+  complete: true,
   protocol: {
     modelsUnchanged:
       before.model === after.model && before.fallback === after.fallback,

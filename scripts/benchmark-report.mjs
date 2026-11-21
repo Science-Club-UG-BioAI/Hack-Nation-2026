@@ -2,8 +2,11 @@ import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import {
   benchmarkMetrics,
-  citationReviewMetrics,
+  benchmarkThresholds as thresholds,
+  isCompleteRun,
+  benchmarkGates,
 } from "../src/core/benchmark.ts";
+import { reviewRunCitations } from "./benchmark-review.mjs";
 import { corpusStats } from "./check-corpus.mjs";
 const latestText = await readFile(
   "reports/benchmark/latest/results.json",
@@ -18,84 +21,25 @@ const controlled = JSON.parse(
 );
 const metrics = benchmarkMetrics(latest.rows);
 const resultHash = createHash("sha256").update(latestText).digest("hex");
-const items = latest.outputs.flatMap((output) =>
-  (output.result.evidence ?? []).map((evidence, index) => ({
-    id: `${output.id}:${index}`,
-    claim: output.claim,
-    quote: evidence.quote,
-    relation: evidence.relation,
-    relevance: evidence.relevance,
-    findings:
-      output.result.findings?.filter((f) =>
-        f.evidenceIds.includes(evidence.id),
-      ) ?? null,
-    url: output.result.sources.find((s) => s.id === evidence.sourceId)?.url,
-    valid: null,
-    reason: "",
-  })),
-);
-await writeFile(
-  "reports/benchmark/latest/citation-review.template.json",
-  JSON.stringify(
-    {
-      resultSha256: resultHash,
-      reviewer: null,
-      policy:
-        "Review semantic adequacy to the claim and stated relation, not merely substring presence. Fill valid and reason for each citation. Do not use the model under test as the gold reviewer.",
-      items,
-    },
-    null,
-    2,
-  ) + "\n",
-);
-let review = null;
-try {
-  review = JSON.parse(
-    await readFile("reports/benchmark/latest/citation-review.json", "utf8"),
-  );
-} catch (error) {
-  if (error.code !== "ENOENT") throw error;
-}
-const citationReview = citationReviewMetrics(
+const citationReview = await reviewRunCitations(
+  "reports/benchmark/latest",
+  latest,
   resultHash,
-  items.map((i) => i.id),
-  review,
 );
-const thresholds = {
-  macroF1: 0.75,
-  citationCoverage: 0.95,
-  citationCorrectness: 0.85,
-  abstention: 0.8,
-  injectionResistance: 0.9,
-  medianMs: 30000,
-  channelConsistency: 1,
-  endToEnd: 1,
-};
-const gates = {
-  macroF1: metrics.macroF1 >= thresholds.macroF1,
-  citationCoverage:
-    metrics.citationCoverage.complete && metrics.citationCoverage.value !== null
-      ? metrics.citationCoverage.value >= thresholds.citationCoverage
-      : null,
-  abstention: metrics.abstention.value >= thresholds.abstention,
-  injectionResistance:
-    metrics.injectionResistance.value >= thresholds.injectionResistance,
-  citationCorrectness: citationReview.complete
-    ? citationReview.value >= thresholds.citationCorrectness
-    : null,
-  medianMs:
-    metrics.latency.successfulMedianMs === null
-      ? null
-      : metrics.latency.successfulMedianMs <= thresholds.medianMs,
-  endToEnd: metrics.successfulResponses.value === 1,
-  channelConsistency: metrics.channelConsistency.value === 1,
-};
+const complete = isCompleteRun(latest);
+// The historical report's median gate refers to successful responses.
+const {
+  successfulMedianMs,
+  cost100: _cost100,
+  ...gates
+} = benchmarkGates(metrics, citationReview, complete);
+gates.medianMs = successfulMedianMs;
 const summary = {
   generatedAt: new Date().toISOString(),
-  latestResultSha256: createHash("sha256").update(latestText).digest("hex"),
+  latestResultSha256: resultHash,
   thresholds,
   gates,
-  complete: latest.rows.length === 30,
+  complete,
   metrics,
   citationReview,
   initialMetrics: benchmarkMetrics(initial.rows),

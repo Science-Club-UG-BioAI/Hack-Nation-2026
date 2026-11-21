@@ -13,18 +13,15 @@ export async function ensureSession(signal: AbortSignal) {
 
 export function SessionControls({ onClear }: { onClear: () => void }) {
   const callback = useRef(onClear);
-  const sender = useRef("");
+  const broadcast = useRef<BroadcastChannel | null>(null);
   callback.current = onClear;
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   useEffect(() => {
-    sender.current = crypto.randomUUID();
     const channel = new BroadcastChannel("prawdowid-session");
+    broadcast.current = channel;
     channel.onmessage = (event) => {
-      if (
-        event.data?.type === "deleted" &&
-        event.data.sender !== sender.current
-      ) {
+      if (event.data?.type === "deleted") {
         callback.current();
         setMessage("Sesja została usunięta w innej karcie.");
       }
@@ -35,6 +32,7 @@ export function SessionControls({ onClear }: { onClear: () => void }) {
     };
     window.addEventListener("pageshow", restore);
     return () => {
+      broadcast.current = null;
       channel.close();
       window.removeEventListener("pageshow", restore);
     };
@@ -50,9 +48,7 @@ export function SessionControls({ onClear }: { onClear: () => void }) {
       });
       if (!response.ok) throw new Error("Deletion failed");
       callback.current();
-      const channel = new BroadcastChannel("prawdowid-session");
-      channel.postMessage({ type: "deleted", sender: sender.current });
-      channel.close();
+      broadcast.current?.postMessage({ type: "deleted" });
       setMessage(
         "Usunięto lokalny zapis i wyniki sesji w obu kanałach. Usunięcie nie obejmuje danych już przesłanych do dostawców usług ani pobranych eksportów.",
       );

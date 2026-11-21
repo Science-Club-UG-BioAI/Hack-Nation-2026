@@ -7,6 +7,7 @@ import {
   type ChannelReply,
 } from "@/core/contracts";
 import { VerificationView } from "./verification-view";
+import { useVerificationRequest } from "./use-verification-request";
 import { SessionControls, ensureSession } from "./session-controls";
 
 export function ChannelWorkbench() {
@@ -17,62 +18,40 @@ export function ChannelWorkbench() {
   const [sent, setSent] = useState("");
   const [reply, setReply] = useState<ChannelReply | null>(null);
   const [error, setError] = useState<ApiErrorBody | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { busy, cancel, runRequest } = useVerificationRequest();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const active = useRef<AbortController | null>(null);
-  useEffect(
-    () => () => {
-      active.current?.abort();
-      active.current = null;
-    },
-    [],
-  );
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    active.current?.abort();
-    const controller = new AbortController();
-    active.current = controller;
-    setBusy(true);
     setReply(null);
     setError(null);
     setSent(content);
-    const timer = setTimeout(() => controller.abort("timeout"), 65_000);
-    try {
-      await ensureSession(controller.signal);
-      const response = await fetch("/api/channels/discord-demo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, ...(statedAt ? { statedAt } : {}) }),
-        signal: controller.signal,
-      });
-      const data = await response.json();
-      controller.signal.throwIfAborted();
-      if (active.current !== controller) return;
-      if (!response.ok) setError(apiErrorSchema.parse(data));
-      else setReply(data);
-    } catch {
-      if (
-        active.current !== controller ||
-        controller.signal.reason === "cancelled"
-      )
-        return;
-      setError({
-        status: "technical_error",
-        requestId: "",
-        code: "CONNECTION_ERROR",
-        retryable: true,
-        message: controller.signal.aborted
-          ? "Przekroczono czas oczekiwania na odpowiedź. Nie wydano werdyktu."
-          : "Nie udało się odebrać odpowiedzi. Sprawdź połączenie i spróbuj ponownie.",
-      });
-    } finally {
-      clearTimeout(timer);
-      if (active.current === controller) {
-        active.current = null;
-        setBusy(false);
-      }
-    }
+    await runRequest(
+      async (signal) => {
+        await ensureSession(signal);
+        const response = await fetch("/api/channels/discord-demo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content, ...(statedAt ? { statedAt } : {}) }),
+          signal,
+        });
+        const data = await response.json();
+        signal.throwIfAborted();
+        if (!response.ok) setError(apiErrorSchema.parse(data));
+        else setReply(data);
+      },
+      (timedOut) => {
+        setError({
+          status: "technical_error",
+          requestId: "",
+          code: "CONNECTION_ERROR",
+          retryable: true,
+          message: timedOut
+            ? "Przekroczono czas oczekiwania na odpowiedź. Nie wydano werdyktu."
+            : "Nie udało się odebrać odpowiedzi. Sprawdź połączenie i spróbuj ponownie.",
+        });
+      },
+    );
   }
 
   return (
@@ -141,9 +120,7 @@ export function ChannelWorkbench() {
             </form>
             <SessionControls
               onClear={() => {
-                active.current?.abort("cancelled");
-                active.current = null;
-                setBusy(false);
+                cancel();
                 setContent("");
                 setStatedAt("");
                 setSent("");
@@ -156,9 +133,7 @@ export function ChannelWorkbench() {
                 className="text-button"
                 type="button"
                 onClick={() => {
-                  active.current?.abort("cancelled");
-                  active.current = null;
-                  setBusy(false);
+                  cancel();
                   requestAnimationFrame(() => inputRef.current?.focus());
                 }}
               >

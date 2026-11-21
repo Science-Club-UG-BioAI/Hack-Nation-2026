@@ -57,9 +57,7 @@ describe("EUvsDisinfo retrieval", () => {
     const result = await retrieve(plan, signal());
     expect(euvsdisinfo).toHaveBeenCalledTimes(1);
     expect(vi.mocked(euvsdisinfo).mock.calls[0][0]).toBe("Ukraine biolabs");
-    expect(result.hits.indexOf(caseHit)).toBeLessThan(
-      result.hits.indexOf(webHit),
-    );
+    expect(result.hits).toEqual([caseHit, webHit, webHit]);
     expect(result.statuses).toContainEqual({
       provider: "euvsdisinfo",
       status: "ok",

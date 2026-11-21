@@ -8,6 +8,7 @@ import {
 } from "@/core/contracts";
 import { VerificationView } from "./verification-view";
 import { demoExamples } from "@/core/demo";
+import { useVerificationRequest } from "./use-verification-request";
 import { SessionControls, ensureSession } from "./session-controls";
 import { AnalysisProgress, type TimedProgress } from "./analysis-progress";
 import { readVerificationStream } from "@/core/progress";
@@ -18,14 +19,13 @@ export function Workbench() {
   const [claim, setClaim] = useState("");
   const [statedAt, setStatedAt] = useState("");
   const [ready, setReady] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { busy, cancel, runRequest } = useVerificationRequest();
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [error, setError] = useState<ApiErrorBody | null>(null);
   const [events, setEvents] = useState<TimedProgress[]>([]);
   const [cancelled, setCancelled] = useState(false);
   const [demo, setDemo] = useState(false);
-  const active = useRef<AbortController | null>(null);
   const claimRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
@@ -39,8 +39,6 @@ export function Workbench() {
       .catch(() => {});
     return () => {
       controller.abort();
-      active.current?.abort();
-      active.current = null;
     };
   }, []);
   useEffect(() => {
@@ -56,11 +54,7 @@ export function Workbench() {
     setCancelled(false);
   };
   async function run(demoId?: string) {
-    active.current?.abort();
-    const controller = new AbortController();
-    active.current = controller;
     clearResult();
-    setBusy(true);
     setElapsed(0);
     setDemo(Boolean(demoId));
     requestAnimationFrame(() => {
@@ -68,92 +62,80 @@ export function Workbench() {
         progressRef.current?.scrollIntoView({ block: "start" });
     });
     const started = Date.now();
-    const timer = setTimeout(() => controller.abort("timeout"), 65_000);
-    try {
-      if (!demoId) await ensureSession(controller.signal);
-      const response = await fetch(
-        demoId ? `/api/demo?id=${encodeURIComponent(demoId)}` : "/api/verify",
-        demoId
-          ? { signal: controller.signal }
-          : {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "text/event-stream",
+    await runRequest(
+      async (signal) => {
+        if (!demoId) await ensureSession(signal);
+        const response = await fetch(
+          demoId ? `/api/demo?id=${encodeURIComponent(demoId)}` : "/api/verify",
+          demoId
+            ? { signal }
+            : {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "text/event-stream",
+                },
+                body: JSON.stringify({
+                  claim,
+                  evidenceGraph: true,
+                  ...(statedAt ? { statedAt } : {}),
+                }),
+                signal,
               },
-              body: JSON.stringify({
-                claim,
-                evidenceGraph: true,
-                ...(statedAt ? { statedAt } : {}),
-              }),
-              signal: controller.signal,
-            },
-      );
-      if (
-        response.ok &&
-        response.headers.get("content-type")?.includes("text/event-stream") &&
-        response.body
-      ) {
-        await readVerificationStream(response.body, (event) => {
-          if (active.current !== controller || controller.signal.aborted)
-            return;
-          if (event.type === "result") {
-            setResult(event.result);
-            requestAnimationFrame(() =>
-              resultRef.current?.focus({
-                preventScroll: !window.matchMedia("(max-width: 760px)").matches,
-              }),
-            );
-          } else if (event.type === "error")
-            setError(apiErrorSchema.parse(event.error));
-          else
-            setEvents((previous) => [
-              ...previous,
-              { ...event, seconds: Math.floor((Date.now() - started) / 1000) },
-            ]);
+        );
+        const showResult = (value: VerificationResult) => {
+          setResult(value);
+          requestAnimationFrame(() =>
+            resultRef.current?.focus({
+              preventScroll: !window.matchMedia("(max-width: 760px)").matches,
+            }),
+          );
+        };
+        if (
+          response.ok &&
+          response.headers.get("content-type")?.includes("text/event-stream") &&
+          response.body
+        ) {
+          await readVerificationStream(response.body, (event) => {
+            signal.throwIfAborted();
+            if (event.type === "result") {
+              showResult(event.result);
+            } else if (event.type === "error")
+              setError(apiErrorSchema.parse(event.error));
+            else
+              setEvents((previous) => [
+                ...previous,
+                {
+                  ...event,
+                  seconds: Math.floor((Date.now() - started) / 1000),
+                },
+              ]);
+          });
+          return;
+        }
+        const data = await response.json();
+        signal.throwIfAborted();
+        if (!response.ok) {
+          setError(apiErrorSchema.parse(data));
+          return;
+        }
+        showResult(data);
+        if (demoId) {
+          setClaim(data.claim);
+          setStatedAt("");
+        }
+      },
+      (timedOut) => {
+        setError({
+          code: timedOut ? "VERIFICATION_TIMEOUT" : "NETWORK_ERROR",
+          requestId: "",
+          retryable: true,
+          message: timedOut
+            ? "Analiza przekroczyła limit czasu. Możesz spróbować ponownie."
+            : "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.",
         });
-        return;
-      }
-      const data = await response.json();
-      controller.signal.throwIfAborted();
-      if (active.current !== controller) return;
-      if (!response.ok) {
-        setError(apiErrorSchema.parse(data));
-        return;
-      }
-      setResult(data);
-      if (demoId) {
-        setClaim(data.claim);
-        setStatedAt("");
-      }
-      requestAnimationFrame(() =>
-        resultRef.current?.focus({
-          preventScroll: !window.matchMedia("(max-width: 760px)").matches,
-        }),
-      );
-    } catch {
-      if (
-        active.current !== controller ||
-        controller.signal.reason === "cancelled"
-      )
-        return;
-      setError({
-        code: controller.signal.aborted
-          ? "VERIFICATION_TIMEOUT"
-          : "NETWORK_ERROR",
-        requestId: "",
-        retryable: true,
-        message: controller.signal.aborted
-          ? "Analiza przekroczyła limit czasu. Możesz spróbować ponownie."
-          : "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.",
-      });
-    } finally {
-      clearTimeout(timer);
-      if (active.current === controller) {
-        setBusy(false);
-        active.current = null;
-      }
-    }
+      },
+    );
   }
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -294,9 +276,7 @@ export function Workbench() {
                     type="button"
                     className="cancel-button"
                     onClick={() => {
-                      active.current?.abort("cancelled");
-                      active.current = null;
-                      setBusy(false);
+                      cancel();
                       setCancelled(true);
                       requestAnimationFrame(() => claimRef.current?.focus());
                     }}
@@ -331,9 +311,7 @@ export function Workbench() {
             </section>
             <SessionControls
               onClear={() => {
-                active.current?.abort("cancelled");
-                active.current = null;
-                setBusy(false);
+                cancel();
                 setClaim("");
                 setStatedAt("");
                 clearResult();

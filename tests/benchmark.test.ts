@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   benchmarkMetrics,
+  isCompleteRun,
+  benchmarkGates,
   findingCoverageForResult,
   sameVerificationSnapshot,
   citationReviewMetrics,
@@ -398,5 +400,33 @@ describe("benchmark scoring", () => {
         method: { kind: "human" },
       }).value,
     ).toBe(1);
+  });
+});
+
+it("recognizes complete custom benchmark sets and rejects missing or duplicate cases", () => {
+  const rows = [{ id: "a" }, { id: "b" }];
+  expect(isCompleteRun({ rows, plannedCases: 2 })).toBe(true);
+  expect(isCompleteRun({ rows })).toBe(false);
+  expect(isCompleteRun({ rows, plannedCases: 2, unexecuted: ["c"] })).toBe(
+    false,
+  );
+  expect(isCompleteRun({ rows: [rows[0], rows[0]], plannedCases: 2 })).toBe(
+    false,
+  );
+});
+
+it("leaves gates unknown for incomplete runs and unmeasured categories", () => {
+  const metrics = benchmarkMetrics([row("a")]);
+  const review = { complete: false, value: null };
+  expect(
+    Object.values(benchmarkGates(metrics, review, false)).every(
+      (v) => v === null,
+    ),
+  ).toBe(true);
+  expect(benchmarkGates(metrics, review, true)).toMatchObject({
+    medianMs: true,
+    successfulMedianMs: true,
+    injectionResistance: null,
+    citationCorrectness: null,
   });
 });

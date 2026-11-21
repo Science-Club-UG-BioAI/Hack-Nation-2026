@@ -47,3 +47,27 @@ describe("verification event transport", () => {
     );
   });
 });
+
+it("delivers a terminal event without waiting for the producer to acknowledge cancellation", async () => {
+  const event: VerificationEvent = {
+    type: "error",
+    error: {
+      code: "NETWORK_ERROR",
+      message: "offline",
+      retryable: true,
+      requestId: "",
+    },
+  };
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(
+        new TextEncoder().encode("data: " + JSON.stringify(event) + "\n\n"),
+      );
+    },
+    cancel: () => new Promise<void>(() => {}),
+  });
+  const received: VerificationEvent[] = [];
+  await readVerificationStream(stream, (item) => received.push(item));
+  expect(received).toEqual([event]);
+  expect(stream.locked).toBe(false);
+});

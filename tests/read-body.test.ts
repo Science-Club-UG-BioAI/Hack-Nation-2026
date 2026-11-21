@@ -45,3 +45,15 @@ it("cancels a stalled read and releases its lock", async () => {
   expect(cancel).toHaveBeenCalledTimes(1);
   expect(stream.locked).toBe(false);
 });
+
+it("reports the byte limit even when the producer never finishes cancellation", async () => {
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(Uint8Array.of(1, 2));
+    },
+    cancel: () => new Promise<void>(() => {}),
+  });
+  const error = new Error("too large");
+  await expect(readBoundedText(stream, 1, error)).rejects.toBe(error);
+  expect(stream.locked).toBe(false);
+});

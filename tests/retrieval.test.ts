@@ -58,9 +58,16 @@ describe("multi-source retrieval", () => {
     vi.mocked(search)
       .mockRejectedValueOnce(new Error("down"))
       .mockResolvedValueOnce([hit]);
+    const progress = vi.fn();
+    const result = await retrieve(plan, new AbortController().signal, progress);
+    const web = { provider: "web", status: "partial", documents: 1 };
+    expect(result.statuses).toContainEqual(web);
     expect(
-      (await retrieve(plan, new AbortController().signal)).statuses,
-    ).toContainEqual({ provider: "web", status: "partial", documents: 1 });
+      progress.mock.calls
+        .map(([event]) => event.source)
+        .filter((source) => source.provider === "web")
+        .at(-1),
+    ).toEqual(web);
   });
   it("never turns a total outage into a factual verdict", async () => {
     vi.mocked(search).mockRejectedValue(new Error("down"));

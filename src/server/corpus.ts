@@ -12,18 +12,22 @@ const tokens = (value: string) => [
       .match(/[\p{L}\p{N}]{4,}/gu) ?? [],
   ),
 ];
+const indexedRecords = catalog.records.map((record) => ({
+  record,
+  words: tokens(record.title + " " + new URL(record.url).pathname),
+}));
+
 export function searchCorpus(query: string) {
   const terms = tokens(query);
-  return catalog.records
-    .map((record) => ({
+  return indexedRecords
+    .map(({ record, words }) => ({
       record,
-      score: tokens(record.title + " " + new URL(record.url).pathname).filter(
-        (word) =>
-          terms.some(
-            (term) =>
-              word === term ||
-              (term.length >= 6 && word.startsWith(term.slice(0, -2))),
-          ),
+      score: words.filter((word) =>
+        terms.some(
+          (term) =>
+            word === term ||
+            (term.length >= 6 && word.startsWith(term.slice(0, -2))),
+        ),
       ).length,
     }))
     .filter((item) => item.score >= 2)

@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { verifyInputSchema, channelInputSchema } from "@/core/contracts";
+import {
+  verifyInputSchema,
+  channelInputSchema,
+  type VerifyInput,
+} from "@/core/contracts";
 import { AppError, InvalidModelOutput } from "@/core/errors";
 import {
   numberSetting,
@@ -15,8 +19,81 @@ import { notifyRecipient } from "./alerts";
 import { verificationDate } from "@/core/verification-date";
 import { readBoundedText } from "@/server/read-body";
 import { assertSessionActive, writeAudit } from "./audit-store";
-import type { VerifyInput } from "@/core/contracts";
 import type { ProgressListener } from "@/core/progress";
+import {
+  assertSameOrigin,
+  sessionId,
+  setSessionCookie,
+} from "./request-session";
+
+async function readVerificationInput(
+  request: NextRequest,
+  channel: "web" | "discord_demo",
+  startedAt: number,
+  signal: AbortSignal,
+) {
+  if (
+    request.headers
+      .get("content-type")
+      ?.split(";", 1)[0]
+      .trim()
+      .toLowerCase() !== "application/json"
+  )
+    throw new AppError("INPUT_INVALID", "Oczekiwano danych JSON.", 400);
+  if (!request.body) throw new AppError("INPUT_INVALID", "Brak danych.", 400);
+  const text = await readBoundedText(
+    request.body,
+    8000,
+    new AppError("INPUT_INVALID", "Żądanie jest zbyt duże.", 400),
+    signal,
+  );
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new AppError("INPUT_INVALID", "Nieprawidłowe dane JSON.", 400);
+  }
+  const parsed = (
+    channel === "web" ? verifyInputSchema : channelInputSchema
+  ).safeParse(json);
+  if (!parsed.success)
+    throw new AppError(
+      "INPUT_INVALID",
+      parsed.error.issues[0]?.message ?? "Nieprawidłowa teza.",
+      400,
+    );
+  const supplied =
+    "claim" in parsed.data
+      ? parsed.data
+      : { claim: parsed.data.content, statedAt: parsed.data.statedAt };
+  return {
+    ...supplied,
+    statedAt: supplied.statedAt ?? verificationDate(startedAt),
+  };
+}
+
+function verificationFailure(
+  error: unknown,
+  timedOut: boolean,
+  cancelled: boolean,
+) {
+  if (timedOut)
+    return new AppError(
+      "VERIFICATION_TIMEOUT",
+      "Analiza przekroczyła limit czasu. Spróbuj ponownie.",
+      504,
+      true,
+    );
+  if (cancelled)
+    return new AppError("REQUEST_CANCELLED", "Analiza została przerwana.", 499);
+  if (error instanceof AppError) return error;
+  return new AppError(
+    "PROVIDER_ERROR",
+    "Nie udało się połączyć z usługą analizy. Spróbuj ponownie.",
+    502,
+    true,
+  );
+}
 
 export async function handleVerification(
   request: NextRequest,
@@ -45,9 +122,7 @@ export async function handleVerification(
     timedOut = true;
     controller.abort();
   }, timeoutMs);
-  const existing = request.cookies.get("prawdowid-session")?.value;
-  const session =
-    existing && /^[0-9a-f-]{36}$/i.test(existing) ? existing : randomUUID();
+  const session = sessionId(request) ?? randomUUID();
   const respond = (body: unknown, status: number) => {
     const response = NextResponse.json(body, {
       status,
@@ -56,76 +131,12 @@ export async function handleVerification(
         ...(status === 429 ? { "Retry-After": "60" } : {}),
       },
     });
-    if (!deleted)
-      response.cookies.set("prawdowid-session", session, {
-        httpOnly: true,
-        sameSite: "strict",
-        secure: request.nextUrl.protocol === "https:",
-        maxAge: 86400,
-        path: "/",
-      });
+    if (!deleted) setSessionCookie(request, response, session);
     return response;
   };
   try {
-    const origin = request.headers.get("origin");
-    // Next.js can normalize 127.0.0.1 to localhost in nextUrl. Compare the
-    // browser origin with the actual Host header, not the normalized URL.
-    let sameOrigin = true;
-    if (origin) {
-      try {
-        const parsedOrigin = new URL(origin);
-        sameOrigin =
-          parsedOrigin.protocol === request.nextUrl.protocol &&
-          parsedOrigin.host ===
-            (request.headers.get("host") || request.nextUrl.host);
-      } catch {
-        sameOrigin = false;
-      }
-    }
-    if (!sameOrigin)
-      throw new AppError(
-        "INPUT_INVALID",
-        "Żądanie pochodzi z innej witryny.",
-        403,
-      );
-    if (
-      request.headers
-        .get("content-type")
-        ?.split(";", 1)[0]
-        .trim()
-        .toLowerCase() !== "application/json"
-    )
-      throw new AppError("INPUT_INVALID", "Oczekiwano danych JSON.", 400);
-    if (!request.body) throw new AppError("INPUT_INVALID", "Brak danych.", 400);
-    const text = await readBoundedText(
-      request.body,
-      8000,
-      new AppError("INPUT_INVALID", "Żądanie jest zbyt duże.", 400),
-      signal,
-    );
-    let json: unknown;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      throw new AppError("INPUT_INVALID", "Nieprawidłowe dane JSON.", 400);
-    }
-    const parsed = (
-      channel === "web" ? verifyInputSchema : channelInputSchema
-    ).safeParse(json);
-    if (!parsed.success)
-      throw new AppError(
-        "INPUT_INVALID",
-        parsed.error.issues[0]?.message ?? "Nieprawidłowa teza.",
-        400,
-      );
-    const supplied =
-      "claim" in parsed.data
-        ? parsed.data
-        : { claim: parsed.data.content, statedAt: parsed.data.statedAt };
-    const input = {
-      ...supplied,
-      statedAt: supplied.statedAt ?? verificationDate(start),
-    };
+    assertSameOrigin(request);
+    const input = await readVerificationInput(request, channel, start, signal);
     acceptedInput = input;
     assertSessionActive(session);
     requireConfiguration();
@@ -180,24 +191,11 @@ export async function handleVerification(
     controller.abort();
     // A provider's timeout can settle before the route's timer callback runs.
     // Classify an expired shared budget by the deadline, not callback ordering.
-    let failure =
-      timedOut || Date.now() >= deadlineAt
-        ? new AppError(
-            "VERIFICATION_TIMEOUT",
-            "Analiza przekroczyła limit czasu. Spróbuj ponownie.",
-            504,
-            true,
-          )
-        : request.signal.aborted || transportSignal?.aborted
-          ? new AppError("REQUEST_CANCELLED", "Analiza została przerwana.", 499)
-          : error instanceof AppError
-            ? error
-            : new AppError(
-                "PROVIDER_ERROR",
-                "Nie udało się połączyć z usługą analizy. Spróbuj ponownie.",
-                502,
-                true,
-              );
+    let failure = verificationFailure(
+      error,
+      timedOut || Date.now() >= deadlineAt,
+      request.signal.aborted || transportSignal?.aborted === true,
+    );
     if (acceptedInput) {
       try {
         assertSessionActive(session);

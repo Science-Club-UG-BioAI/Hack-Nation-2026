@@ -3,11 +3,14 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import {
   benchmarkMetrics,
-  benchmarkThresholds,
+  benchmarkThresholds as thresholds,
+  benchmarkGates,
   findingCoverageForResult,
   sameVerificationSnapshot,
-  citationReviewMetrics,
+  isCompleteRun,
 } from "../src/core/benchmark.ts";
+
+import { reviewRunCitations } from "./benchmark-review.mjs";
 
 const directory = process.argv[2];
 if (!directory)
@@ -21,6 +24,8 @@ if (
   new Set(run.rows.map((r) => r.id)).size !== run.rows.length
 )
   throw new Error("Duplicate case IDs");
+if (outputs.size !== run.rows.length)
+  throw new Error("Benchmark rows and outputs must cover the same cases");
 // Recompute both runs by the same protocol without changing their saved results.
 const rows = run.rows.map((row) => {
   const output = outputs.get(row.id);
@@ -35,88 +40,10 @@ const rows = run.rows.map((row) => {
           sameVerificationSnapshot(output.result, output.channelResult?.result),
   };
 });
-const complete =
-  rows.length === (run.plannedCases ?? 30) && !run.unexecuted?.length;
+const complete = isCompleteRun(run);
 const metrics = benchmarkMetrics(rows);
-const items = run.outputs.flatMap((output) =>
-  (output.result.evidence ?? []).map((e, index) => ({
-    id: `${output.id}:${index}`,
-    claim: output.claim,
-    quote: e.quote,
-    relation: e.relation,
-    findings:
-      output.result.findings
-        ?.filter((f) => f.evidenceIds.includes(e.id))
-        .map((f) => ({ id: f.id, text: f.text })) ?? null,
-    verdict: output.result.verdict ?? null,
-    url: output.result.sources?.find((s) => s.id === e.sourceId)?.url,
-    entails: null,
-    relationCorrect: null,
-    atomic: null,
-    factual: null,
-    valid: null,
-    reason: "",
-  })),
-);
-const template = {
-  resultSha256,
-  reviewer: null,
-  method: { kind: null, model: null, notes: "" },
-  auditedModels: [run.model, run.fallback].filter(Boolean),
-  policy:
-    "Follow docs/citation-review.md. Judge every item on entails, relationCorrect, atomic and factual; valid=true only if all applicable dimensions hold. A model reviewer must differ from auditedModels. Structural references and the model's own audit are not gold labels.",
-  items,
-};
-await writeFile(
-  resolve(directory, "citation-review.template.json"),
-  JSON.stringify(template, null, 2) + "\n",
-);
-let review = null;
-try {
-  review = JSON.parse(
-    await readFile(resolve(directory, "citation-review.json"), "utf8"),
-  );
-} catch (error) {
-  if (error.code !== "ENOENT") throw error;
-}
-const citationReview = citationReviewMetrics(
-  resultSha256,
-  items.map((i) => i.id),
-  review,
-  [run.model, run.fallback].filter(Boolean),
-);
-const atLeast = (value, target) =>
-  complete && value !== null ? value >= target : null;
-const thresholds = benchmarkThresholds;
-const gates = {
-  macroF1: atLeast(metrics.macroF1, thresholds.macroF1),
-  citationCoverage: atLeast(
-    metrics.citationCoverage.value,
-    thresholds.citationCoverage,
-  ),
-  citationCorrectness: citationReview.complete
-    ? atLeast(citationReview.value, thresholds.citationCorrectness)
-    : null,
-  abstention: atLeast(metrics.abstention.value, thresholds.abstention),
-  injectionResistance: atLeast(
-    metrics.injectionResistance.value,
-    thresholds.injectionResistance,
-  ),
-  medianMs:
-    complete && metrics.latency.medianMs !== null
-      ? metrics.latency.medianMs <= thresholds.medianMs
-      : null,
-  successfulMedianMs:
-    complete && metrics.latency.successfulMedianMs !== null
-      ? metrics.latency.successfulMedianMs <= thresholds.medianMs
-      : null,
-  endToEnd: atLeast(metrics.successfulResponses.value, thresholds.endToEnd),
-  channelConsistency: atLeast(
-    metrics.channelConsistency.value,
-    thresholds.channelConsistency,
-  ),
-  cost100: null,
-};
+const citationReview = await reviewRunCitations(directory, run, resultSha256);
+const gates = benchmarkGates(metrics, citationReview, complete);
 const failures = rows
   .filter(
     (row) =>

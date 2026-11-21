@@ -49,6 +49,30 @@ export function clearSessionVerifications(session: string) {
     }
 }
 
+function cacheResult(
+  key: string,
+  session: string,
+  result: VerificationResult,
+  channels: Set<string>,
+) {
+  const old = state.cache.get(key);
+  if (old) clearTimeout(old.timer);
+  if (!old && state.cache.size >= 100) {
+    const oldest = state.cache.keys().next().value!;
+    clearTimeout(state.cache.get(oldest)!.timer);
+    state.cache.delete(oldest);
+  }
+  const timer = setTimeout(() => state.cache.delete(key), TTL);
+  timer.unref();
+  state.cache.set(key, {
+    session,
+    result: structuredClone(result),
+    expires: Date.now() + TTL,
+    timer,
+    channels,
+  });
+}
+
 function keyFor(input: VerifyInput, session: string) {
   return createHash("sha256")
     .update(
@@ -105,21 +129,18 @@ export async function runVerification(
     };
   };
   const cached = state.cache.get(key);
-  const previous =
-    cached &&
-    cached.expires > Date.now() &&
-    (cached.result.status !== "unable_to_verify" ||
-      !cached.channels.has(channel))
-      ? cached.result
-      : undefined;
-  if (cached && !previous) {
+  if (cached) {
+    if (
+      cached.expires > Date.now() &&
+      (cached.result.status !== "unable_to_verify" ||
+        !cached.channels.has(channel))
+    ) {
+      cached.channels.add(channel);
+      onProgress?.({ type: "stage", stage: "reused" });
+      return deliver(cached.result, true);
+    }
     clearTimeout(cached.timer);
     state.cache.delete(key);
-  }
-  if (previous) {
-    cached!.channels.add(channel);
-    onProgress?.({ type: "stage", stage: "reused" });
-    return deliver(previous, true);
   }
   const pending = state.pending.get(key);
   if (pending) {
@@ -168,28 +189,12 @@ export async function runVerification(
       result.strength = describeStrength(result);
       // Preserve the same attempt for the other channel, including failed audits.
       // A repeat in a channel that already saw an unsuccessful attempt retries it.
-      {
-        const old = state.cache.get(key);
-        if (old) clearTimeout(old.timer);
-        if (!old && state.cache.size >= 100) {
-          const oldest = state.cache.keys().next().value!;
-          clearTimeout(state.cache.get(oldest)!.timer);
-          state.cache.delete(oldest);
-        }
-        const timer = setTimeout(() => state.cache.delete(key), TTL);
-        timer.unref();
-        state.cache.set(key, {
-          session,
-          result: structuredClone(result),
-          expires: Date.now() + TTL,
-          timer,
-          channels,
-        });
-      }
+      cacheResult(key, session, result, channels);
       return result;
     })
     .finally(() => {
-      state.pending.delete(key);
+      if (state.pending.get(key)?.controller === controller)
+        state.pending.delete(key);
       release();
     });
   state.pending.set(key, {

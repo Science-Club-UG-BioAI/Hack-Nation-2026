@@ -108,6 +108,7 @@ describe("EUvsDisinfo adapter", () => {
       provider: "euvsdisinfo",
       sourceType: "official",
       contentScope: "text",
+      publisher: "EUvsDisinfo (Europejska Służba Działań Zewnętrznych)",
       publisherGroup: "euvsdisinfo.eu",
     });
     expect(hits[0].raw_content).toContain("SUMMARY");

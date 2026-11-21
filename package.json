@@ -19,6 +19,9 @@
     "benchmark:evaluate": "node --experimental-strip-types scripts/evaluate-run.mjs",
     "benchmark:compare": "node --experimental-strip-types scripts/compare-benchmarks.mjs"
   },
+  "prettier": {
+    "endOfLine": "auto"
+  },
   "engines": {
     "node": ">=22.13"
   },

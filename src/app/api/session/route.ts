@@ -1,32 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AppError } from "@/core/errors";
-import { deleteSessionAudit, sessionAudit } from "@/server/audit-store";
+import {
+  assertSessionActive,
+  deleteSessionAudit,
+  sessionAudit,
+} from "@/server/audit-store";
 import { clearSessionVerifications } from "@/server/verification-service";
-import { assertSessionActive } from "@/server/audit-store";
+import {
+  assertSameOrigin,
+  sessionId,
+  setSessionCookie,
+} from "@/server/request-session";
 import { randomUUID } from "node:crypto";
 export const runtime = "nodejs";
 
-function session(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  let sameOrigin = true;
-  if (origin) {
-    try {
-      sameOrigin =
-        new URL(origin).origin ===
-        `${request.nextUrl.protocol}//${request.headers.get("host") || request.nextUrl.host}`;
-    } catch {
-      sameOrigin = false;
-    }
-  }
-  if (request.headers.get("sec-fetch-site") === "cross-site" || !sameOrigin)
-    throw new AppError(
-      "INPUT_INVALID",
-      "Żądanie pochodzi z innej witryny.",
-      403,
-    );
-  const value = request.cookies.get("prawdowid-session")?.value;
-  return value && /^[0-9a-f-]{36}$/i.test(value) ? value : null;
-}
 function failure(error: unknown) {
   return NextResponse.json(
     {
@@ -43,7 +30,8 @@ function failure(error: unknown) {
 }
 export function GET(request: NextRequest) {
   try {
-    const id = session(request);
+    assertSameOrigin(request);
+    const id = sessionId(request);
     return NextResponse.json(
       { retentionHours: 24, records: id ? sessionAudit(id) : [] },
       {
@@ -65,7 +53,8 @@ export function POST(request: NextRequest) {
         "Brak nagłówka rozpoczęcia sesji.",
         403,
       );
-    let id = session(request);
+    assertSameOrigin(request);
+    let id = sessionId(request);
     if (id) {
       try {
         assertSessionActive(id);
@@ -79,13 +68,7 @@ export function POST(request: NextRequest) {
       { ready: true },
       { headers: { "Cache-Control": "no-store" } },
     );
-    response.cookies.set("prawdowid-session", id ?? randomUUID(), {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: request.nextUrl.protocol === "https:",
-      maxAge: 86400,
-      path: "/",
-    });
+    setSessionCookie(request, response, id ?? randomUUID());
     return response;
   } catch (error) {
     return failure(error);
@@ -99,7 +82,8 @@ export function DELETE(request: NextRequest) {
         "Brak nagłówka operacji usunięcia.",
         403,
       );
-    const id = session(request);
+    assertSameOrigin(request);
+    const id = sessionId(request);
     if (id) {
       deleteSessionAudit(id);
       clearSessionVerifications(id);
@@ -108,13 +92,7 @@ export function DELETE(request: NextRequest) {
       { deleted: true },
       { headers: { "Cache-Control": "no-store" } },
     );
-    response.cookies.set("prawdowid-session", "", {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: request.nextUrl.protocol === "https:",
-      maxAge: 0,
-      path: "/",
-    });
+    setSessionCookie(request, response, null);
     return response;
   } catch (error) {
     return failure(error);

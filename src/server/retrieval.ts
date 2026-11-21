@@ -4,28 +4,69 @@ import type {
   RetrievalStatus,
   SourceProvider,
 } from "@/core/contracts";
-import type { SearchHit } from "@/core/evidence";
 import { AppError } from "@/core/errors";
 import { search } from "./providers";
 import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
 import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
 import type { ProgressListener } from "@/core/progress";
-import { startCall } from "./config";
+
+type SourceSearch = {
+  provider: SourceProvider;
+  requests: (() => Promise<SourceBatch>)[];
+};
+
+async function retrieveSource(
+  { provider, requests }: SourceSearch,
+  onProgress?: ProgressListener,
+) {
+  let documents = 0;
+  let failures = 0;
+  let partial = false;
+  let remaining = requests.length;
+  const report = (status: RetrievalStatus["status"] | "running") =>
+    onProgress?.({ type: "source", source: { provider, documents, status } });
+
+  const batches = await Promise.all(
+    requests.map(async (run) => {
+      report("running");
+      try {
+        const batch = await run();
+        documents += batch.hits.length;
+        partial ||= batch.partial;
+        return batch.hits;
+      } catch {
+        failures++;
+        return [];
+      } finally {
+        if (--remaining > 0) report("running");
+      }
+    }),
+  );
+  let status: RetrievalStatus["status"] = documents ? "ok" : "empty";
+  if (failures === requests.length) status = "error";
+  else if (partial || failures) status = "partial";
+  report(status);
+  return {
+    hits: batches.flat(),
+    status: { provider, documents, status },
+    failures,
+  };
+}
 
 export async function retrieve(
   plan: z.infer<typeof planSchema>,
   signal: AbortSignal,
   onProgress?: ProgressListener,
 ) {
-  const tasks: { provider: SourceProvider; run: () => Promise<SourceBatch> }[] =
-    [];
   const statuses: RetrievalStatus[] = [];
   const limited = AbortSignal.any([signal, AbortSignal.timeout(15_000)]);
-  tasks.push({
-    provider: "corpus",
-    run: () => corpus(plan.queries.join(" "), limited),
-  });
+  const sources: SourceSearch[] = [
+    {
+      provider: "corpus",
+      requests: [() => corpus(plan.queries.join(" "), limited)],
+    },
+  ];
   for (const [provider, query, adapter] of [
     ["wikipedia", plan.wikipediaQuery, wikipedia],
     ["sejm", plan.sejmQuery, sejm],
@@ -37,127 +78,34 @@ export async function retrieve(
     ],
   ] as const) {
     if (query)
-      tasks.push({
-        provider,
-        run: () => {
-          // This keyed service does not return billing metadata.
-          if (provider === "euvsdisinfo") startCall(provider);
-          return adapter(query, limited);
-        },
-      });
+      sources.push({ provider, requests: [() => adapter(query, limited)] });
     else statuses.push({ provider, status: "not_applicable", documents: 0 });
   }
-  // Direct material first, then diverse web results; prepareDocuments deduplicates.
-  for (const query of plan.queries)
-    tasks.push({
+  if (plan.queries.length)
+    sources.push({
       provider: "web",
-      run: async () => ({ hits: await search(query, limited), partial: false }),
+      requests: plan.queries.map((query) => async () => ({
+        hits: await search(query, limited),
+        partial: false,
+      })),
     });
+
   for (const source of statuses) onProgress?.({ type: "source", source });
-  const completed = new Map<
-    SourceProvider,
-    { count: number; documents: number; successes: number; partial: boolean }
-  >();
-  const results = await Promise.allSettled(
-    tasks.map(async (task) => {
-      onProgress?.({
-        type: "source",
-        source: {
-          provider: task.provider,
-          status: "running",
-          documents: completed.get(task.provider)?.documents ?? 0,
-        },
-      });
-      let batch: SourceBatch | undefined;
-      try {
-        batch = await task.run();
-        return batch;
-      } finally {
-        const state = completed.get(task.provider) ?? {
-          count: 0,
-          documents: 0,
-          successes: 0,
-          partial: false,
-        };
-        state.count++;
-        state.documents += batch?.hits.length ?? 0;
-        state.successes += batch ? 1 : 0;
-        state.partial ||= !batch || batch.partial;
-        completed.set(task.provider, state);
-        onProgress?.({
-          type: "source",
-          source: {
-            provider: task.provider,
-            documents: state.documents,
-            status:
-              state.count <
-              tasks.filter((t) => t.provider === task.provider).length
-                ? "running"
-                : !state.successes
-                  ? "error"
-                  : state.partial
-                    ? "partial"
-                    : state.documents
-                      ? "ok"
-                      : "empty",
-          },
-        });
-      }
-    }),
+  // Promise.all preserves source and query priority regardless of completion order.
+  const results = await Promise.all(
+    sources.map((source) => retrieveSource(source, onProgress)),
   );
   signal.throwIfAborted();
-  if (
-    results.every(
-      (result) =>
-        result.status === "rejected" ||
-        (result.status === "fulfilled" && !result.value.hits.length),
-    ) &&
-    results.some((result) => result.status === "rejected")
-  )
+  const hits = results.flatMap((result) => result.hits);
+  if (!hits.length && results.some((result) => result.failures > 0))
     throw new AppError(
       "PROVIDER_ERROR",
       "Nie udało się połączyć z usługami wyszukiwania źródeł. Spróbuj ponownie.",
       502,
       true,
     );
-  const hits: SearchHit[] = [];
-  for (const provider of [
-    "corpus",
-    "wikipedia",
-    "sejm",
-    "arxiv",
-    "euvsdisinfo",
-    "web",
-  ] as const) {
-    const own = results.filter(
-      (_, index) => tasks[index].provider === provider,
-    );
-    if (!own.length) continue;
-    const batches = own.flatMap((result) =>
-      result.status === "fulfilled" ? [result.value] : [],
-    );
-    const found = batches.flatMap((batch) => batch.hits);
-    hits.push(
-      ...(provider === "euvsdisinfo"
-        ? found.map((hit) => ({
-            ...hit,
-            publisher: "EUvsDisinfo (Europejska Służba Działań Zewnętrznych)",
-          }))
-        : found),
-    );
-    const failed =
-      own.length !== batches.length || batches.some((batch) => batch.partial);
-    statuses.push({
-      provider,
-      documents: found.length,
-      status: !batches.length
-        ? "error"
-        : failed
-          ? "partial"
-          : found.length
-            ? "ok"
-            : "empty",
-    });
-  }
-  return { hits, statuses };
+  return {
+    hits,
+    statuses: statuses.concat(results.map((result) => result.status)),
+  };
 }

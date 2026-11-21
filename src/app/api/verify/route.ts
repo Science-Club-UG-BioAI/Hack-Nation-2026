@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { handleVerification } from "@/server/handle-verification";
 import type { VerificationEvent } from "@/core/progress";
+import { sessionId } from "@/server/request-session";
 export const runtime = "nodejs";
 export const maxDuration = 65;
 export function POST(request: NextRequest) {
@@ -8,9 +9,7 @@ export function POST(request: NextRequest) {
   // Streaming clients establish the session before starting, so no late cookie is lost.
   if (
     !request.headers.get("accept")?.includes("text/event-stream") ||
-    !/^[0-9a-f-]{36}$/i.test(
-      request.cookies.get("prawdowid-session")?.value ?? "",
-    )
+    !sessionId(request)
   )
     return handleVerification(request, "web");
   const abort = new AbortController();

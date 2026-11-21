@@ -26,7 +26,8 @@ export async function readBoundedText(
     }
   } finally {
     signal?.removeEventListener("abort", onAbort);
-    await cancel();
+    // A producer can keep its cancellation promise pending indefinitely.
+    void cancel();
     reader.releaseLock();
   }
 }

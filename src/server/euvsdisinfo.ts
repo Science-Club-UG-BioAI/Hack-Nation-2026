@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { SearchHit } from "@/core/evidence";
+import { startCall } from "./config";
 import { readBoundedText } from "./read-body";
 import { htmlText, type SourceBatch } from "./source-adapters";
 
@@ -59,6 +60,7 @@ export async function euvsdisinfo(
   const key = process.env.EUVSDISINFO_API_KEY?.trim();
   if (!key) throw new Error("EUVSDISINFO_API_KEY is not configured");
   if (query.trim().length < 3) return { hits: [], partial: false };
+  startCall("euvsdisinfo");
   const response = await fetch(ENDPOINT, {
     method: "POST",
     signal,
@@ -111,6 +113,7 @@ export async function euvsdisinfo(
       raw_content: htmlText(item.content),
       sourceType: "official",
       contentScope: "text",
+      publisher: "EUvsDisinfo (Europejska Służba Działań Zewnętrznych)",
       publisherGroup: "euvsdisinfo.eu",
       notes: review
         ? [

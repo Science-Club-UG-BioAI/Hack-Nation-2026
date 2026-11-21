@@ -254,6 +254,13 @@ describe("real route and adapters with controlled HTTP provider responses", () =
     expect((await POST(request({ claim: "short" }))).status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();
   });
+  it("rejects a browser-marked cross-site request without an Origin header", async () => {
+    const response = await POST(
+      request({ claim }, { "sec-fetch-site": "cross-site" }),
+    );
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "INPUT_INVALID" });
+  });
   it("rejects a cross-origin request", async () =>
     expect(
       (await POST(request({ claim }, { origin: "https://attacker.example" })))

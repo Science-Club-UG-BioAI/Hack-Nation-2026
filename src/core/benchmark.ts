@@ -147,6 +147,20 @@ export function sameVerificationSnapshot(left: unknown, right: unknown) {
   ].every((key) => JSON.stringify(a[key]) === JSON.stringify(b[key]));
 }
 
+export function isCompleteRun(run: {
+  rows: { id: string }[];
+  plannedCases?: number;
+  unexecuted?: string[];
+}) {
+  const planned = run.plannedCases ?? 30;
+  return (
+    planned > 0 &&
+    run.rows.length === planned &&
+    !run.unexecuted?.length &&
+    new Set(run.rows.map((row) => row.id)).size === planned
+  );
+}
+
 export const benchmarkThresholds = {
   macroF1: 0.75,
   citationCoverage: 0.95,
@@ -412,13 +426,17 @@ export function benchmarkMetrics(rows: Observation[]) {
   const rate = (
     subset: Observation[],
     predicate: (row: Observation) => boolean,
-  ) => ({
-    passed: subset.filter(predicate).length,
-    total: subset.length,
-    value: subset.length
-      ? subset.filter(predicate).length / subset.length
-      : null,
-  });
+  ) => {
+    const total = subset.length;
+    const passed = subset.filter(predicate).length;
+    return { passed, total, value: total ? passed / total : null };
+  };
+  const successful = (row: Observation) =>
+    row.httpStatus === 200 && row.actualStatus !== "unable_to_verify";
+  const durations = rows.map((row) => row.durationMs);
+  const successfulDurations = rows
+    .filter(successful)
+    .map((row) => row.durationMs);
   return {
     cases: rows.length,
     macroF1: perClass.reduce((s, c) => s + c.f1, 0) / classes.length,
@@ -448,44 +466,19 @@ export function benchmarkMetrics(rows: Observation[]) {
       rows.filter((r) => r.channelMatch !== null),
       (r) => r.channelMatch === true,
     ),
-    successfulResponses: rate(
-      rows,
-      (r) => r.httpStatus === 200 && r.actualStatus !== "unable_to_verify",
-    ),
+    successfulResponses: rate(rows, successful),
     exactOutcome: rate(
       rows,
       (r) => r.actual === r.expected && r.actualStatus === r.expectedStatus,
     ),
     latency: {
-      medianMs: percentile(
-        rows.map((r) => r.durationMs),
-        0.5,
-      ),
-      p95Ms: percentile(
-        rows.map((r) => r.durationMs),
-        0.95,
-      ),
-      maxMs: rows.length ? Math.max(...rows.map((r) => r.durationMs)) : null,
+      medianMs: percentile(durations, 0.5),
+      p95Ms: percentile(durations, 0.95),
+      maxMs: durations.length ? Math.max(...durations) : null,
       includesErrors: true,
       excludesChannelCache: true,
-      successfulMedianMs: percentile(
-        rows
-          .filter(
-            (r) =>
-              r.httpStatus === 200 && r.actualStatus !== "unable_to_verify",
-          )
-          .map((r) => r.durationMs),
-        0.5,
-      ),
-      successfulP95Ms: percentile(
-        rows
-          .filter(
-            (r) =>
-              r.httpStatus === 200 && r.actualStatus !== "unable_to_verify",
-          )
-          .map((r) => r.durationMs),
-        0.95,
-      ),
+      successfulMedianMs: percentile(successfulDurations, 0.5),
+      successfulP95Ms: percentile(successfulDurations, 0.95),
     },
     evidenceGraph: (() => {
       const requested = rows.filter((r) => r.graph?.requested);
@@ -520,5 +513,43 @@ export function benchmarkMetrics(rows: Observation[]) {
       reason:
         "No billing measurement attached; do not infer zero cost from successful calls.",
     },
+  };
+}
+
+export function benchmarkGates(
+  metrics: ReturnType<typeof benchmarkMetrics>,
+  citationReview: Pick<
+    ReturnType<typeof citationReviewMetrics>,
+    "value" | "complete"
+  >,
+  complete: boolean,
+) {
+  const atLeast = (value: number | null, target: number) =>
+    complete && value !== null ? value >= target : null;
+  const withinTimeLimit = (value: number | null) =>
+    complete && value !== null ? value <= benchmarkThresholds.medianMs : null;
+  const thresholds = benchmarkThresholds;
+  return {
+    macroF1: atLeast(metrics.macroF1, thresholds.macroF1),
+    citationCoverage: atLeast(
+      metrics.citationCoverage.value,
+      thresholds.citationCoverage,
+    ),
+    citationCorrectness: citationReview.complete
+      ? atLeast(citationReview.value, thresholds.citationCorrectness)
+      : null,
+    abstention: atLeast(metrics.abstention.value, thresholds.abstention),
+    injectionResistance: atLeast(
+      metrics.injectionResistance.value,
+      thresholds.injectionResistance,
+    ),
+    medianMs: withinTimeLimit(metrics.latency.medianMs),
+    successfulMedianMs: withinTimeLimit(metrics.latency.successfulMedianMs),
+    endToEnd: atLeast(metrics.successfulResponses.value, thresholds.endToEnd),
+    channelConsistency: atLeast(
+      metrics.channelConsistency.value,
+      thresholds.channelConsistency,
+    ),
+    cost100: null,
   };
 }
