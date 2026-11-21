@@ -71,6 +71,9 @@ describe.skipIf(process.env.RUN_BENCHMARK_CONTROLLED !== "1")(
           result.status === "completed" &&
           result.verdict === item.expected &&
           (!item.conflict || result.evidenceConflict === true) &&
+          (!item.contextOnly ||
+            (result.evidenceConflict === false &&
+              result.evidence.every((item) => item.relation === "context"))) &&
           result.evidence.length >= 2;
         rows.push({
           id: item.id,
@@ -106,6 +109,6 @@ describe.skipIf(process.env.RUN_BENCHMARK_CONTROLLED !== "1")(
       expect(rows.filter((row) => !row.passed).map((row) => row.id)).toEqual(
         [],
       );
-    }, 310000);
+    }, 380000);
   },
 );

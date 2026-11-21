@@ -336,3 +336,49 @@ it("requires a finding inventory in live generation but can read legacy saved se
     resolveSelection(selected, quotationCatalog(docs), docs).findings,
   ).toBeUndefined();
 });
+
+it("accepts a statement as direct proof that an allegation was made, but not as decisive proof of its content", () => {
+  const quote =
+    "Organizator zarzucił operatorowi magazynu bezprawne usunięcie eksponatu.";
+  const documents = [{ ...docs[0], chunks: [{ id: "p1", text: quote }] }];
+  const catalog = quotationCatalog(documents);
+  const selection = {
+    ...selected,
+    proofGaps: [],
+    evidence: [{ ...selected.evidence[0], scope: "direct" }],
+    findings: [{ id: "speech", text: quote, quoteIds: ["q1"] }],
+    basis: {
+      kind: "confirmed",
+      establishedPremise: "",
+      inferenceOrCorrection: "",
+      premiseQuoteIds: [],
+      decisiveQuoteIds: ["q1"],
+    },
+  };
+  expect(resolveSelection(selection, catalog, documents, true)).toMatchObject({
+    verdict: "supported",
+    evidence: [{ relation: "supports" }],
+  });
+  for (const kind of ["confirmed", "contradicted", "mixed_context"]) {
+    const contextual = {
+      ...selection,
+      basis: {
+        ...selection.basis,
+        kind,
+        establishedPremise: quote,
+        inferenceOrCorrection: "Zarzut rozstrzyga sprawę.",
+        premiseQuoteIds: ["q1"],
+      },
+      evidence: [
+        {
+          ...selected.evidence[0],
+          scope: "reported_position",
+          relation: kind === "contradicted" ? "contradicts" : "supports",
+        },
+      ],
+    };
+    expect(() =>
+      resolveSelection(contextual, catalog, documents, true),
+    ).toThrow();
+  }
+});

@@ -77,7 +77,7 @@ function keyFor(input: VerifyInput, session: string) {
   return createHash("sha256")
     .update(
       JSON.stringify([
-        "reasoned-guard-v2",
+        "reasoned-guard-v3",
         "findings-v1-source-metadata-v2",
         session,
         input.claim.normalize("NFC").trim(),

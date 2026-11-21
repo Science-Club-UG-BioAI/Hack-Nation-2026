@@ -84,6 +84,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
           if (modelCalls === 2)
             return geminiResponse({
               verdict: "supported",
+              proofGaps: [],
               findings: [{ id: "f1", text: claim, quoteIds: ["q1", "q2"] }],
               basis: {
                 kind: "confirmed",
@@ -97,11 +98,13 @@ describe("real route and adapters with controlled HTTP provider responses", () =
               evidence: [
                 {
                   quoteId: "q1",
+                  scope: "direct",
                   relation: "supports",
                   relevance: "Właściwa data.",
                 },
                 {
                   quoteId: "q2",
+                  scope: "direct",
                   relation: "supports",
                   relevance: "Drugie źródło potwierdza datę.",
                 },

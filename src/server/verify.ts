@@ -375,7 +375,7 @@ export async function verify(
         "unable_to_verify",
         "Wyszukiwanie było niepełne i nie uzyskano dowodów pozwalających ukończyć sprawdzenie.",
         documents,
-        retrievalWarnings,
+        [...assessment.limitations, ...retrievalWarnings],
       );
     return finish(
       {
@@ -383,6 +383,7 @@ export async function verify(
         explanation:
           "W pobranych materiałach nie wskazano dowodów pozwalających potwierdzić lub obalić tę tezę. Brak potwierdzenia nie oznacza fałszu.",
         limitations: [
+          ...assessment.limitations,
           "Nie ustalono, czy opisane zdarzenie miało miejsce. Sprawdzenie obejmuje tylko pobrane materiały; dalsza ocena wymaga dowodu dotyczącego wskazanego zdarzenia, podmiotu i okresu.",
         ],
         evidence: [],
