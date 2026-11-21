@@ -11,6 +11,7 @@ import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
 import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
 import type { ProgressListener } from "@/core/progress";
+import { startCall } from "./config";
 
 export async function retrieve(
   plan: z.infer<typeof planSchema>,
@@ -35,7 +36,15 @@ export async function retrieve(
       euvsdisinfo,
     ],
   ] as const) {
-    if (query) tasks.push({ provider, run: () => adapter(query, limited) });
+    if (query)
+      tasks.push({
+        provider,
+        run: () => {
+          // This keyed service does not return billing metadata.
+          if (provider === "euvsdisinfo") startCall(provider);
+          return adapter(query, limited);
+        },
+      });
     else statuses.push({ provider, status: "not_applicable", documents: 0 });
   }
   // Direct material first, then diverse web results; prepareDocuments deduplicates.
@@ -128,7 +137,14 @@ export async function retrieve(
       result.status === "fulfilled" ? [result.value] : [],
     );
     const found = batches.flatMap((batch) => batch.hits);
-    hits.push(...found);
+    hits.push(
+      ...(provider === "euvsdisinfo"
+        ? found.map((hit) => ({
+            ...hit,
+            publisher: "EUvsDisinfo (Europejska Służba Działań Zewnętrznych)",
+          }))
+        : found),
+    );
     const failed =
       own.length !== batches.length || batches.some((batch) => batch.partial);
     statuses.push({

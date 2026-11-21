@@ -10,6 +10,8 @@ import {
   type VerificationEvent,
 } from "@/core/progress";
 import { randomUUID } from "node:crypto";
+import { DatabaseSync } from "node:sqlite";
+import { sessionAudit } from "@/server/audit-store";
 
 const claim = "Polska przystąpiła do NATO 12 marca 1999 roku.";
 const quote = "Poland joined NATO on 12 March 1999.";
@@ -22,6 +24,12 @@ const request = (body: unknown, headers: Record<string, string> = {}) =>
 const geminiResponse = (value: unknown) =>
   Response.json({
     status: "completed",
+    usage: {
+      total_input_tokens: 100,
+      total_cached_tokens: 10,
+      total_output_tokens: 20,
+      total_thought_tokens: 5,
+    },
     steps: [
       {
         type: "model_output",
@@ -33,6 +41,7 @@ const geminiResponse = (value: unknown) =>
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "test-key-not-real");
   vi.stubEnv("TAVILY_API_KEY", "test-key-not-real");
+  vi.stubEnv("GEMINI_MODEL", "gemini-3.1-flash-lite");
   vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
 });
 afterEach(() => {
@@ -50,6 +59,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
           expect(init?.signal).toBeTruthy();
           if (String(url).includes("tavily"))
             return Response.json({
+              usage: { credits: 2 },
               results: [
                 {
                   title: "NATO",
@@ -105,15 +115,14 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         },
       );
       vi.stubGlobal("fetch", fetcher);
+      const session = randomUUID();
       const response = await POST(
         request(
           { claim },
-          transport === "stream"
-            ? {
-                accept: "text/event-stream",
-                cookie: `prawdowid-session=${randomUUID()}`,
-              }
-            : {},
+          {
+            cookie: `prawdowid-session=${session}`,
+            ...(transport === "stream" && { accept: "text/event-stream" }),
+          },
         ),
       );
       expect(response.status).toBe(200);
@@ -145,6 +154,33 @@ describe("real route and adapters with controlled HTTP provider responses", () =
       } else body = await response.json();
       expect(body.verdict).toBe("supported");
       expect(body.mode).toBe("live");
+      expect(body.usage).toMatchObject({
+        inputTokens: 300,
+        outputTokens: 75,
+        searchCalls: 2,
+        cached: false,
+      });
+      expect(body.usage.costUsd).toBeCloseTo(0.03218075, 10);
+      expect(body.strength.independentGroups).toBe(2);
+      const row = sessionAudit(session)[0];
+      expect(row.usage).toEqual(body.usage);
+      expect(row.usageCalls).toHaveLength(5);
+      const db = new DatabaseSync(process.env.AUDIT_DB_PATH!, {
+        readOnly: true,
+      });
+      try {
+        expect(
+          JSON.parse(
+            String(
+              db
+                .prepare("SELECT usage FROM checks WHERE id=?")
+                .get(body.requestId)?.usage,
+            ),
+          ),
+        ).toEqual(body.usage);
+      } finally {
+        db.close();
+      }
       expect(body.citationContract).toBe("findings-v1");
       expect(body.findings).toEqual([
         { id: "f1", text: claim, evidenceIds: ["q1", "q2"] },

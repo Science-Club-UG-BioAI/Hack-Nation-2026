@@ -4,13 +4,22 @@ import { setTimeout as delay } from "node:timers/promises";
 import { addAbortListener } from "node:events";
 import type { SearchHit } from "@/core/evidence";
 import { readBoundedText } from "./read-body";
+import { startCall, type UsageCall } from "./config";
 
 const USER_AGENT =
   "Prawdowid/0.2 (https://github.com/Science-Club-UG-BioAI/Hack-Nation-2026)";
 export type SourceBatch = { hits: SearchHit[]; partial: boolean };
 
 // Fixed API hosts only. Bound the downloaded body before parsing HTML/XML/JSON.
-async function read(url: URL, signal: AbortSignal): Promise<string> {
+async function read(
+  url: URL,
+  signal: AbortSignal,
+  searchProvider?: Extract<
+    UsageCall["provider"],
+    "wikipedia" | "sejm" | "arxiv"
+  >,
+): Promise<string> {
+  if (searchProvider) startCall(searchProvider).costUsd = 0;
   const response = await fetch(url, {
     signal,
     redirect: "error",
@@ -89,6 +98,7 @@ export async function wikipedia(
             formatversion: "2",
           }),
           signal,
+          "wikipedia",
         ),
       ),
     );
@@ -129,6 +139,7 @@ export async function wikipedia(
         sourceType: "encyclopedia",
         contentScope: "text",
         publisherGroup: "wikipedia.org",
+        publisher: "Wikipedia (Wikimedia Foundation)",
         notes: [
           `Artykuł encyklopedyczny, wersja ${parsed.parse.revid}. Weryfikuj również źródła pierwotne wskazane w artykule.`,
         ],
@@ -158,6 +169,7 @@ export async function sejm(
           limit: "3",
         }),
         signal,
+        "sejm",
       ),
     ),
   );
@@ -184,6 +196,10 @@ export async function sejm(
         sourceType: "official",
         contentScope: full ? "text" : "metadata",
         publisherGroup: "gov.pl",
+        publisher: "Kancelaria Sejmu RP (rejestr ELI)",
+        eventPeriod: act.announcementDate
+          ? { from: act.announcementDate, to: act.announcementDate }
+          : null,
         // Do not confuse announcementDate (date of the act) with publication.
         published_date: act.promulgation ?? null,
         notes: [
@@ -251,6 +267,7 @@ export async function arxiv(
         sortBy: "relevance",
       }),
       signal,
+      "arxiv",
     );
     const $ = load(xml, { xml: true });
     if (!$("feed").length) throw new Error("Invalid arXiv response");
@@ -269,6 +286,8 @@ export async function arxiv(
         canonicalUrl: `https://arxiv.org/abs/${id.replace(/v\d+$/, "")}`,
         raw_content: entry.children("summary").text().trim(),
         published_date: entry.children("published").text().trim(),
+        updatedAt: entry.children("updated").text().trim() || null,
+        publisher: "arXiv",
         provider: "arxiv",
         sourceType: "research",
         contentScope: "abstract",

@@ -4,6 +4,8 @@ import {
   type Assessment,
   type Document,
   type SourceMetadata,
+  type Source,
+  type VerificationResult,
 } from "./contracts";
 import { getDomain } from "tldts";
 import { invalidOutput } from "./errors";
@@ -50,6 +52,86 @@ function shingles(text: string): Set<string> {
   for (let i = 0; i + 5 <= words.length; i++)
     result.add(words.slice(i, i + 5).join(" "));
   return result;
+}
+
+const knownDate = (value?: string | null) =>
+  value && Number.isFinite(Date.parse(value)) ? value : null;
+
+export function freshnessWarning(source: Source, claim: string, asOf: string) {
+  const current =
+    /(?<!\p{L})(?:dziś|dzisiaj|wczoraj|obecnie|aktualnie|ostatnio|teraz|w tym roku|w tym miesiącu|w tym tygodniu)(?!\p{L})/iu.test(
+      claim,
+    );
+  const years = new Set(claim.match(/\b(?:19|20)\d{2}\b/g) ?? []);
+  const year = years.size === 1 ? [...years][0] : undefined;
+  const period = source.eventPeriod;
+  const day = asOf.slice(0, 10);
+  const explicitDays = claim.match(/\b(?:19|20)\d{2}-\d{2}-\d{2}\b/g) ?? [];
+  const targetDay =
+    explicitDays.length === 1
+      ? explicitDays[0]
+      : /(?<!\p{L})(dziś|dzisiaj)(?!\p{L})/iu.test(claim)
+        ? day
+        : null;
+  if (
+    targetDay &&
+    period &&
+    ((period.from && period.from.slice(0, 10) > targetDay) ||
+      (period.to && period.to.slice(0, 10) < targetDay))
+  )
+    return "Opisany okres zdarzenia nie obejmuje dnia wskazanego w tezie.";
+  if (
+    year &&
+    period &&
+    ((period.from && period.from.slice(0, 4) > year) ||
+      (period.to && period.to.slice(0, 4) < year))
+  )
+    return "Opisany okres zdarzenia nie obejmuje roku wskazanego w tezie.";
+  if (!current) return null;
+  if (period?.from && period.from.slice(0, 10) > day)
+    return "Opisane zdarzenie przypada po dacie wypowiedzi.";
+  const date = period?.to ?? source.updatedAt ?? source.publishedAt;
+  if (!date) return "Brak daty pozwalającej ocenić aktualność materiału.";
+  if (Date.parse(asOf) - Date.parse(date) > 365 * 86_400_000)
+    return "Materiał archiwalny względem daty tezy. Sprawdź, czy opisany stan nadal obowiązywał.";
+  return null;
+}
+
+export function describeStrength(
+  result: VerificationResult,
+): NonNullable<VerificationResult["strength"]> {
+  const cited = result.sources.filter((s) =>
+    result.evidence.some((e) => e.sourceId === s.id),
+  );
+  const groups = new Set(
+    cited.map((s) => s.publisherGroup || publisherGroup(s.url)),
+  ).size;
+  const limitations = [
+    "Grupujemy według domen wydawców. Serwisy gov.pl liczymy łącznie, a różne domeny mogą powtarzać tę samą informację.",
+  ];
+  if (groups === 1)
+    limitations.push("Wszystkie cytaty pochodzą z jednej grupy wydawców.");
+  if (result.evidenceConflict)
+    limitations.push(
+      "Cytowane materiały zawierają nierozstrzygniętą sprzeczność.",
+    );
+  if (cited.some((s) => s.freshnessWarning))
+    limitations.push(
+      "Co najmniej jedno cytowane źródło wymaga sprawdzenia okresu, którego dotyczy.",
+    );
+  if (
+    cited.some(
+      (s) => s.contentScope === "metadata" || s.contentScope === "abstract",
+    )
+  )
+    limitations.push("Część podstawy obejmuje tylko metadane lub abstrakt.");
+  return {
+    independentGroups: groups,
+    summary: cited.length
+      ? `Liczba cytowanych źródeł wynosi ${cited.length}, a liczba reprezentowanych grup wydawców wynosi ${groups}.`
+      : "Brak cytowanych źródeł.",
+    limitations,
+  };
 }
 
 function isNearCopy(a: Set<string>, b: Set<string>) {
@@ -142,15 +224,22 @@ export function prepareDocuments(
     urls.add(identity);
     hashes.add(hash);
     const id = `s${documents.length + 1}`;
-    const published =
-      hit.published_date && !Number.isNaN(Date.parse(hit.published_date))
-        ? hit.published_date
-        : null;
+    const published = knownDate(hit.published_date);
+    const from = knownDate(hit.eventPeriod?.from);
+    const to = knownDate(hit.eventPeriod?.to);
     documents.push({
       id,
       title: hit.title.slice(0, 300),
       url,
       publishedAt: published,
+      updatedAt: knownDate(hit.updatedAt),
+      eventPeriod:
+        (from || to) && !(from && to && Date.parse(from) > Date.parse(to))
+          ? { from, to }
+          : null,
+      publisher: hit.publisher || new URL(identity).hostname,
+      publisherIsDomain: !hit.publisher || hit.publisherIsDomain === true,
+      freshnessWarning: hit.freshnessWarning ?? null,
       retrievedAt,
       provider: hit.provider ?? "web",
       sourceType: hit.sourceType ?? (group === "gov.pl" ? "official" : "web"),

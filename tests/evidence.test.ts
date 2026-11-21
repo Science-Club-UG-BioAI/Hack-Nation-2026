@@ -5,6 +5,7 @@ import {
   validateAssessment,
   requireCorroboration,
   publisherGroup,
+  freshnessWarning,
 } from "@/core/evidence";
 import {
   verifyInputSchema,
@@ -221,6 +222,48 @@ describe("source preparation", () => {
   });
   it("preserves unknown publication dates", () =>
     expect(prepareDocuments([hit], "Poland", "now")[0].publishedAt).toBeNull());
+  it("distinguishes event, publication, update and retrieval dates", () => {
+    const [s] = prepareDocuments(
+      [
+        {
+          ...hit,
+          publisher: "Kancelaria Sejmu",
+          published_date: "2020-01-05",
+          updatedAt: "2024-06-01",
+          eventPeriod: { from: "1999-03-12", to: "1999-03-12" },
+        },
+      ],
+      "NATO",
+      "2026-01-04",
+    );
+    expect(s).toMatchObject({
+      publisher: "Kancelaria Sejmu",
+      publisherIsDomain: false,
+      publishedAt: "2020-01-05",
+      updatedAt: "2024-06-01",
+    });
+    expect(freshnessWarning(s, "W 1999 roku", s.retrievedAt)).toBeNull();
+    expect(freshnessWarning(s, "W 2010 roku", s.retrievedAt)).toContain(
+      "okres",
+    );
+    expect(freshnessWarning(s, "Dziś w Polsce", s.retrievedAt)).toContain(
+      "dnia",
+    );
+    expect(freshnessWarning(s, "Obecnie w Polsce", s.retrievedAt)).toContain(
+      "archiwalny",
+    );
+    const [unknown] = prepareDocuments([hit], "NATO", s.retrievedAt);
+    expect(unknown).toMatchObject({
+      publisher: "example.org",
+      publisherIsDomain: true,
+      publishedAt: null,
+      updatedAt: null,
+      eventPeriod: null,
+    });
+    expect(
+      freshnessWarning(unknown, "Obecnie w Polsce", s.retrievedAt),
+    ).toContain("Brak daty");
+  });
   it("bounds document count and context size", () => {
     const docs = prepareDocuments(
       Array.from({ length: 10 }, (_, i) => ({

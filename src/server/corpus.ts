@@ -68,6 +68,10 @@ export async function corpus(
         url: record.url,
         raw_content: raw,
         published_date: record.publishedAt,
+        publisher: record.publisher,
+        publisherIsDomain: record.publisherIsDomain,
+        updatedAt: record.updatedAt,
+        eventPeriod: record.eventPeriod,
         provider: "corpus",
         sourceType:
           record.type === "official"

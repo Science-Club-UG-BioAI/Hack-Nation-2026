@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AppError, invalidOutput } from "@/core/errors";
 import type { SearchHit } from "@/core/evidence";
 import { geminiResponse } from "./gemini-transport";
+import { startCall, TAVILY_CREDIT_USD } from "./config";
 
 async function searchResponse(response: Response): Promise<unknown> {
   if (!response.ok) {
@@ -161,6 +162,7 @@ export async function search(
   query: string,
   signal: AbortSignal,
 ): Promise<SearchHit[]> {
+  const call = startCall("tavily");
   const response = await fetch("https://api.tavily.com/search", {
     method: "POST",
     signal,
@@ -173,12 +175,21 @@ export async function search(
       query,
       max_results: 6,
       search_depth: "advanced",
+      include_usage: true,
       include_raw_content: true,
+      include_published_date: true,
       include_answer: false,
       auto_parameters: false,
     }),
   });
-  const parsed = searchSchema.safeParse(await searchResponse(response));
+  const body = await searchResponse(response);
+  const credits = z
+    .object({ usage: z.object({ credits: z.number().int().nonnegative() }) })
+    .safeParse(body);
+  call.credits = credits.success ? credits.data.usage.credits : null;
+  call.costUsd =
+    call.credits === null ? null : call.credits * TAVILY_CREDIT_USD;
+  const parsed = searchSchema.safeParse(body);
   if (!parsed.success)
     throw new AppError(
       "PROVIDER_ERROR",

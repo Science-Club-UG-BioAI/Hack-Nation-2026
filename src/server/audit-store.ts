@@ -5,12 +5,14 @@ import { DatabaseSync } from "node:sqlite";
 import { AppError } from "@/core/errors";
 import { maskPersonalData } from "@/core/privacy";
 import type { VerificationResult } from "@/core/contracts";
+import { summarizeUsage, type UsageCall } from "./config";
 
 const RETENTION_MS = 24 * 60 * 60_000;
 const MAX_RECORDS = 5000;
 const hash = (value: string) =>
   createHash("sha256").update(value).digest("hex");
 type Store = {
+  schemaVersion: 2;
   path: string;
   db: DatabaseSync;
   timer: ReturnType<typeof setInterval>;
@@ -31,7 +33,10 @@ function openStore() {
     /* turbopackIgnore: true */ process.env.AUDIT_DB_PATH ||
       ".runtime/audit.sqlite",
   );
-  if (globalStore.prawdowidAudit?.path === path)
+  if (
+    globalStore.prawdowidAudit?.path === path &&
+    globalStore.prawdowidAudit.schemaVersion === 2
+  )
     return globalStore.prawdowidAudit.db;
   closeAuditStore();
   mkdirSync(dirname(path), { recursive: true });
@@ -42,6 +47,18 @@ function openStore() {
     CREATE INDEX IF NOT EXISTS checks_session ON checks(session_hash);
     CREATE INDEX IF NOT EXISTS checks_expiry ON checks(expires_at);
     CREATE TABLE IF NOT EXISTS revoked_sessions (session_hash TEXT PRIMARY KEY, expires_at INTEGER NOT NULL);`);
+  // Serialize schema inspection and migration across processes opening an older database.
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const columns = db.prepare("PRAGMA table_info(checks)").all();
+    if (!columns.some((c) => c.name === "usage"))
+      db.exec("ALTER TABLE checks ADD COLUMN usage TEXT");
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    db.close();
+    throw error;
+  }
   prune(db);
   const timer = setInterval(() => {
     try {
@@ -51,7 +68,7 @@ function openStore() {
     }
   }, 60_000);
   timer.unref();
-  globalStore.prawdowidAudit = { path, db, timer };
+  globalStore.prawdowidAudit = { path, db, timer, schemaVersion: 2 };
   return db;
 }
 function store() {
@@ -119,6 +136,7 @@ export type AuditEntry = {
   statedAt?: string;
   durationMs: number;
   result?: VerificationResult;
+  calls?: UsageCall[];
   errorCode?: string;
 };
 export function writeAudit(session: string, entry: AuditEntry) {
@@ -129,6 +147,9 @@ export function writeAudit(session: string, entry: AuditEntry) {
     prune(db);
     const result = entry.result;
     const graph = result?.evidenceGraph;
+    const usage =
+      result?.usage ??
+      (entry.calls ? summarizeUsage(entry.calls, false) : null);
     const graphVerdict = graph?.nodes.find(
       (node) => node.id === "verdict" && node.type === "VERDICT",
     );
@@ -138,6 +159,7 @@ export function writeAudit(session: string, entry: AuditEntry) {
       at: new Date().toISOString(),
       channel: entry.channel,
       claim: maskPersonalData(entry.claim).text,
+      alertClaimKey: claimKey(entry.claim, entry.statedAt),
       statedAt: entry.statedAt ?? null,
       durationMs: entry.durationMs,
       status: result?.status ?? "technical_error",
@@ -154,12 +176,20 @@ export function writeAudit(session: string, entry: AuditEntry) {
       limitations:
         result?.limitations.map((v) => maskPersonalData(v).text) ?? [],
       retrieval: result?.retrieval ?? [],
+      strength: result?.strength ?? null,
+      usage,
+      usageCalls: entry.calls ?? null,
       sources:
         result?.sources.map((s) => ({
           id: s.id,
           title: maskPersonalData(s.title).text,
           url: sourceUrl(s.url),
           publishedAt: s.publishedAt,
+          updatedAt: s.updatedAt ?? null,
+          eventPeriod: s.eventPeriod ?? null,
+          publisher: s.publisher ? maskPersonalData(s.publisher).text : null,
+          publisherIsDomain: s.publisherIsDomain ?? null,
+          freshnessWarning: s.freshnessWarning ?? null,
           retrievedAt: s.retrievedAt,
           publisherGroup: s.publisherGroup ?? null,
         })) ?? [],
@@ -187,13 +217,14 @@ export function writeAudit(session: string, entry: AuditEntry) {
       expiresAt: new Date(Date.now() + RETENTION_MS).toISOString(),
     };
     db.prepare(
-      "INSERT INTO checks(id, session_hash, at, expires_at, payload) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO checks(id, session_hash, at, expires_at, payload, usage) VALUES (?, ?, ?, ?, ?, ?)",
     ).run(
       entry.requestId,
       hash(session),
       Date.now(),
       Date.now() + RETENTION_MS,
       JSON.stringify(payload),
+      usage ? JSON.stringify(usage) : null,
     );
     db.exec(
       `DELETE FROM checks WHERE id IN (SELECT id FROM checks ORDER BY at DESC, rowid DESC LIMIT -1 OFFSET ${MAX_RECORDS})`,
@@ -214,6 +245,65 @@ export function sessionAudit(session: string) {
     )
     .all(hash(session))
     .map((row) => JSON.parse(String(row.payload)) as Record<string, unknown>);
+}
+
+function claimKey(claim: string, statedAt?: string) {
+  const normalized = maskPersonalData(claim)
+    .text.normalize("NFC")
+    .toLocaleLowerCase("pl")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/[.!?]+$/u, "");
+  return hash(JSON.stringify([normalized, statedAt ?? null]));
+}
+
+// Use the bounded, expiring session audit as repeat history. Two deliveries of
+// the same snapshot to different channels represent one question.
+export function repeatedWithoutSources(
+  session: string,
+  result: VerificationResult,
+  channel: string,
+  id: string,
+) {
+  return Boolean(
+    store()
+      .prepare(
+        `
+    SELECT 1 FROM checks WHERE session_hash=? AND expires_at>? AND id<>?
+      AND json_extract(payload,'$.alertClaimKey')=?
+      AND json_extract(payload,'$.verdict')='insufficient'
+      AND json_array_length(payload,'$.sources')=0
+      AND (json_extract(payload,'$.verificationId')<>? OR json_extract(payload,'$.channel')=?)
+    LIMIT 1`,
+      )
+      .get(
+        hash(session),
+        Date.now(),
+        id,
+        claimKey(result.claim, result.statedAt ?? undefined),
+        result.requestId,
+        channel,
+      ),
+  );
+}
+
+export function saveAlert(
+  session: string,
+  id: string,
+  reason: string,
+  status: string,
+  httpStatus: number | null = null,
+) {
+  store()
+    .prepare(
+      "UPDATE checks SET payload=json_set(payload,'$.alert',json(?)) WHERE id=? AND session_hash=? AND expires_at>?",
+    )
+    .run(
+      JSON.stringify({ reason, status, httpStatus }),
+      id,
+      hash(session),
+      Date.now(),
+    );
 }
 export function deleteSessionAudit(session: string) {
   const db = store();

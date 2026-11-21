@@ -5,6 +5,7 @@ import { verify } from "./verify";
 import { projectVerificationGraph } from "./verification-graph";
 import { assertSessionActive } from "./audit-store";
 import type { ProgressListener } from "@/core/progress";
+import { describeStrength, freshnessWarning } from "@/core/evidence";
 
 const TTL = 5 * 60_000;
 type Entry = {
@@ -53,7 +54,7 @@ function keyFor(input: VerifyInput, session: string) {
     .update(
       JSON.stringify([
         "reasoned-guard-v2",
-        "findings-v1-graph-projection",
+        "findings-v1-source-metadata-v2",
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,
@@ -158,6 +159,13 @@ export async function runVerification(
     .then((result) => {
       combined.throwIfAborted();
       assertSessionActive(session);
+      for (const source of result.sources)
+        source.freshnessWarning ??= freshnessWarning(
+          source,
+          result.checkedClaim ?? result.claim,
+          result.statedAt ?? result.checkedAt,
+        );
+      result.strength = describeStrength(result);
       // Preserve the same attempt for the other channel, including failed audits.
       // A repeat in a channel that already saw an unsuccessful attempt retries it.
       {

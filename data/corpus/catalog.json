@@ -7,7 +7,7 @@
       "title": "Polska polityka zagraniczna XXI wieku - droga do NATO i Unii Europejskiej - Narodziny III RP - zpe.gov.pl",
       "url": "https://zpe.gov.pl/watek/LP7H11XUNM/4/a/polska-polityka-zagraniczna-xxi-wieku---droga-do-nato-i-unii-europejskiej/DERNLCXJB",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Zintegrowana Platforma Edukacyjna",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:20.745Z",
@@ -17,14 +17,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "60ae9a8bc068fd2f",
       "title": "Przeczytaj - Wstąpienie Polski do NATO - zpe.gov.pl",
       "url": "https://zpe.gov.pl/a/przeczytaj/DW5UPsJ7F",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Zintegrowana Platforma Edukacyjna",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:20.893Z",
@@ -34,31 +37,41 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "7adfcc962290a959",
       "title": "25 lat temu Polska przystąpiła do NATO - Kancelaria Prezesa Rady Ministrów - Portal Gov.pl",
       "url": "https://www.gov.pl/web/premier/25-lat-temu-polska-przystapila-do-nato",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Kancelaria Prezesa Rady Ministrów",
       "type": "official",
-      "publishedAt": null,
+      "publishedAt": "2024-03-12",
       "retrievedAt": "2026-11-21T10:56:21.019Z",
       "discoveryQuery": "Polska NATO Unia Europejska historia członkostwo",
       "discovery": "Tavily Search; verified direct HTTP 200 HTML",
       "license": "Metadata-only catalog; no full-text redistribution permission asserted",
       "licenseUrl": null,
       "contentStored": false,
-      "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "publicationDateBasis": "Data przy tytule komunikatu KPRM",
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": {
+        "from": "1999-03-12",
+        "to": "1999-03-12"
+      },
+      "eventPeriodBasis": "Data przystąpienia do NATO w pierwszym akapicie"
     },
     {
       "id": "176eba32251a1f39",
       "title": "Droga Polski do NATO - kalendarium",
       "url": "https://www.bbn.gov.pl/pl/wydarzenia/15-lat-polski-w-nato/polska-w-sojuszu-polnoc/5294,Droga-Polski-do-NATO-kalendarium.html",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Biuro Bezpieczeństwa Narodowego",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.202Z",
@@ -68,14 +81,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "2bc602aca1acb6c6",
       "title": "Zintegrowana Platforma Edukacyjna",
       "url": "https://zpe.gov.pl/szukaj?query=Polska+w+NATO",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Zintegrowana Platforma Edukacyjna",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.233Z",
@@ -85,14 +101,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "80bfb51743038172",
       "title": "25. rocznica przystąpienia Polski do NATO - Polska w Albanii - Portal Gov.pl",
       "url": "https://www.gov.pl/web/albania/25-rocznica-przystapienia-polski-do-nato",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Ambasada RP w Tiranie",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.251Z",
@@ -102,14 +121,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "a4a6c61d39553c33",
       "title": "Korzyści i inicjatywy",
       "url": "https://www.bbn.gov.pl/pl/wydarzenia/15-lat-polski-w-nato/polska-w-sojuszu-polnoc/5295,Korzysci-i-inicjatywy.html",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Biuro Bezpieczeństwa Narodowego",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.341Z",
@@ -119,14 +141,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "a2393c1c4ebb343b",
       "title": "Polska w NATO - Polska w NATO - Portal Gov.pl",
       "url": "https://www.gov.pl/web/nato/polska-w-nato-rp",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Stałe Przedstawicielstwo RP przy NATO",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.408Z",
@@ -136,14 +161,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "5d613288ea7f2314",
       "title": "Polska w NATO - Ministerstwo Spraw Zagranicznych - Portal Gov.pl",
       "url": "https://www.gov.pl/web/dyplomacja/polska-w-nato",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Ministerstwo Spraw Zagranicznych RP",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.427Z",
@@ -153,14 +181,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "fdd811ad6770d283",
       "title": "23 lata Polski w NATO. Orędzie Prezydenta",
       "url": "https://www.bbn.gov.pl/pl/wydarzenia/9323,23-lata-Polski-w-NATO-Oredzie-Prezydenta.html",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Biuro Bezpieczeństwa Narodowego",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.547Z",
@@ -170,14 +201,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "23edc1c464429f2b",
       "title": "Miejsce Polski w świecie współczesnym. Droga do NATO i Unii Europejskiej - zpe.gov.pl",
       "url": "https://zpe.gov.pl/b/miejsce-polski-w-swiecie-wspolczesnym-droga-do-nato-i-unii-europejskiej/P11YXQxCC",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Zintegrowana Platforma Edukacyjna",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.562Z",
@@ -187,14 +221,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "a81b633692a643c4",
       "title": "Senat Rzeczypospolitej Polskiej / Aktualności / 18. rocznica przystąpienia Polski do Unii Europejskiej",
       "url": "https://www.senat.gov.pl/aktualnoscilista/art,14725,18-rocznica-przystapienia-polski-do-unii-europejskiej.html",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Senat RP",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.730Z",
@@ -204,14 +241,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "5425d3460147f091",
       "title": "Poland in the UN - Poland in the UN - Gov.pl website",
       "url": "https://www.gov.pl/web/un/poland-in-the-un",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Stałe Przedstawicielstwo RP przy ONZ",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.783Z",
@@ -221,14 +261,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "0b5e4361b16c0970",
       "title": "Brief History of Poland",
       "url": "https://eng.ipn.gov.pl/en/brief-history-of-poland",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Instytut Pamięci Narodowej",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.923Z",
@@ -238,14 +281,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "59cdf63a9499a53c",
       "title": "Poland in the US - Poland in US - Gov.pl website",
       "url": "https://www.gov.pl/web/usa-en",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Ministerstwo Spraw Zagranicznych RP",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:21.951Z",
@@ -255,14 +301,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "df62e716511a6ea0",
       "title": "Poland in Canada - Poland in Canada - Gov.pl website",
       "url": "https://www.gov.pl/web/canada-en",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Ministerstwo Spraw Zagranicznych RP",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:22.041Z",
@@ -272,14 +321,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "3b99bdbb5e9e680f",
       "title": "Basic information about Poland - Civil Service - Portal Gov.pl",
       "url": "https://www.gov.pl/web/civilservice/basic-information-about-poland",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Kancelaria Prezesa Rady Ministrów",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:22.063Z",
@@ -289,14 +341,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ae11da4326a3a298",
       "title": "Must Know Facts About Poland | study.gov.pl",
       "url": "https://study.gov.pl/must-know-facts-about-poland",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Narodowa Agencja Wymiany Akademickiej",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:23.054Z",
@@ -306,14 +361,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b00ff32756f00955",
       "title": "Ministry of Foreign Affairs Republic of Poland - Ministry of Foreign Affairs Republic of Poland - Gov.pl website",
       "url": "https://www.gov.pl/web/diplomacy",
       "domain": "gov.pl",
-      "publisher": "Administracja publiczna RP",
+      "publisher": "Ministerstwo Spraw Zagranicznych RP",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:23.079Z",
@@ -323,7 +381,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "959dd9964f03e56b",
@@ -340,7 +401,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "2d18f69d6a5d72f4",
@@ -357,7 +421,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b1c60536956cff87",
@@ -374,7 +441,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "3e8bd73da3dbcd15",
@@ -391,7 +461,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "75bea37e0ada9f81",
@@ -408,7 +481,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "08b1a7561532ede9",
@@ -425,7 +501,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "eb35dba0383a584d",
@@ -442,7 +521,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "78088817fca43469",
@@ -459,7 +541,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "bbad2935565484e1",
@@ -476,7 +561,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "8b9c9022770dfd4f",
@@ -493,14 +581,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "bff16f60d5061903",
       "title": "EU enlargement",
       "url": "https://european-union.europa.eu/principles-countries-history/eu-enlargement_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Unia Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:33.856Z",
@@ -510,14 +601,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b6bef7f9303d50f4",
       "title": "EU countries | European Union",
       "url": "https://european-union.europa.eu/principles-countries-history/eu-countries_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Unia Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:33.914Z",
@@ -527,14 +621,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "0effde341226b4d3",
       "title": "Poland – EU country | European Union",
       "url": "https://european-union.europa.eu/principles-countries-history/eu-countries/poland_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Unia Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:33.972Z",
@@ -544,14 +641,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "846bd35ffb3102e2",
       "title": "Agenda 2000 - Commission Opinion on Poland\\'s Application for Membership of the European Union",
       "url": "https://ec.europa.eu/commission/presscorner/detail/en/doc_97_16",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Komisja Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:35.147Z",
@@ -561,14 +661,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "67220b8cd60d8886",
       "title": "Countries using the euro | European Union",
       "url": "https://european-union.europa.eu/institutions-law-budget/euro/countries-using-euro_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Unia Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:36.134Z",
@@ -578,14 +681,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "c2b36375a55e1e77",
       "title": "Easy to read – about the EU | European Union",
       "url": "https://european-union.europa.eu/easy-read_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Unia Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:36.456Z",
@@ -595,14 +701,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "6dd624490aec8e1f",
       "title": "History of enlargement: From 6 to 27 members",
       "url": "https://enlargement.ec.europa.eu/enlargement-policy/history-enlargement-6-27-members_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Komisja Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:36.586Z",
@@ -612,14 +721,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "1b8509a15ef7ceb3",
       "title": "History of Schengen",
       "url": "https://home-affairs.ec.europa.eu/policies/schengen/schengen-area/history-schengen_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Komisja Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:36.883Z",
@@ -629,14 +741,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e23b281856d1f9a2",
       "title": "EU & ME | WHAT IS THE EUROPEAN UNION?",
       "url": "https://op.europa.eu/webpub/com/eu-and-me/en/WHAT_IS_THE_EUROPEAN_UNION.html",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Urząd Publikacji Unii Europejskiej",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:37.170Z",
@@ -646,14 +761,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "d76edeb3d1655644",
       "title": "Schengen, visa, borders",
       "url": "https://home-affairs.ec.europa.eu/policies/schengen_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Komisja Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:37.609Z",
@@ -663,14 +781,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "5776d510f9be56e0",
       "title": "Schengen area",
       "url": "https://home-affairs.ec.europa.eu/policies/schengen/schengen-area_en",
       "domain": "europa.eu",
-      "publisher": "Instytucje Unii Europejskiej",
+      "publisher": "Komisja Europejska",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:37.715Z",
@@ -680,7 +801,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ea70899c6571dd19",
@@ -697,7 +821,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "179afc9c85eff71b",
@@ -714,7 +841,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "65ff3ab50814b70d",
@@ -731,7 +861,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e34b70f629d4ff1d",
@@ -748,7 +881,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e45aa9222b58bc7d",
@@ -765,7 +901,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "c188242df63be99e",
@@ -782,7 +921,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "4b8efd3c75427aca",
@@ -799,7 +941,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ff9de31463d3a873",
@@ -816,7 +961,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "f7d43e32a3b961db",
@@ -833,7 +981,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "8ea686985b464607",
@@ -850,7 +1001,14 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": {
+        "from": "2024-03-14",
+        "to": "2024-03-14"
+      },
+      "eventPeriodBasis": "Data spotkania w pierwszym akapicie komunikatu NATO"
     },
     {
       "id": "ea368b802e1ee142",
@@ -867,7 +1025,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e5638a587eac6333",
@@ -884,7 +1045,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "10456fca3ca5586f",
@@ -901,7 +1065,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "02b1f043b24f736e",
@@ -918,14 +1085,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "5b3d1935a4c7ac89",
       "title": "Poland",
       "url": "https://shape.nato.int/poland",
       "domain": "nato.int",
-      "publisher": "NATO",
+      "publisher": "Supreme Headquarters Allied Powers Europe (NATO)",
       "type": "official",
       "publishedAt": null,
       "retrievedAt": "2026-11-21T10:56:48.090Z",
@@ -935,7 +1105,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "684231045c7191cf",
@@ -952,7 +1125,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "5abac603307e37d2",
@@ -969,7 +1145,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "62bc769f674e9ab5",
@@ -986,7 +1165,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "3d8f2fc08432477b",
@@ -1003,7 +1185,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "d52c040a8912c1f5",
@@ -1020,7 +1205,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "359b43c321e50b7e",
@@ -1037,7 +1225,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "eb580bc6e071b8c7",
@@ -1054,7 +1245,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b6ba1db9613d7f3a",
@@ -1071,7 +1265,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "6fbb31fedb1ab726",
@@ -1088,7 +1285,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "HTML publication meta",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "de56bbfa44b11f8a",
@@ -1105,7 +1305,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "220df3732b866aaf",
@@ -1122,7 +1325,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b510f146ac5fad12",
@@ -1139,7 +1345,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "08791a1b2d3ce19a",
@@ -1156,7 +1365,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "6cb07a2b4e2c7f65",
@@ -1173,7 +1385,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "f075a09b9de241ad",
@@ -1190,7 +1405,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ba29f40a0365760e",
@@ -1207,7 +1425,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "5a3ac944ca3a0ed5",
@@ -1224,7 +1445,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "3f1f643e8b285692",
@@ -1241,7 +1465,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ec1d10656fd4d0b6",
@@ -1258,7 +1485,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "67f55a6a8a63c31a",
@@ -1275,7 +1505,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "17d2c9a269b0e2f8",
@@ -1292,7 +1525,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "1ab9e31479c0502d",
@@ -1309,7 +1545,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "6dcb01fc407d4222",
@@ -1326,7 +1565,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "9840aaf794388cb6",
@@ -1343,7 +1585,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "c1657eaf8675d74b",
@@ -1360,7 +1605,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e8efca27ffe53cbb",
@@ -1377,7 +1625,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "bf6ac0ad08a20f99",
@@ -1394,7 +1645,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ab41e164fab18235",
@@ -1411,7 +1665,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "1c7c9dca0ecdaa0b",
@@ -1428,7 +1685,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "05c5c2b455de487f",
@@ -1445,7 +1705,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ce21425d04229b38",
@@ -1462,7 +1725,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "8ce977233ff48893",
@@ -1479,7 +1745,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "1feb0f0f492c7e49",
@@ -1496,7 +1765,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "feb433342262babb",
@@ -1513,7 +1785,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b288694b483216a3",
@@ -1530,14 +1805,17 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e1b4835ca4338553",
       "title": "NASA Scientific Visualization Studio | The Inner Solar System: Discovering Earth's Neighborhood w/ Dr. James Garvin",
       "url": "https://svs.gsfc.nasa.gov/10618",
       "domain": "nasa.gov",
-      "publisher": "NASA",
+      "publisher": "NASA Goddard Space Flight Center",
       "type": "official",
       "publishedAt": "2010-08-16T04:00:00.000Z",
       "retrievedAt": "2026-11-21T10:57:44.819Z",
@@ -1547,7 +1825,11 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "HTML publication meta",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": "2023-05-03T17:54:00Z",
+      "eventPeriod": null,
+      "updatedAtBasis": "Stopka NASA SVS: last updated"
     },
     {
       "id": "9da9e2ee249fc32f",
@@ -1564,7 +1846,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "e51fe6200ccb49e5",
@@ -1581,7 +1866,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "a0f9e0d658f0fe81",
@@ -1598,7 +1886,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "84fba67713bc5991",
@@ -1615,7 +1906,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "3aea0084003912a1",
@@ -1632,7 +1926,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "d5d308c4e2358667",
@@ -1649,7 +1946,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "bddc98d34790c343",
@@ -1666,7 +1966,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "33d957842e2f7e89",
@@ -1683,7 +1986,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "8d7b037e1d54cae1",
@@ -1700,7 +2006,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "d3f7f44f370ef9b2",
@@ -1717,7 +2026,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "9b850851fcdde59e",
@@ -1734,7 +2046,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "57ae9943b01b1d27",
@@ -1751,7 +2066,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "eef55ea11c326dbf",
@@ -1768,7 +2086,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "bf537935342e3fef",
@@ -1785,7 +2106,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "38585570b0e9d67c",
@@ -1802,7 +2126,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "d924b6490d908906",
@@ -1819,7 +2146,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "02fb4ad2781cdc32",
@@ -1836,7 +2166,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "0d22eddacf3cdb31",
@@ -1853,7 +2186,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "7e825977adffe0f7",
@@ -1870,7 +2206,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "cc1422917ffa0316",
@@ -1887,7 +2226,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "f8ffeb97c36f7c8a",
@@ -1904,7 +2246,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "3a16e0c099e5bac6",
@@ -1921,7 +2266,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "cee868ac48ddcedf",
@@ -1938,7 +2286,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "f63b9b310558c0e3",
@@ -1955,7 +2306,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "cd27626209b2c8be",
@@ -1972,7 +2326,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "cd248f5ae60715b8",
@@ -1989,7 +2346,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "f72be9e1496f89ec",
@@ -2006,7 +2366,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ce09478fb97a5b0f",
@@ -2023,7 +2386,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "cd8b103692b95a73",
@@ -2040,7 +2406,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "6b0db4c779a581e2",
@@ -2057,7 +2426,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "c88603efc60ff800",
@@ -2074,7 +2446,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "b11722a9ba30d747",
@@ -2091,7 +2466,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "41d4cac5e0533446",
@@ -2108,7 +2486,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "df9bf0083ea5d2e1",
@@ -2125,7 +2506,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ee56042eaf4eee38",
@@ -2142,7 +2526,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "83b8dc74bb8987f0",
@@ -2159,7 +2546,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "ee28fe529d613dbf",
@@ -2176,7 +2566,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "36655ecfcfb92a6f",
@@ -2193,7 +2586,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     },
     {
       "id": "56206eefce03bc31",
@@ -2210,7 +2606,10 @@
       "licenseUrl": null,
       "contentStored": false,
       "publicationDateBasis": "unknown",
-      "httpStatus": 200
+      "httpStatus": 200,
+      "publisherIsDomain": false,
+      "updatedAt": null,
+      "eventPeriod": null
     }
   ]
 }

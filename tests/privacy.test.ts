@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
+import { DatabaseSync } from "node:sqlite";
+import { join, dirname } from "node:path";
 import { readFileSync } from "node:fs";
 import { NextRequest } from "next/server";
 import { maskPersonalData } from "@/core/privacy";
@@ -68,8 +70,10 @@ it("masks obvious identifiers while preserving dates and substantive quantities"
   expect(maskPersonalData(result.text).count).toBe(0);
 });
 it("masks before model access and persistence, exports only the current session", async () => {
+  const privateClaim =
+    claim + " Dowód ABA300000, rachunek GB82 WEST 1234 5698 7654 32.";
   const session = randomUUID();
-  const response = await verify(req(session, "POST", { claim }));
+  const response = await verify(req(session, "POST", { claim: privateClaim }));
   expect(response.status).toBe(200);
   const result = await response.json();
   const exported = await GET(req(session, "GET")).json();
@@ -85,11 +89,24 @@ it("masks before model access and persistence, exports only the current session"
     vi.mocked(generate).mock.calls,
     vi.mocked(search).mock.calls,
   ])
-    expect(JSON.stringify(payload)).not.toContain("test@example.org");
+    expect(JSON.stringify(payload)).not.toMatch(
+      /test@example\.org|ABA300000|GB82 WEST/,
+    );
   expect(await GET(req(randomUUID(), "GET")).json()).toMatchObject({
     records: [],
   });
   expect(result.limitations.join(" ")).toContain("zamaskowano");
+});
+it("preserves surrounding claim context, dates and unrelated codes", () => {
+  const original =
+    "W 2025 r. dowód ABA 300000 i rachunki DE89 3704 0044 0532 0130 00 oraz FR1420041010050500013M02606 obejmowały 3 wpłaty.";
+  expect(maskPersonalData(original)).toEqual({
+    count: 3,
+    text: "W 2025 r. dowód [DOWÓD] i rachunki [RACHUNEK] oraz [RACHUNEK] obejmowały 3 wpłaty.",
+  });
+  const unrelated =
+    "Lot ABC123456 z 2024 roku miał oznaczenie XABA300000 i 120 miejsc. Kod DE00 TEST 2024.";
+  expect(maskPersonalData(unrelated)).toEqual({ text: unrelated, count: 0 });
 });
 it("survives a restart and expires records even after the process was stopped", () => {
   const session = randomUUID();
@@ -106,6 +123,41 @@ it("survives a restart and expires records even after the process was stopped", 
   vi.setSystemTime(Date.now() + 24 * 60 * 60_000 + 1);
   closeAuditStore();
   expect(sessionAudit(session)).toEqual([]);
+});
+it("migrates existing checks without inventing historical usage", () => {
+  const path = join(dirname(process.env.AUDIT_DB_PATH!), "legacy.sqlite");
+  const db = new DatabaseSync(path);
+  const session = randomUUID();
+  db.exec(
+    "CREATE TABLE checks(id TEXT PRIMARY KEY, session_hash TEXT NOT NULL, at INTEGER NOT NULL, expires_at INTEGER NOT NULL, payload TEXT NOT NULL)",
+  );
+  db.prepare("INSERT INTO checks VALUES(?,?,?,?,?)").run(
+    "historical",
+    createHash("sha256").update(session).digest("hex"),
+    Date.now(),
+    Date.now() + 60000,
+    '{"status":"completed"}',
+  );
+  db.close();
+  vi.stubEnv("AUDIT_DB_PATH", path);
+  expect(sessionAudit(session)).toEqual([{ status: "completed" }]);
+  writeAudit(session, {
+    requestId: randomUUID(),
+    channel: "web",
+    claim,
+    durationMs: 0,
+    calls: [],
+  });
+  expect(sessionAudit(session)).toHaveLength(2);
+  const migrated = new DatabaseSync(path, { readOnly: true });
+  try {
+    expect(
+      migrated.prepare("SELECT usage FROM checks WHERE id='historical'").get()
+        ?.usage,
+    ).toBeNull();
+  } finally {
+    migrated.close();
+  }
 });
 it("deletes only the current session and prevents late writes and cookie replay", async () => {
   const own = randomUUID(),
