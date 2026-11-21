@@ -1,6 +1,0 @@
-{
-  "resultSha256": "79c2073c6edf88d91ee000412fe3fa18811b1f6562eab13da10ad755417d0fb3",
-  "reviewer": null,
-  "policy": "Independently review entailment of every assigned atomic finding and the stated relation. Structural references and the model's own audit are not gold labels.",
-  "items": []
-}
