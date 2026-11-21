@@ -4,6 +4,8 @@ import {
   type VerificationResult,
 } from "./contracts";
 
+import { sourceDisagreement } from "./source-disagreement";
+
 // A deterministic transport formatter, with no extra model call or changed verdict.
 export function channelReply(result: VerificationResult): ChannelReply {
   const blocks = [
@@ -18,8 +20,20 @@ export function channelReply(result: VerificationResult): ChannelReply {
     result.explanation,
     ...(result.verdict === null ? ["Nie wydano werdyktu o prawdziwości."] : []),
     ...(result.evidenceConflict
-      ? ["Źródła są sprzeczne. Nie rozstrzygamy arbitralnie."]
+      ? ["Rozbieżność między źródłami pozostaje nierozstrzygnięta."]
       : []),
+    ...sourceDisagreement(result).flatMap(({ label, positions }) => [
+      label,
+      ...positions.map(({ text, citations }) =>
+        [
+          text,
+          ...citations.map(
+            ({ source, number }) =>
+              `[${number}] ${source.title} · ${source.url}`,
+          ),
+        ].join("\n"),
+      ),
+    ]),
     ...result.evidence.map((e, i) => {
       const source = result.sources.find((s) => s.id === e.sourceId)!;
       const relation = {

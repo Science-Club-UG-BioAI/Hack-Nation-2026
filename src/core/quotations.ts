@@ -276,6 +276,38 @@ export function resolveSelection(
     ids.add(finding.id);
     texts.add(text);
   }
+  if (basis?.kind === "conflict") {
+    const decisiveIds = new Set(basis.decisiveQuoteIds);
+    const covered = new Set(
+      findings.flatMap((finding) => {
+        const citations = evidence.filter((item) =>
+          finding.evidenceIds.includes(item.id),
+        );
+        const relation = citations[0]?.relation;
+        return relation !== "context" &&
+          citations.every((item) => item.relation === relation)
+          ? citations.map((item) => item.id)
+          : [];
+      }),
+    );
+    const positions = evidence.filter(
+      (item) => decisiveIds.has(item.id) && covered.has(item.id),
+    );
+    if (
+      !positions.some(
+        (support) =>
+          support.relation === "supports" &&
+          positions.some(
+            (opposition) =>
+              opposition.relation === "contradicts" &&
+              opposition.sourceId !== support.sourceId,
+          ),
+      )
+    )
+      throw invalidOutput([
+        "For conflict, provide separate findings stating what each side reports, with decisive supporting and contradicting quotations from different documents.",
+      ]);
+  }
   // Only this inventory is published as model-authored prose. Free-form
   // explanation, limitations and relevance cannot smuggle uncited assertions.
   const explanation = findings.length

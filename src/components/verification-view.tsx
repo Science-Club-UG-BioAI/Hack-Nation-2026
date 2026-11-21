@@ -1,5 +1,7 @@
+import { countSourcesByProvider } from "@/core/source-counts";
 import { useState } from "react";
 import { EvidenceGraphView } from "./evidence-graph-view";
+import { sourceDisagreement } from "@/core/source-disagreement";
 import {
   resultLabel,
   providerLabels,
@@ -56,6 +58,15 @@ export function VerificationView({ result }: { result: ResultDetails }) {
   const strength = strengthSummary(result.strength);
   const displayedVerdict = result.verdict;
   const displayedLabel = resultLabel(result);
+  const disagreement = sourceDisagreement(result);
+  const providerCounts = countSourcesByProvider(result.sources);
+  const providerStatuses = new Map(
+    result.retrieval?.map((item) => [item.provider, item.status]),
+  );
+  const providers = new Set([
+    ...providerStatuses.keys(),
+    ...providerCounts.keys(),
+  ]);
   const sourcesById = new Map<string, SourceDetails>(
     result.sources.map((source) => [source.id, source]),
   );
@@ -128,6 +139,42 @@ export function VerificationView({ result }: { result: ResultDetails }) {
             })
           : result.explanation}
       </p>
+      {disagreement.length > 0 ? (
+        <section
+          className="coverage-panel"
+          aria-label="Rozbieżności między źródłami"
+        >
+          <h3>Rozbieżności między źródłami</h3>
+          {result.evidenceConflict && (
+            <p>Dostępne dowody pozostawiają rozbieżność nierozstrzygniętą.</p>
+          )}
+          {disagreement.map((side) => (
+            <div key={side.relation}>
+              <h4>{side.label}</h4>
+              <ul>
+                {side.positions.map((position, index) => (
+                  <li key={index}>
+                    {position.text}
+                    <ul>
+                      {position.citations.map(({ source, number }) => (
+                        <li key={number}>
+                          <a href={`#evidence-${number}`}>
+                            {source.title} · dowód {number}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      ) : result.evidenceConflict ? (
+        <p className="status-notice">
+          Rozbieżność między źródłami pozostaje nierozstrzygnięta.
+        </p>
+      ) : null}
       {result.status === "completed" && strength && (
         <aside className="coverage-panel" aria-label="Siła podstawy">
           <strong>Siła podstawy</strong>
@@ -162,12 +209,6 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           To status obsługi zgłoszenia. Nie wydano werdyktu o prawdziwości.
         </p>
       )}
-      {result.evidenceConflict && (
-        <p className="status-notice">
-          Sprzeczne dowody: źródła wskazują różne ustalenia. Nie rozstrzygamy
-          arbitralnie, które są poprawne.
-        </p>
-      )}
       {result.delivery?.reused && (
         <p className="reuse-notice">
           To ten sam wynik sprawdzenia z tej sesji, z datą podaną poniżej. Nie
@@ -182,33 +223,41 @@ export function VerificationView({ result }: { result: ResultDetails }) {
             {result.coverage.publisherGroups}
           </strong>
           <small>
-            Przeanalizowane materiały: {result.coverage.reviewedSources}.
+            Materiały zakwalifikowane do analizy: {result.sources.length}.
             Potwierdzenie lub obalenie wymaga dowodów z co najmniej{" "}
             {result.coverage.minimumGroups} grup. Różne domeny nie gwarantują
             niezależności informacji.
           </small>
         </div>
       )}
-      {result.retrieval && result.retrieval.length > 0 && (
+      {providers.size > 0 && result.mode === "live" && (
         <details className="retrieval-details">
           <summary>Gdzie szukaliśmy dowodów</summary>
+          <p>Łącznie zakwalifikowano do analizy: {result.sources.length}.</p>
           <ul>
-            {result.retrieval.map((item) => (
-              <li key={item.provider}>
-                <strong>{providerLabels[item.provider]}</strong>:{" "}
+            {[...providers].map((provider) => {
+              const status = provider && providerStatuses.get(provider);
+              const note =
+                status &&
                 {
-                  {
-                    ok: "pobrano materiały",
-                    empty: "brak wyników",
-                    partial: "część materiałów niedostępna",
-                    error: "API niedostępne",
-                    not_applicable: "nie wybrano dla tego tematu",
-                  }[item.status]
-                }
-                {item.documents > 0 &&
-                  ` (${item.documents}, przed usunięciem duplikatów)`}
-              </li>
-            ))}
+                  ok: "",
+                  empty: "brak wyników",
+                  partial: "część materiałów niedostępna",
+                  error: "API niedostępne",
+                  not_applicable: "nie wybrano dla tego tematu",
+                }[status];
+              return (
+                <li key={provider ?? "unknown"}>
+                  <strong>
+                    {provider
+                      ? providerLabels[provider]
+                      : "Bez oznaczenia dostawcy"}
+                  </strong>
+                  : {note && `${note} · `}
+                  do analizy: {providerCounts.get(provider) ?? 0}
+                </li>
+              );
+            })}
           </ul>
         </details>
       )}

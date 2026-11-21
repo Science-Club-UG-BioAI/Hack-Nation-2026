@@ -2,6 +2,8 @@ vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { channelReply } from "@/core/channel";
+import { sourceDisagreement } from "@/core/source-disagreement";
 import { verify } from "@/server/verify";
 import { generate, search } from "@/server/providers";
 import { AppError, invalidOutput } from "@/core/errors";
@@ -77,6 +79,14 @@ describe("verification pipeline", () => {
       new AbortController().signal,
     );
     expect(result.status).toBe("completed");
+    expect(result.sources).toHaveLength(2);
+    expect(result.coverage?.reviewedSources).toBe(2);
+    expect(result.retrieval).toContainEqual({
+      provider: "web",
+      status: "ok",
+      documents: 2,
+    });
+    expect(web).toHaveBeenCalledTimes(2);
     expect(model).toHaveBeenCalledTimes(4);
     expect(model.mock.calls[2][4]?.maxOutputTokens).toBe(1600);
     expect(model.mock.calls[3][4]?.maxOutputTokens).toBe(3200);
@@ -812,6 +822,33 @@ describe("verification pipeline", () => {
       "contradicts",
       "supports",
     ]);
+    expect(sourceDisagreement(result)).toMatchObject([
+      {
+        relation: "supports",
+        positions: [
+          {
+            text: "Protokół A podaje masę 50 gramów.",
+            citations: [{ source: { title: "Protokół A" }, number: 1 }],
+          },
+        ],
+      },
+      {
+        relation: "contradicts",
+        positions: [
+          {
+            text: "Protokół B podaje masę 60 gramów.",
+            citations: [{ source: { title: "Protokół B" }, number: 2 }],
+          },
+        ],
+      },
+    ]);
+    const reply = channelReply(result).messages.join("\n");
+    expect(reply).toContain(
+      "Źródła wspierające twierdzenie\n\nProtokół A podaje masę 50 gramów.\n[1] Protokół A",
+    );
+    expect(reply).toContain(
+      "Źródła przeczące twierdzeniu\n\nProtokół B podaje masę 60 gramów.\n[2] Protokół B",
+    );
     const auditCall = model.mock.calls.at(-1)!;
     expect(auditCall[1]).toContain("assessment.evidenceConflict=true");
     expect(auditCall[1]).toContain("Nie żądaj wyboru jednej strony");

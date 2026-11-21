@@ -143,7 +143,7 @@ test("multiple evidence cards, provenance, provider failures and mobile layout",
           minimumGroups: 2,
         },
         retrieval: [
-          { provider: "web", status: "partial", documents: 2 },
+          { provider: "web", status: "partial", documents: 12 },
           { provider: "wikipedia", status: "ok", documents: 1 },
         ],
         evidence: sources.slice(0, 2).map((source) => ({
@@ -167,9 +167,22 @@ test("multiple evidence cards, provenance, provider failures and mobile layout",
   ).toBeVisible();
   await expect(page.getByText("Sejm / ELI API · Tylko metadane")).toBeVisible();
   await page.getByText("Gdzie szukaliśmy dowodów", { exact: true }).click();
+  const breakdown = page.locator(".retrieval-details");
+  await expect(breakdown).toContainText(
+    "Łącznie zakwalifikowano do analizy: 3.",
+  );
+  await expect(breakdown).toContainText(
+    "Wyszukiwanie WWW: część materiałów niedostępna · do analizy: 0",
+  );
+  await expect(breakdown).toContainText("Wikipedia API: do analizy: 1");
+  await expect(breakdown).toContainText("Sejm / ELI API: do analizy: 1");
+  await expect(breakdown).toContainText("arXiv API: do analizy: 1");
+  await expect(page.locator(".source-activity")).toContainText(
+    "Niepełne wyniki · do analizy: 0",
+  );
   await expect(
-    page.getByText(/Wyszukiwanie WWW: część materiałów niedostępna/),
-  ).toBeVisible();
+    page.getByRole("region", { name: "Podsumowanie materiałów" }),
+  ).toContainText("Materiały do analizy3");
   await page
     .getByText("Pozostałe przejrzane materiały — bez zatwierdzonego cytatu", {
       exact: true,
@@ -280,4 +293,71 @@ test("a technical error does not render a verdict or an automatic demo", async (
       exact: false,
     }),
   ).toHaveCount(0);
+});
+
+test("explains the split between disagreeing sources and links both citations", async ({
+  page,
+}) => {
+  const claim = "Próbka Omega w protokole z 2 kwietnia ważyła 50 gramów.";
+  const checkedAt = "2026-11-21T14:00:00Z";
+  const positions = [
+    { id: "a", title: "Protokół A", mass: 50, relation: "supports" },
+    { id: "b", title: "Protokół B", mass: 60, relation: "contradicts" },
+  ];
+  await page.route("**/api/verify", (route) =>
+    route.fulfill({
+      json: {
+        status: "completed",
+        verdict: "insufficient",
+        evidenceConflict: true,
+        mode: "live",
+        requestId: "split-fixture",
+        claim,
+        checkedAt,
+        statedAt: null,
+        explanation:
+          "Protokół A podaje 50 gramów. [1]\n\nProtokół B podaje 60 gramów. [2]",
+        citationContract: "findings-v1",
+        limitations: [],
+        sources: positions.map(({ id, title }) => ({
+          id,
+          title,
+          url: `https://example.org/${id}`,
+          retrievedAt: checkedAt,
+          publishedAt: null,
+        })),
+        evidence: positions.map(({ id, mass, relation }) => ({
+          id,
+          sourceId: id,
+          chunkId: id,
+          relation,
+          quote: `Masa próbki wynosi ${mass} gramów.`,
+          relevance: "Cytat z protokołu.",
+        })),
+        findings: positions.map(({ id, title, mass }) => ({
+          id,
+          text: `${title} podaje ${mass} gramów.`,
+          evidenceIds: [id],
+        })),
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.getByLabel("Twierdzenie do sprawdzenia").fill(claim);
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Brak wystarczających dowodów" }),
+  ).toBeVisible();
+  const split = page.getByRole("region", {
+    name: "Rozbieżności między źródłami",
+  });
+  await expect(split).toContainText("Protokół A podaje 50 gramów.");
+  await expect(split).toContainText("Protokół B podaje 60 gramów.");
+  await expect(
+    split.getByRole("link", { name: "Protokół A · dowód 1" }),
+  ).toHaveAttribute("href", "#evidence-1");
+  await split.getByRole("link", { name: "Protokół B · dowód 2" }).click();
+  await expect(page.locator("#evidence-2 blockquote")).toContainText(
+    "60 gramów",
+  );
 });

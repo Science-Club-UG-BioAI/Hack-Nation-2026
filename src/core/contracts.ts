@@ -125,6 +125,7 @@ export type SourceMetadata = {
 export type RetrievalStatus = {
   provider: SourceProvider;
   status: "ok" | "empty" | "partial" | "error" | "not_applicable";
+  // The result counts qualified sources. Search progress reports candidate hits.
   documents: number;
 };
 export type Source = {

@@ -336,8 +336,8 @@ export function Workbench() {
                   <Icon name="layers" />
                 </span>
                 <div>
-                  <span>Przejrzane materiały</span>
-                  <strong>{result?.coverage?.reviewedSources ?? "—"}</strong>
+                  <span>Materiały do analizy</span>
+                  <strong>{result?.sources.length ?? "—"}</strong>
                 </div>
               </div>
               <div>

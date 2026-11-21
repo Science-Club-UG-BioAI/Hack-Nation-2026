@@ -1,3 +1,4 @@
+import { countSourcesByProvider } from "@/core/source-counts";
 import { providerLabels, type VerificationResult } from "@/core/contracts";
 import {
   stageLabels,
@@ -65,6 +66,11 @@ export function AnalysisProgress({
         : [],
     ),
   );
+  const providerCounts = result
+    ? countSourcesByProvider(result.sources)
+    : undefined;
+  for (const source of result?.retrieval ?? [])
+    sources.set(source.provider, source);
   const title = busy
     ? demo
       ? "Otwieranie przykładu"
@@ -168,13 +174,15 @@ export function AnalysisProgress({
                 {
                   {
                     running: interrupted ? "Przerwano" : "Pobieranie…",
-                    ok: `Materiały: ${source.documents}`,
+                    ok: "Pobrano wyniki",
                     empty: "Brak wyników",
-                    partial: `${source.documents} · niepełne`,
+                    partial: "Niepełne wyniki",
                     error: "Niedostępne",
                     not_applicable: "Nie wybrano",
                   }[source.status]
                 }
+                {providerCounts &&
+                  ` · do analizy: ${providerCounts.get(source.provider) ?? 0}`}
               </small>
             </div>
           ))}

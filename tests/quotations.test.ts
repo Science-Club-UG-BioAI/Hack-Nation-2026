@@ -336,3 +336,59 @@ it("requires a finding inventory in live generation but can read legacy saved se
     resolveSelection(selected, quotationCatalog(docs), docs).findings,
   ).toBeUndefined();
 });
+
+it("requires a conflict to describe both sides from decisive sources", () => {
+  const conflictingDocs = [
+    ...docs,
+    {
+      ...docs[0],
+      id: "s2",
+      url: "https://example.net",
+      chunks: [
+        {
+          id: "s2:p1",
+          text: "Drugi dokument podaje inną datę: 14 marca 1999 roku.",
+        },
+      ],
+    },
+  ];
+  const basis = {
+    kind: "conflict",
+    establishedPremise: "",
+    inferenceOrCorrection: "",
+    premiseQuoteIds: [],
+    decisiveQuoteIds: ["q1", "q2"],
+  };
+  const sides = [
+    { id: "a", text: "Pierwszy dokument podaje 12 marca.", quoteIds: ["q1"] },
+    { id: "b", text: "Drugi dokument podaje 14 marca.", quoteIds: ["q2"] },
+  ];
+  const draft = {
+    ...selected,
+    basis,
+    evidence: [
+      selected.evidence[0],
+      { quoteId: "q2", relation: "contradicts", relevance: "Inna data." },
+    ],
+  };
+  const catalog = quotationCatalog(conflictingDocs);
+  for (const findings of [
+    [sides[0]],
+    [{ ...sides[0], quoteIds: ["q1", "q2"] }],
+  ]) {
+    expect(() =>
+      resolveSelection({ ...draft, findings }, catalog, conflictingDocs, true),
+    ).toThrow();
+  }
+  expect(
+    resolveSelection(
+      { ...draft, findings: sides },
+      catalog,
+      conflictingDocs,
+      true,
+    ),
+  ).toMatchObject({
+    verdict: "insufficient",
+    evidenceConflict: true,
+  });
+});

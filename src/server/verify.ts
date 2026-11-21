@@ -1,3 +1,4 @@
+import { countSourcesByProvider } from "@/core/source-counts";
 import {
   auditSchema,
   planSchema,
@@ -198,6 +199,7 @@ export async function verify(
     documents: Document[],
   ): Extract<VerificationResult, { status: "completed" }> => {
     signal.throwIfAborted();
+    const counts = countSourcesByProvider(documents);
     return {
       ...assessment,
       explanation: calendarGuidance
@@ -214,7 +216,10 @@ export async function verify(
       statedAt: input.statedAt ?? null,
       checkedAt,
       mode: "live",
-      retrieval,
+      retrieval: retrieval.map((item) => ({
+        ...item,
+        documents: counts.get(item.provider) ?? 0,
+      })),
       coverage: evidenceCoverage(assessment, documents),
       sources: documents.map(({ chunks: _chunks, ...source }) => source),
     };
