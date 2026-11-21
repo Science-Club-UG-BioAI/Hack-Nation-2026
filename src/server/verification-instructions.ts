@@ -8,10 +8,8 @@ const PROOF_SCOPE =
 const CALENDAR_GUIDANCE =
   "Pole statedAt to data wypowiedzi ustalona przez system lub użytkownika. „Dziś” i „dzisiaj” oznaczają tę datę, „wczoraj” poprzedni dzień, a „jutro” następny. Dla twierdzenia o dacie corocznego święta lub powtarzalnego wydarzenia wyszukaj przede wszystkim stałą datę obchodów i porównaj ją z datą odniesienia. Przy różnych datach bezpośrednie obalenie może wynikać z porównania; źródło nie musi wymieniać konkretnego dnia zapytania. W findings cytuj sprawdzalną regułę kalendarzową (np. stałą datę obchodów). Datę wypowiedzi pozostaw w statedAt; nie przypisuj jej dokumentom. Wymagaj źródła z właściwego dnia, jeżeli teza opisuje konkretne wydarzenie lub stan rzeczy, a nie regułę kalendarzową.";
 
-export function calendarGuidanceFor(claim: string) {
-  const datedClaim =
-    /(?<!\p{L})(?:dziś|dzis|dzisiaj|wczoraj|jutro)(?!\p{L})/iu.test(claim);
-  return datedClaim ? ` ${CALENDAR_GUIDANCE}` : "";
+export function calendarGuidanceFor(dayReferences: string) {
+  return dayReferences ? ` ${CALENDAR_GUIDANCE} ${dayReferences}` : "";
 }
 
 export function planningInstruction(
@@ -20,10 +18,12 @@ export function planningInstruction(
 ) {
   return (
     PLAN_PROMPT +
+    " W clarificationDetail wybierz jedno pytanie o szczegół, którego użytkownik jeszcze nie podał. Przy needsClarification=true ma ono usunąć niejednoznaczność. Dla sprawdzalnej tezy też wypełnij to pole, jeśli szczegół pozwoli zawęzić następne wyszukiwanie. Na przykład: lokalne zdarzenie ma znaną datę i kraj, ale nie miejscowość → needsClarification=false, clarificationDetail=locality. Nie pytaj o dane podane w tezie, wynikające z opisu obrazu lub wyliczalne z daty wypowiedzi. Wybierz none, gdy żaden z dostępnych szczegółów nie pomoże nawet po bezowocnym wyszukiwaniu." +
     " Przy zarzucie bezprawnego działania uwzględnij w zapytaniach, kto wydał decyzję, oraz podstawę prawną lub orzeczenie dotyczące tego czynu. Szukaj też dowodów przeciwnych." +
     calendarGuidance +
     ` Dzień weryfikacji w strefie Europe/Warsaw: ${verificationDay}. Porównuj datę opisywanego zdarzenia z tym dniem. Względne określenia w tezie, np. „dzisiaj” i „wczoraj”, odnoś do statedAt. Nie oznaczaj zdarzenia z przeszłości jako prognozy tylko dlatego, że nie masz o nim wiedzy. ` +
-    ` Dobierz zapytania do bezpośrednich API: wikipediaQuery to krótka polska nazwa tematu lub hasła encyklopedii; sejmQuery to dosłowny fragment tytułu polskiego aktu prawnego (tylko gdy teza dotyczy polskiego prawa); arxivQuery to 2–5 angielskich słów kluczowych (tylko gdy teza dotyczy badań naukowych); euvsdisinfoQuery to 2–5 angielskich słów kluczowych (tylko gdy teza może dotyczyć prokremlowskiej lub zagranicznej dezinformacji, np. Rosji, Ukrainy, NATO, UE, migracji, wyborów, spisków zdrowotnych). Dla niepasującego API zwróć null. Nie wysyłaj pełnego zdania jako tytułu aktu.`
+    ' Pole queries służy korpusowi audytowalnemu. Osobno dla każdej sprawdzalnej tezy, także przy missing_evidence, w factCheckQueries podaj 1–2 hasła do indeksu recenzji. Każde hasło to 1–3 polskie słowa kluczowe, najważniejsze najpierw. Użyj rzeczowników i nazw własnych w formie hasłowej. Pierwsze hasło połącz z miejscem lub podmiotem, drugie oprzyj na innym istotnym obiekcie lub synonimie. Przykład dla doniesienia o wczorajszych pożarach i ewakuacjach w Grecji: ["pożary Grecja", "ewakuacja Grecja"]. Pomiń określenia względne, przypadkowe liczby i daty, chyba że są częścią nazwy lub identyfikują temat. Nie dopisuj sugerowanej oceny. Szczegóły oryginalnej tezy pozostają kryteriami oceny wyników. Gdy teza nie podlega wyszukiwaniu, zwróć [].' +
+    " euvsdisinfoQuery to krótka angielska fraza dla bazy EUvsDisinfo, jeśli temat może dotyczyć dezinformacji zagranicznej. W pozostałych przypadkach zwróć null."
   );
 }
 
@@ -37,7 +37,7 @@ export function assessmentInstruction(calendarGuidance: string) {
     ` ADEKWATNOŚĆ: podobna nazwa, słowo kluczowe lub zbieżna data nie oznaczają tego samego obiektu i zdarzenia. Materiał o innym podmiocie nie potwierdza ani nie obala tezy. Jeśli nie ma adekwatnego dowodu, zwróć basis.kind=unresolved, findings=[], evidence=[], premiseQuoteIds=[] i decisiveQuoteIds=[]; nie opisuj niepowiązanych zdarzeń ani nie twierdź, że wskazany podmiot lub zdarzenie nie istnieje. ` +
     ` PUBLIKACJA: findings to pełna lista ustaleń faktograficznych odpowiedzi, także korekt i istotnych zastrzeżeń. Każdy element: unikalne id, jedno atomowe ustalenie w text, quoteIds z dostarczonego katalogu quotations. Rozdziel niezależne fakty na osobne elementy; każdy cytat musi uzasadniać całe przypisane ustalenie. Nie powtarzaj ustaleń, nie przypisuj cytatu tylko dlatego, że dotyczy podobnego tematu. Przy sprzeczności opisz osobno, co podaje każde źródło, bez przyjmowania jego twierdzenia za ustalony fakt. Gdy nie ma ustaleń, findings=[]. Pola explanation, limitations i relevance nie będą publikowane; wszystkie fakty potrzebne użytkownikowi umieść wyłącznie w findings. ` +
     ` Oszczędzaj szczegóły: ustalenia mają rozstrzygnąć tezę, a nie opisywać cały temat. Dla tezy mieszanej podaj osobno potwierdzoną przesłankę i korektę błędnego wniosku; każde ustalenie opatrz tylko cytatami dowodzącymi go w całości. Serwer dołącza dokładny tekst każdego quoteId wskazanego w findings. W evidence określ jawne relacje cytatów do tezy; brak określonej relacji oznacza jedynie context, nigdy automatyczne potwierdzenie lub zaprzeczenie. ` +
-    ` Dąż do 3–5 trafnych dowodów z różnych źródeł, uwzględniając kontrdowody. supported/refuted wymaga co najmniej dwóch różnych publisherGroup z bezpośrednim dowodem w tym samym kierunku. Nie dodawaj nieistotnych cytatów, aby osiągnąć liczbę. Kilka stron lub cytatów jednego wydawcy nie jest niezależnym potwierdzeniem. contentScope=metadata to wyłącznie metadane, nie treść przepisów; abstract to wyłącznie abstrakt, nie pełna praca ani konsensus naukowy. Respektuj notes i zakres pobranego materiału. W materiałach provider=euvsdisinfo sekcja SUMMARY cytuje dezinformację i NIGDY nie jest dowodem potwierdzającym tezę; ustalenia zawiera sekcja RESPONSE. Preferuj źródła pierwotne, ale oceniaj adekwatność, nie samą etykietę API.`
+    ` Dąż do 3–5 trafnych dowodów z różnych źródeł, uwzględniając kontrdowody. supported/refuted wymaga co najmniej dwóch różnych publisherGroup z bezpośrednim dowodem w tym samym kierunku. Nie dodawaj nieistotnych cytatów, aby osiągnąć liczbę. Kilka stron lub cytatów jednego wydawcy nie jest niezależnym potwierdzeniem. contentScope=metadata to wyłącznie metadane, nie treść przepisów; abstract to wyłącznie abstrakt, nie pełna praca ani konsensus naukowy. Respektuj notes i zakres pobranego materiału. W rekordach Google Fact Check rozróżnij sprawdzaną tezę od oceny wydawcy. Przywołuj ocenę jako stanowisko redakcji w odniesieniu do dokładnie tej tezy, nie dopowiadaj uzasadnienia niewidocznego w rekordzie. W materiałach provider=euvsdisinfo sekcja SUMMARY cytuje dezinformację i NIGDY nie jest dowodem potwierdzającym tezę; ustalenia zawiera sekcja RESPONSE. Preferuj źródła pierwotne, ale oceniaj adekwatność, nie samą etykietę API.`
   );
 }
 

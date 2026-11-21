@@ -179,6 +179,7 @@ export function AnalysisProgress({
                     partial: "Niepełne wyniki",
                     error: "Niedostępne",
                     not_applicable: "Nie wybrano",
+                    not_configured: "Brak klucza API",
                   }[source.status]
                 }
                 {providerCounts &&
@@ -200,7 +201,7 @@ export function AnalysisProgress({
                 <span>
                   {event.type === "stage"
                     ? stageLabels[event.stage]
-                    : `${providerLabels[event.source.provider]} · ${{ running: "pobieranie", ok: "pobrano materiały", empty: "brak wyników", partial: "niepełne dane", error: "niedostępne", not_applicable: "nie wybrano dla tego tematu" }[event.source.status]}`}
+                    : `${providerLabels[event.source.provider]} · ${{ running: "pobieranie", ok: "pobrano materiały", empty: "brak wyników", partial: "niepełne dane", error: "niedostępne", not_configured: "brak klucza API", not_applicable: "nie wybrano dla tego tematu" }[event.source.status]}`}
                 </span>
               </li>
             ))}

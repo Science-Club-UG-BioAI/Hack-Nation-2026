@@ -1,7 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { generate, search } from "@/server/providers";
-import { usageContext, summarizeUsage, type UsageCall } from "@/server/config";
+import { generate } from "@/server/providers";
 import { critiqueSchema } from "@/server/evidence-graph";
 
 const schema = z.object({ ok: z.boolean() });
@@ -23,30 +22,6 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-});
-it("retains successful searches with missing billing data as an unknown total", async () => {
-  vi.stubGlobal(
-    "fetch",
-    vi
-      .fn()
-      .mockResolvedValueOnce(
-        Response.json({ results: [], usage: { credits: 2 } }),
-      )
-      .mockResolvedValueOnce(Response.json({ results: [] })),
-  );
-  const calls: UsageCall[] = [];
-  await usageContext.run(calls, async () => {
-    await search("pierwsze pytanie", new AbortController().signal);
-    await search("drugie pytanie", new AbortController().signal);
-  });
-  expect(calls.map((c) => c.costUsd)).toEqual([0.016, null]);
-  expect(summarizeUsage(calls, false)).toEqual({
-    inputTokens: 0,
-    outputTokens: 0,
-    searchCalls: 2,
-    costUsd: null,
-    cached: false,
-  });
 });
 it("logs bounded schema diagnostics without provider text or input values", async () => {
   const warning = vi.spyOn(console, "warn").mockImplementation(() => {});

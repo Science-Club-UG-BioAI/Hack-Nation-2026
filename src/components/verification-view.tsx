@@ -252,6 +252,7 @@ export function VerificationView({ result }: { result: ResultDetails }) {
                   partial: "część materiałów niedostępna",
                   error: "API niedostępne",
                   not_applicable: "nie wybrano dla tego tematu",
+                  not_configured: "brak klucza API",
                 }[status];
               return (
                 <li key={provider ?? "unknown"}>

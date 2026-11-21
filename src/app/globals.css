@@ -1351,6 +1351,7 @@ blockquote {
 .graph-controls label,
 .graph-element {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: 0.2rem;
   font-size: 0.85rem;

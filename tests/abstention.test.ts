@@ -14,6 +14,7 @@ beforeEach(() => {
       checkable: true,
       needsClarification: false,
       clarificationKind: "missing_evidence",
+      factCheckQueries: ["Koral raport"],
       queries: ["Koral pomiary", "Koral raport"],
       explanation: "Brak publicznego raportu.",
     })
@@ -80,6 +81,7 @@ it("discards incidental evidence when the model explicitly establishes no facts"
       checkable: true,
       needsClarification: false,
       clarificationKind: "missing_evidence",
+      factCheckQueries: ["Koral pomiar"],
       queries: ["Projekt Koral pomiar", "Projekt Koral dokument"],
       explanation: "Szukaj dokumentu.",
     })
