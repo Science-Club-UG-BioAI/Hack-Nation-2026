@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { EvidenceGraph } from "./evidence-graph";
 
 export const verdictSchema = z.enum([
   "supported",
@@ -28,6 +29,7 @@ export const verifyInputSchema = z
       .trim()
       .min(20, "Wpisz przynajmniej 20 znaków.")
       .max(500, "Teza może mieć najwyżej 500 znaków."),
+    evidenceGraph: z.boolean().optional(),
     statedAt: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -106,6 +108,8 @@ export type Source = {
 } & SourceMetadata;
 export type Document = Source & { chunks: { id: string; text: string }[] };
 type ResultBase = {
+  evidenceGraph?: EvidenceGraph;
+  graphStatus?: "ready" | "failed" | "unavailable";
   requestId: string;
   claim: string;
   checkedClaim?: string;

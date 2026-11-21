@@ -474,3 +474,23 @@ Po ustanowieniu sesji przez `POST /api/session` klient WWW wysyła `POST /api/ve
 Bez nagłówka `Accept` lub bez poprawnego identyfikatora sesji pozostaje dotychczasowa odpowiedź JSON i kody HTTP. Adapter Discord zachowuje swój kontrakt. Rozłączenie strumienia przerywa analizę przez istniejący mechanizm anulowania; walidacja, limity, maskowanie danych, audyt i reguły werdyktu pozostają wspólne. Demo nie symuluje wykonania etapów, a ponowne użycie wyniku nie udaje nowego wyszukiwania.
 
 Walidacja panelu: kontrola typów, kompilacja produkcyjna, 167 testów jednostkowych/integracyjnych i 16 testów przeglądarkowych. Sprawdzono szerokości 320, 390, 768, 1024 i 1440 px oraz zrzuty widoku pustego, wyniku i analizy. Scenariusze API używają kontrolowanych odpowiedzi dostawców; nie uruchamiano płatnych testów live. Testy transportu obejmują ramki podzielone wewnątrz znaków UTF-8, przerwane połączenie, zdarzenie przed odpowiedzią dostawcy i anulowanie po rozłączeniu.
+
+## Graf dowodowy
+
+Na ekranie weryfikacji wybierz **Graf dowodowy · dane syntetyczne**, aby
+przejść od werdyktu do przesłanek, cytatu i dokumentu bez kluczy API.
+W analizie online graf wyznacza główny werdykt na ekranie wyniku, a uzasadnienie
+dotychczasowej analizy pozostaje dostępne. Gdy grafu nie da się zbudować, panel
+korzysta z wyniku sprawdzenia całego twierdzenia.
+
+Klienci API mogą zażądać grafu, dodając `"evidenceGraph": true` do treści
+istniejącego żądania `POST /api/verify`. Wynik grafu jest dostępny w
+`evidenceGraph`, pod węzłem `verdict`. Powtórzenie tego samego żądania w tej
+samej sesji wykorzystuje zapisany wynik przez pięć minut.
+Eksport JSON zawiera graf i cytowane fragmenty zapisanych migawek, więc można
+porównać cytaty, zakresy znaków i hashe bez ponawiania analizy. Serwerowe
+archiwum audytu zachowuje dotychczasową politykę przechowywania metadanych.
+
+`npm test` sprawdza konstrukcję, krytykę i walidację grafu.
+`npm run test:e2e -- e2e/evidence-graph.spec.ts` sprawdza widok demonstracyjny
+oraz pobieranie JSON i PNG.

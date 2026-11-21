@@ -128,6 +128,10 @@ export function writeAudit(session: string, entry: AuditEntry) {
     assertSessionActive(session);
     prune(db);
     const result = entry.result;
+    const graph = result?.evidenceGraph;
+    const graphVerdict = graph?.nodes.find(
+      (node) => node.id === "verdict" && node.type === "VERDICT",
+    );
     const payload = {
       requestId: entry.requestId,
       verificationId: result?.requestId ?? null,
@@ -159,6 +163,18 @@ export function writeAudit(session: string, entry: AuditEntry) {
           relation: e.relation,
           quoteSha256: hash(e.quote),
         })) ?? [],
+      ...(graph && {
+        evidenceGraph: {
+          analysisId: graph.analysisId,
+          version: graph.version,
+          technical: graph.validation.technical,
+          verdict:
+            graphVerdict?.type === "VERDICT" ? graphVerdict.verdict : null,
+          nodes: graph.nodes.length,
+          edges: graph.edges.length,
+          sha256: hash(JSON.stringify(graph)),
+        },
+      }),
       // Metadata and hashes only: no source bodies or full quotations archived.
       expiresAt: new Date(Date.now() + RETENTION_MS).toISOString(),
     };

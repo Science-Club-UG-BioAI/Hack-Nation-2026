@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import type { VerificationResult, VerifyInput } from "@/core/contracts";
 import { acquire, forgetSessionLimits } from "./limits";
 import { verify } from "./verify";
+import { buildEvidenceGraph } from "./evidence-graph";
+import { numberSetting } from "./config";
 import { assertSessionActive } from "./audit-store";
 import type { ProgressListener } from "@/core/progress";
 
@@ -18,6 +20,7 @@ type State = {
     string,
     {
       session: string;
+      wantsGraph: boolean;
       controller: AbortController;
       promise: Promise<VerificationResult>;
     }
@@ -26,7 +29,7 @@ type State = {
 const globals = globalThis as typeof globalThis & {
   prawdowidVerificationsV3?: State;
 };
-const state = (globals.prawdowidVerificationsV3 ??= {
+const state: State = (globals.prawdowidVerificationsV3 ??= {
   cache: new Map(),
   pending: new Map(),
 });
@@ -79,37 +82,118 @@ export async function runVerification(
   requestId: string,
   signal: AbortSignal,
   onProgress?: ProgressListener,
-) {
+  deadlineAt = Date.now() + numberSetting("VERIFY_TIMEOUT_MS", 60_000, 60_000),
+): Promise<{ result: VerificationResult; reused: boolean }> {
   signal.throwIfAborted();
   assertSessionActive(session);
   const key = keyFor(input, session);
+  const wantsGraph = input.evidenceGraph === true;
+  const deliver = (result: VerificationResult, reused: boolean) => {
+    if (!wantsGraph) {
+      const { evidenceGraph: _graph, graphStatus: _status, ...legacy } = result;
+      return { result: structuredClone(legacy), reused };
+    }
+    return { result: structuredClone(result), reused };
+  };
   const cached = state.cache.get(key);
-  if (cached && cached.expires > Date.now()) {
-    onProgress?.({ type: "stage", stage: "reused" });
-    return { result: structuredClone(cached.result), reused: true };
-  }
-  if (cached) {
+  const previous =
+    cached && cached.expires > Date.now() ? cached.result : undefined;
+  if (cached && !previous) {
     clearTimeout(cached.timer);
     state.cache.delete(key);
+  }
+  if (
+    previous &&
+    (!wantsGraph ||
+      previous.graphStatus === "ready" ||
+      previous.graphStatus === "unavailable" ||
+      previous.status === "out_of_scope" ||
+      previous.status === "needs_clarification")
+  ) {
+    onProgress?.({ type: "stage", stage: "reused" });
+    return deliver(
+      wantsGraph && !previous.graphStatus
+        ? { ...previous, graphStatus: "unavailable" }
+        : previous,
+      true,
+    );
   }
   const pending = state.pending.get(key);
   if (pending) {
     onProgress?.({ type: "stage", stage: "waiting" });
-    return {
-      result: structuredClone(await waiting(pending.promise, signal)),
-      reused: true,
-    };
+    const shared = await waiting(pending.promise, signal);
+    if (!wantsGraph || pending.wantsGraph) return deliver(shared, true);
+    if (shared.status === "unable_to_verify")
+      return deliver({ ...shared, graphStatus: "failed" }, true);
+    return runVerification(
+      input,
+      session,
+      requestId,
+      signal,
+      onProgress,
+      deadlineAt,
+    );
   }
-  const release = acquire(session);
+  let release: () => void;
+  try {
+    release = acquire(session);
+  } catch (error) {
+    if (previous) return deliver({ ...previous, graphStatus: "failed" }, true);
+    throw error;
+  }
   const controller = new AbortController();
   const combined = AbortSignal.any([signal, controller.signal]);
-  const task = verify(input, requestId, combined, onProgress)
-    .then((result) => {
+  const graphController = new AbortController();
+  const graphDeadline = deadlineAt - 2_500;
+  const graph = wantsGraph
+    ? buildEvidenceGraph(
+        input,
+        previous?.requestId ?? requestId,
+        AbortSignal.any([
+          combined,
+          graphController.signal,
+          AbortSignal.timeout(Math.max(1, graphDeadline - Date.now())),
+        ]),
+        graphDeadline,
+        onProgress,
+      ).catch((error: unknown) => {
+        console.info(
+          JSON.stringify({
+            requestId,
+            event: "evidence_graph_failed",
+            errorType: error instanceof Error ? error.name : "UnknownError",
+          }),
+        );
+        return undefined;
+      })
+    : undefined;
+  const legacyTask = previous
+    ? Promise.resolve(previous)
+    : verify(input, requestId, combined, onProgress);
+  const task = legacyTask
+    .then(async (legacy): Promise<VerificationResult> => {
+      let result = legacy;
+      if (graph) {
+        if (
+          legacy.status === "out_of_scope" ||
+          legacy.status === "needs_clarification"
+        ) {
+          graphController.abort();
+          result = { ...legacy, graphStatus: "unavailable" };
+        } else {
+          const evidenceGraph = await graph;
+          result = evidenceGraph
+            ? { ...legacy, evidenceGraph, graphStatus: "ready" }
+            : { ...legacy, graphStatus: "failed" };
+        }
+      }
       combined.throwIfAborted();
       assertSessionActive(session);
-      // Failures to perform verification must be retried against the services, not cached.
+      // Cache a usable legacy result even when the optional graph must be retried.
       if (result.status !== "unable_to_verify") {
-        if (state.cache.size >= 100) {
+        const old = state.cache.get(key);
+        if (old) clearTimeout(old.timer);
+        if (!old && state.cache.size >= 100) {
           const oldest = state.cache.keys().next().value!;
           clearTimeout(state.cache.get(oldest)!.timer);
           state.cache.delete(oldest);
@@ -126,9 +210,10 @@ export async function runVerification(
       return result;
     })
     .finally(() => {
+      graphController.abort();
       state.pending.delete(key);
       release();
     });
-  state.pending.set(key, { session, controller, promise: task });
-  return { result: await task, reused: false };
+  state.pending.set(key, { session, controller, promise: task, wantsGraph });
+  return deliver(await task, false);
 }
