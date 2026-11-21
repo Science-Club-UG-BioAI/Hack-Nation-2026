@@ -1,28 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { arxiv, sejm, wikipedia } from "@/server/source-adapters";
-
+import { factCheck } from "@/server/fact-check";
 describe.skipIf(process.env.RUN_SOURCE_LIVE_TESTS !== "1")(
-  "opt-in public API integration",
+  "trusted fact-check indexes",
   () => {
-    it.each([
-      ["wikipedia", wikipedia, "Polska NATO", "text"],
-      ["sejm", sejm, "Konstytucja Rzeczypospolitej Polskiej", "metadata"],
-      ["arxiv", arxiv, "attention transformer", "abstract"],
-    ] as const)(
-      "retrieves real %s material",
-      async (provider, adapter, query, scope) => {
-        const result = await adapter(query, AbortSignal.timeout(20_000));
-        expect(result.hits.length).toBeGreaterThan(0);
-        expect(result.hits.some((hit) => hit.contentScope === scope)).toBe(
-          true,
-        );
-        for (const hit of result.hits) {
-          expect(hit.provider).toBe(provider);
-          expect(hit.raw_content!.length).toBeGreaterThan(40);
-          expect(hit.url).toMatch(/^https:\/\//);
-        }
-      },
-      25_000,
-    );
+    it("retrieves reviews from Google Fact Check", async () => {
+      const hits = await factCheck(
+        "rakiety polska",
+        AbortSignal.timeout(20000),
+      );
+      expect(hits.length).toBeGreaterThan(0);
+      for (const hit of hits) {
+        expect(hit.provider).toBe("google_factcheck");
+        expect(hit.contentScope).toBe("metadata");
+      }
+    }, 25000);
   },
 );

@@ -78,11 +78,13 @@ function keyFor(input: VerifyInput, session: string) {
     .update(
       JSON.stringify([
         "reasoned-guard-v3",
-        "findings-v1-source-metadata-v2",
+        "trusted-sources-v1",
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,
         input.imageContext ?? null,
+        Boolean(process.env.GOOGLE_FACTCHECK_API_KEY?.trim()),
+        Boolean(process.env.EUVSDISINFO_API_KEY?.trim()),
         process.env.GEMINI_MODEL ?? "default",
         process.env.GEMINI_FALLBACK_MODEL ?? "default",
       ]),

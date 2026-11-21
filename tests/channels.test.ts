@@ -6,11 +6,13 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { POST as web } from "@/app/api/verify/route";
 import { POST as discord } from "@/app/api/channels/discord-demo/route";
-import { generate, search } from "@/server/providers";
+import { generate } from "@/server/providers";
+import { factCheck } from "@/server/fact-check";
 import { planSchema, auditSchema } from "@/core/contracts";
 import { AppError } from "@/core/errors";
 
-vi.mock("@/server/providers", () => ({ generate: vi.fn(), search: vi.fn() }));
+vi.mock("@/server/fact-check", () => ({ factCheck: vi.fn() }));
+vi.mock("@/server/providers", () => ({ generate: vi.fn() }));
 const claim = "Polska przystąpiła do NATO 12 marca 1999 roku.";
 const request = (body: unknown, session = randomUUID(), path = "verify") =>
   new NextRequest(`http://localhost:3000/api/${path}`, {
@@ -24,9 +26,9 @@ const request = (body: unknown, session = randomUUID(), path = "verify") =>
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("GEMINI_API_KEY", "test");
-  vi.stubEnv("TAVILY_API_KEY", "test");
+  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "test");
   vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
-  vi.mocked(search).mockResolvedValue([
+  vi.mocked(factCheck).mockResolvedValue([
     {
       title: "Official",
       url: "https://nato.int/source",
@@ -47,6 +49,7 @@ beforeEach(() => {
         needsClarification: false,
         outOfScope: false,
         explanation: "Data.",
+        factCheckQueries: ["Polska NATO", "akcesja NATO"],
         queries: ["Poland NATO date", "Poland NATO alternative date"],
       } as never;
     if (schema === auditSchema)
@@ -120,7 +123,7 @@ it.each(["web", "discord"])(
     for (const item of initial.evidence) expect(reply).toContain(item.quote);
     for (const source of initial.sources) expect(reply).toContain(source.url);
     expect(generate).toHaveBeenCalledTimes(3);
-    expect(search).toHaveBeenCalledTimes(2);
+    expect(factCheck).toHaveBeenCalledTimes(2);
   },
 );
 
@@ -245,7 +248,9 @@ it("responds automatically to a clarification without a factual verdict", async 
   vi.mocked(generate).mockResolvedValueOnce({
     checkable: true,
     needsClarification: true,
+    clarificationDetail: "comparison",
     explanation: "Podaj kraj i okres.",
+    factCheckQueries: [],
     queries: [],
   });
   const response = await discord(
@@ -261,7 +266,10 @@ it("responds automatically to a clarification without a factual verdict", async 
   expect(body.messages.join("\n")).toContain(
     "Status obsługi: Potrzebne doprecyzowanie",
   );
-  expect(search).not.toHaveBeenCalled();
+  expect(body.messages.join("\n")).toContain(
+    "Jakie dwie wartości lub jakie okresy chcesz porównać?",
+  );
+  expect(factCheck).not.toHaveBeenCalled();
 });
 it("does not cache provider errors or convert them into verdicts", async () => {
   vi.mocked(generate).mockRejectedValueOnce(
@@ -357,7 +365,7 @@ it("projects the same supported result and citations into the graph without extr
   const plain = await discord(request({ content: claim }, session));
   expect((await plain.json()).result).not.toHaveProperty("evidenceGraph");
   expect(generate).toHaveBeenCalledTimes(3);
-  expect(search).toHaveBeenCalledTimes(2);
+  expect(factCheck).toHaveBeenCalledTimes(2);
 });
 
 it("preserves the verdict when the graph cannot be rendered", async () => {

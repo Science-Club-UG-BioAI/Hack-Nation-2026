@@ -30,10 +30,6 @@ const resultSchema = z.object({
   error: z.object({ code: z.number(), message: z.string() }).optional(),
 });
 
-export function euvsdisinfoConfigured() {
-  return Boolean(process.env.EUVSDISINFO_API_KEY?.trim());
-}
-
 function parseMessage(body: string, contentType: string) {
   if (contentType.includes("application/json")) return JSON.parse(body);
   const data = body

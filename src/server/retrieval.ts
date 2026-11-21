@@ -5,10 +5,11 @@ import type {
   SourceProvider,
 } from "@/core/contracts";
 import { AppError } from "@/core/errors";
-import { search } from "./providers";
-import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
+import { factCheck } from "./fact-check";
+import { configuration } from "./config";
+import type { SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
-import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
+import { euvsdisinfo } from "./euvsdisinfo";
 import type { ProgressListener } from "@/core/progress";
 
 type SourceSearch = {
@@ -67,29 +68,49 @@ export async function retrieve(
       requests: [() => corpus(plan.queries.join(" "), limited)],
     },
   ];
-  for (const [provider, query, adapter] of [
-    ["wikipedia", plan.wikipediaQuery, wikipedia],
-    ["sejm", plan.sejmQuery, sejm],
-    ["arxiv", plan.arxivQuery, arxiv],
-    [
-      "euvsdisinfo",
-      euvsdisinfoConfigured() ? plan.euvsdisinfoQuery : null,
-      euvsdisinfo,
-    ],
-  ] as const) {
-    if (query)
-      sources.push({ provider, requests: [() => adapter(query, limited)] });
-    else statuses.push({ provider, status: "not_applicable", documents: 0 });
-  }
-  if (plan.queries.length)
+  const configured = configuration();
+  const topics = plan.factCheckQueries.length
+    ? plan.factCheckQueries
+    : plan.queries;
+  const factCheckQueries = new Set(
+    topics.map((phrase) =>
+      phrase
+        .normalize("NFC")
+        .toLowerCase()
+        .trim()
+        .split(/\s+/u)
+        .slice(0, 3)
+        .join(" "),
+    ),
+  );
+  if (configured.google_factcheck && factCheckQueries.size) {
     sources.push({
-      provider: "web",
-      requests: plan.queries.map((query) => async () => ({
-        hits: await search(query, limited),
+      provider: "google_factcheck",
+      requests: [...factCheckQueries].map((query) => async () => ({
+        hits: await factCheck(query, limited),
         partial: false,
       })),
     });
-
+  } else {
+    statuses.push({
+      provider: "google_factcheck",
+      status: configured.google_factcheck ? "not_applicable" : "not_configured",
+      documents: 0,
+    });
+  }
+  const disinfoQuery = plan.euvsdisinfoQuery;
+  if (disinfoQuery && configured.euvsdisinfo) {
+    sources.push({
+      provider: "euvsdisinfo",
+      requests: [() => euvsdisinfo(disinfoQuery, limited)],
+    });
+  } else {
+    statuses.push({
+      provider: "euvsdisinfo",
+      status: disinfoQuery ? "not_configured" : "not_applicable",
+      documents: 0,
+    });
+  }
   for (const source of statuses) onProgress?.({ type: "source", source });
   // Promise.all preserves source and query priority regardless of completion order.
   const results = await Promise.all(

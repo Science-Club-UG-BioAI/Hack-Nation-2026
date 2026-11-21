@@ -90,9 +90,11 @@ if (!key) {
     process.exitCode = 1;
   }
 }
-console.log(
-  JSON.stringify({
-    provider: "tavily",
-    configured: Boolean(process.env.TAVILY_API_KEY),
-  }),
-);
+for (const [provider, key] of [
+  ["google_factcheck", "GOOGLE_FACTCHECK_API_KEY"],
+  ["euvsdisinfo", "EUVSDISINFO_API_KEY"],
+]) {
+  console.log(
+    JSON.stringify({ provider, configured: Boolean(process.env[key]?.trim()) }),
+  );
+}

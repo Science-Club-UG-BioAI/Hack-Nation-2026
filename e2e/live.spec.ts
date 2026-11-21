@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { readVerificationStream } from "../src/core/progress";
+import type { VerificationResult } from "../src/core/contracts";
 import { writeFile } from "node:fs/promises";
 
 test.describe("opt-in live providers (uses API credits)", () => {
@@ -30,7 +32,15 @@ test.describe("opt-in live providers (uses API credits)", () => {
       );
       await page.getByRole("button", { name: "Sprawdź dowody" }).click();
       const response = await responsePromise;
-      const result = await response.json();
+      let verified: VerificationResult | undefined;
+      const stream = new Response(new Uint8Array(await response.body())).body!;
+      await readVerificationStream(stream, (event) => {
+        if (event.type === "result") verified = event.result;
+        if (event.type === "error") throw new Error(event.error.message);
+      });
+      if (!verified)
+        throw new Error("Verification stream ended without a result");
+      const result = verified as VerificationResult;
       await writeFile(
         testInfo.outputPath("live-result.json"),
         JSON.stringify(result, null, 2),
@@ -43,15 +53,14 @@ test.describe("opt-in live providers (uses API credits)", () => {
       expect(result.mode).toBe("live");
       expect(result.verdict, JSON.stringify(result)).toBe(scenario.verdict);
       expect(result.evidence.length).toBeGreaterThanOrEqual(2);
-      expect(result.coverage.citedSources).toBeGreaterThanOrEqual(2);
+      expect(result.coverage?.citedSources).toBeGreaterThanOrEqual(2);
       await expect(page.locator("article.evidence")).toHaveCount(
         result.evidence.length,
       );
-      expect(result.coverage.publisherGroups).toBeGreaterThanOrEqual(2);
+      expect(result.coverage?.publisherGroups).toBeGreaterThanOrEqual(2);
       expect(
-        result.retrieval.some(
-          (item: { provider: string; status: string }) =>
-            item.provider === "wikipedia" && item.status === "ok",
+        result.retrieval?.every((item: { provider: string; status: string }) =>
+          ["corpus", "euvsdisinfo", "google_factcheck"].includes(item.provider),
         ),
       ).toBe(true);
       await expect(page.getByText(/Cytowane źródła:/)).toBeVisible();

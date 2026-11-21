@@ -53,12 +53,24 @@ export const planSchema = z.object({
   clarificationKind: z
     .enum(["none", "ambiguous_claim", "missing_evidence"])
     .default("none"),
+  clarificationDetail: z
+    .enum([
+      "subject",
+      "event",
+      "country",
+      "locality",
+      "period",
+      "comparison",
+      "measure",
+      "document",
+      "quotation",
+      "none",
+    ])
+    .default("none"),
   outOfScope: z.boolean().default(false),
   explanation: z.string().min(1).max(1200),
   queries: z.array(z.string().min(3).max(350)).min(0).max(2),
-  wikipediaQuery: z.string().min(2).max(150).nullable().default(null),
-  sejmQuery: z.string().min(3).max(150).nullable().default(null),
-  arxivQuery: z.string().min(3).max(150).nullable().default(null),
+  factCheckQueries: z.array(z.string().trim().min(1).max(120)).max(2),
   euvsdisinfoQuery: z.string().min(3).max(150).nullable().default(null),
 });
 export const evidenceSchema = z.object({
@@ -102,8 +114,17 @@ export type VerifyInput = z.infer<typeof verifyInputSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
 export type Verdict = z.infer<typeof verdictSchema>;
 export type SourceProvider =
-  "web" | "wikipedia" | "sejm" | "arxiv" | "euvsdisinfo" | "corpus";
+  | "web"
+  | "wikipedia"
+  | "sejm"
+  | "arxiv"
+  | "euvsdisinfo"
+  | "corpus"
+  | "demagog"
+  | "google_factcheck";
 export const providerLabels: Record<SourceProvider, string> = {
+  demagog: "Demagog",
+  google_factcheck: "Google Fact Check",
   corpus: "Korpus audytowalny",
   web: "Wyszukiwanie WWW",
   wikipedia: "Wikipedia API",
@@ -126,7 +147,8 @@ export type SourceMetadata = {
 };
 export type RetrievalStatus = {
   provider: SourceProvider;
-  status: "ok" | "empty" | "partial" | "error" | "not_applicable";
+  status:
+    "ok" | "empty" | "partial" | "error" | "not_applicable" | "not_configured";
   // The result counts qualified sources. Search progress reports candidate hits.
   documents: number;
 };

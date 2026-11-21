@@ -40,7 +40,7 @@ const geminiResponse = (value: unknown) =>
 
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "test-key-not-real");
-  vi.stubEnv("TAVILY_API_KEY", "test-key-not-real");
+  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "test-key-not-real");
   vi.stubEnv("GEMINI_MODEL", "gemini-3.1-flash-lite");
   vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
 });
@@ -57,28 +57,39 @@ describe("real route and adapters with controlled HTTP provider responses", () =
       const fetcher = vi.fn(
         async (url: string | URL | Request, init?: RequestInit) => {
           expect(init?.signal).toBeTruthy();
-          if (String(url).includes("tavily"))
+          if (
+            new URL(String(url)).hostname === "factchecktools.googleapis.com"
+          ) {
             return Response.json({
-              usage: { credits: 2 },
-              results: [
+              claims: [
                 {
-                  title: "NATO",
-                  url: "https://nato.int/source",
-                  raw_content: quote + " More relevant historical context.",
-                },
-                {
-                  title: "Official",
-                  url: "https://gov.pl/nato",
-                  raw_content: quote + " Official membership record.",
+                  text: quote,
+                  claimReview: [
+                    {
+                      title: "Review one",
+                      url: "https://demagog.org.pl/fake_news/one",
+                      textualRating: "True",
+                    },
+                    {
+                      title: "Review two",
+                      url: "https://example.org/review",
+                      textualRating: "Correct",
+                    },
+                  ],
                 },
               ],
             });
+          }
+          expect(String(url)).toBe(
+            "https://generativelanguage.googleapis.com/v1beta/interactions",
+          );
           modelCalls++;
           if (modelCalls === 1)
             return geminiResponse({
               checkable: true,
               needsClarification: false,
               explanation: "Sprawdzalna data.",
+              factCheckQueries: ["Polska NATO", "akcesja NATO"],
               queries: ["Poland NATO date", "Poland NATO alternative date"],
             });
           if (modelCalls === 2)
@@ -147,7 +158,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
           events.some(
             (e) =>
               e.type === "source" &&
-              e.source.provider === "web" &&
+              e.source.provider === "google_factcheck" &&
               e.source.status === "ok",
           ),
         ).toBe(true);
@@ -163,7 +174,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         searchCalls: 2,
         cached: false,
       });
-      expect(body.usage.costUsd).toBeCloseTo(0.03218075, 10);
+      expect(body.usage.costUsd).toBeNull();
       expect(body.strength.independentGroups).toBe(2);
       const row = sessionAudit(session)[0];
       expect(row.usage).toEqual(body.usage);

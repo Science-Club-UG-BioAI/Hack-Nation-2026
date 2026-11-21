@@ -42,9 +42,7 @@ const claimsSchema = z
             text: z.string().min(3).max(500),
             checkable: z.boolean(),
             queries: z.array(z.string().min(3).max(250)).max(2),
-            wikipediaQuery: planSchema.shape.wikipediaQuery,
-            sejmQuery: planSchema.shape.sejmQuery,
-            arxivQuery: planSchema.shape.arxivQuery,
+
             euvsdisinfoQuery: planSchema.shape.euvsdisinfoQuery,
           })
           .strict(),

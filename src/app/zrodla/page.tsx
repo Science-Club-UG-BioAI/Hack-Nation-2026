@@ -24,8 +24,9 @@ export default function SourcesPage() {
           <p>
             To katalog publikacji, nie lista gwarantująca prawdziwość
             informacji. Podczas sprawdzania system wyszukuje pasujące tytuły i
-            pobiera tekst wybranych stron ponownie. Korzysta też z wyszukiwania
-            WWW i publicznych API.
+            pobiera tekst wybranych stron ponownie. Sprawdzenie obejmuje ten
+            korpus, bazę EUvsDisinfo oraz recenzje z Google Fact Check, w tym
+            publikacje Demagoga.
           </p>
           <p>
             Przechowujemy metadane i linki, bez pełnych artykułów. Brak daty

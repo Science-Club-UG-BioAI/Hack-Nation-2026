@@ -9,10 +9,11 @@ vi.mock("@/server/providers", () => ({
     checkable: true,
     needsClarification: false,
     explanation: "Test",
+    factCheckQueries: ["xx fixture"],
     queries: ["xx fixture", "yy fixture"],
   }),
-  search: async () => [],
 }));
+vi.mock("@/server/fact-check", () => ({ factCheck: async () => [] }));
 vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));
@@ -34,7 +35,7 @@ const send = async (
   );
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "fake");
-  vi.stubEnv("TAVILY_API_KEY", "fake");
+  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fake");
   vi.stubEnv(
     "ALERT_WEBHOOK_URL",
     "https://recipient.example/incoming/private-token",

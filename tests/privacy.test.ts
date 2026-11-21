@@ -13,9 +13,11 @@ import {
 } from "@/server/audit-store";
 import { POST as verify } from "@/app/api/verify/route";
 import { DELETE, GET } from "@/app/api/session/route";
-import { generate, search } from "@/server/providers";
+import { generate } from "@/server/providers";
+import { factCheck } from "@/server/fact-check";
 import { demoResult } from "@/core/demo";
-vi.mock("@/server/providers", () => ({ generate: vi.fn(), search: vi.fn() }));
+vi.mock("@/server/fact-check", () => ({ factCheck: vi.fn() }));
+vi.mock("@/server/providers", () => ({ generate: vi.fn() }));
 vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));
@@ -26,6 +28,7 @@ const plan = {
   needsClarification: false,
   clarificationKind: "missing_evidence",
   explanation: "Brak dowodu.",
+  factCheckQueries: ["raport pomiaru"],
   queries: ["raport pomiaru 2025", "raport pomiaru dokumentacja"],
 };
 const req = (session: string, method: string, body?: unknown) =>
@@ -41,10 +44,10 @@ const req = (session: string, method: string, body?: unknown) =>
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("GEMINI_API_KEY", "fake");
-  vi.stubEnv("TAVILY_API_KEY", "fake");
+  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fake");
   vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
   vi.mocked(generate).mockResolvedValue(plan);
-  vi.mocked(search).mockResolvedValue([]);
+  vi.mocked(factCheck).mockResolvedValue([]);
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -87,7 +90,7 @@ it("masks before model access and persistence, exports only the current session"
     result,
     exported,
     vi.mocked(generate).mock.calls,
-    vi.mocked(search).mock.calls,
+    vi.mocked(factCheck).mock.calls,
   ])
     expect(JSON.stringify(payload)).not.toMatch(
       /test@example\.org|ABA300000|GB82 WEST/,

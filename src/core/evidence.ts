@@ -106,9 +106,11 @@ export function describeStrength(
   const groups = new Set(
     cited.map((s) => s.publisherGroup || publisherGroup(s.url)),
   ).size;
-  const limitations = [
-    "Grupujemy według domen wydawców. Serwisy gov.pl liczymy łącznie, a różne domeny mogą powtarzać tę samą informację.",
-  ];
+  const limitations: string[] = [];
+  if (groups)
+    limitations.push(
+      "Grupujemy według domen wydawców. Serwisy gov.pl liczymy łącznie, a różne domeny mogą powtarzać tę samą informację.",
+    );
   if (groups === 1)
     limitations.push("Wszystkie cytaty pochodzą z jednej grupy wydawców.");
   if (result.evidenceConflict)

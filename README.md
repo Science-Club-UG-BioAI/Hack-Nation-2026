@@ -14,7 +14,7 @@ Wymagany Node.js 22.13+ (testowano na 24) oraz npm. Skrypty benchmarku używają
 ```powershell
 npm ci
 Copy-Item .env.example .env.local
-# Uzupełnij GEMINI_API_KEY i TAVILY_API_KEY lokalnie.
+# Uzupełnij GEMINI_API_KEY, GOOGLE_FACTCHECK_API_KEY i EUVSDISINFO_API_KEY lokalnie.
 npm run dev
 ```
 
@@ -36,7 +36,7 @@ Serwer nasłuchuje tylko na `127.0.0.1`. To lokalne demo, nie publiczne wdrożen
 | `GEMINI_API_KEY`               | Klucz Gemini API                                                            |
 | `GEMINI_MODEL`                 | Dokładny identyfikator modelu dostępny na koncie; domyślny w `.env.example` |
 | `GEMINI_FALLBACK_MODEL`        | Model zapasowy na awarię usługi; pusty wpis wyłącza przełączenie            |
-| `TAVILY_API_KEY`               | Klucz Tavily Search API                                                     |
+| `GOOGLE_FACTCHECK_API_KEY`     | Klucz Google Cloud z włączonym Fact Check Tools API                         |
 | `EUVSDISINFO_API_KEY`          | Opcjonalny klucz EUvsDisinfo MCP; pusty wyłącza to źródło                   |
 | `VERIFY_TIMEOUT_MS`            | Wspólny limit analizy; domyślnie i maksymalnie 60000 ms                     |
 | `MAX_CONCURRENT_VERIFICATIONS` | Domyślnie 3 analizy w jednym procesie                                       |
@@ -55,15 +55,15 @@ node --env-file=.env.local scripts/check-providers.mjs --generate
 ## Przebieg analizy
 
 1. Walidacja danych, origin i limitów. Opcjonalna data wypowiedzi jest przekazywana do modelu.
-2. Gemini rozpoznaje opinię, potrzebę doprecyzowania i wyjście poza zakres. Dla sprawdzalnej tezy przygotowuje dwa zapytania: neutralne oraz szukające kontrdowodu. Doprecyzowanie i nieobsługiwane wejście mają osobne statusy, bez werdyktu.
-3. Tavily wykonuje dwa wyszukiwania równolegle, do 6 wyników każde. Dodatkowo model dobiera bezpośrednie API do tematu: Wikipedia, Sejm/ELI, arXiv oraz EUvsDisinfo przy tezach związanych z dezinformacją, jeśli ustawiono klucz (do 3 wyników z każdego). Używamy pobranego materiału, nie odpowiedzi wygenerowanej przez wyszukiwarkę.
+2. Gemini rozpoznaje opinię, potrzebę doprecyzowania i wyjście poza zakres. Dla sprawdzalnej tezy przygotowuje dwa szczegółowe zapytania do korpusu oraz osobne hasła do Google Fact Check. Każde hasło zawiera do trzech słów, np. `rakiety Polska`. Ocena odnosi się do pełnej tezy, w tym czasu i liczby obiektów. Doprecyzowanie i nieobsługiwane wejście mają osobne statusy, bez werdyktu.
+3. System przeszukuje wyłącznie korpus audytowalny, indeks recenzji Google Fact Check oraz EUvsDisinfo dla pasujących tematów.
 4. Usuwamy powtarzające się URL-e, identyczne i niemal identyczne teksty. Dobieramy dokumenty naprzemiennie z grup wydawców: maksymalnie 10 dokumentów, 3 na grupę, 4000 znaków na dokument i 40000 łącznie. Fragmenty otrzymują identyfikatory.
 5. Serwer dzieli fragmenty na oznaczone cytaty (do 650 znaków). Gemini ocenia tezę, dążąc do 3–5 trafnych dowodów, i wybiera identyfikatory `quoteId`. Tekst cytatu i przypisanie do źródła wstawia serwer z pobranego materiału — model ich nie przepisuje.
 6. Kod sprawdza istnienie źródła, fragmentu i dosłownego cytatu. Dopuszczalna jest tylko normalizacja Unicode NFC i białych znaków. Potwierdzenie lub obalenie wymaga odpowiednich dowodów z co najmniej 2 grup wydawców. Brak takiego potwierdzenia daje `insufficient`, zachowując prawidłowe cytaty. Kilka poddomen gov.pl lub wersji językowych Wikipedii to jedna grupa. To konserwatywna reguła MVP, nie naukowa miara pewności ani niezależności źródeł.
 7. Dodatkowe wywołanie modelu sprawdza sens wniosku, okres, podmiot i kontrdowody. Wyjątek: po udanym wyszukiwaniu ocena `insufficient` bez wybranych dowodów kończy się stałym komunikatem serwera o ograniczeniach, bez publikowania nieaudytowanego uzasadnienia modelu. Negatywny audyt daje status `unable_to_verify` i `verdict: null`, z przyczyną i bez zatwierdzonych cytatów. Nieudana kontrola odpowiedzi nie jest oceną prawdziwości tezy.
 8. UI pokazuje wynik, cytaty, liczbę cytowanych źródeł i grup, statusy API, zakres materiału, linki, daty i ograniczenia. Pozostałe przejrzane dokumenty są dostępne osobno, bez sugerowania, że popierają ocenę. Zmiana tezy usuwa poprzedni wynik.
 
-Analiza wykonuje do 2 wyszukiwań Tavily i maksymalnie 10 żądań do publicznych API (Wikipedia: 1 wyszukiwanie + do 3 artykułów; Sejm: 1 wyszukiwanie + do 3 tekstów; arXiv: 1 wyszukiwanie; EUvsDisinfo: 1 wyszukiwanie). Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
+Każda z dwóch fraz trafia raz do Google Fact Check, co daje najwyżej dwa wywołania Fact Check Tools API. Korpus pobiera do trzech pasujących publikacji z katalogu. EUvsDisinfo otrzymuje najwyżej jedno zapytanie. Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
 
 ## Odporność Gemini i rozliczenia
 
@@ -75,20 +75,13 @@ Analiza wykonuje do 2 wyszukiwań Tavily i maksymalnie 10 żądań do publicznyc
 
 ## Bezpośrednie źródła
 
-| API                       | Pobierany materiał                                                                              | Ograniczenia                                                                                                                                |
-| ------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wikipedia (polska edycja) | Wyszukiwanie haseł i tekst HTML artykułu; link z numerem konkretnej rewizji                     | Encyklopedia jest źródłem wtórnym. Data rewizji nie jest datą powstania opisywanego faktu.                                                  |
-| api.sejm.gov.pl / ELI     | Wyszukiwanie tytułów aktów DU/MP, tekst HTML jeśli dostępny; w pozostałych przypadkach metadane | Nie odczytujemy PDF. Metadane pozwalają sprawdzić tytuł lub datę aktu, nie treść przepisów. Nie pobieramy jeszcze głosowań ani stenogramów. |
-| arXiv                     | Atom: tytuł, link do wersji, data i abstrakt                                                    | Nie pobieramy pełnego tekstu; obecność w arXiv nie dowodzi recenzji ani konsensusu.                                                         |
-| EUvsDisinfo (EEAS) MCP    | Wyszukiwanie przypadków dezinformacji i artykułów analitycznych (tytuł, treść, link)            | Baza w języku angielskim. Sekcja SUMMARY przypadku to cytowana dezinformacja, nie fakt; ustalenia zawiera RESPONSE. Wymaga klucza API.      |
+| Źródło             | Materiał                                                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Google Fact Check  | Rekordy ClaimReview różnych wydawców, w tym Demagoga. Raport pokazuje sprawdzaną tezę wraz z oceną redakcji i linkiem do jej publikacji.                   |
+| EUvsDisinfo        | Przypadki dezinformacji i artykuły analityczne z istniejącego API. W opisie przypadku SUMMARY oznacza przytoczone twierdzenie, RESPONSE zawiera ustalenia. |
+| Korpus audytowalny | Wyszukiwanie lokalne w zatwierdzonym katalogu. Pobierany jest tekst wyłącznie spod adresów zapisanych w katalogu.                                          |
 
-Poza EUvsDisinfo te API nie wymagają dodatkowych kluczy. Zapytania dobiera model; źródło niepasujące do tematu ma status „nie wybrano”. Pobieranie jest ograniczone do stałych hostów API, bez przekierowań, do 3 MB na odpowiedź. HTML/XML parsujemy przez Cheerio; HTML źródeł nie jest wykonywany.
-
-Grupy wydawców wyznaczamy z domen rejestrowalnych (tldts), z dodatkowym grupowaniem gov.pl. Wszystkie prace arXiv również należą do jednej grupy — to ograniczenie tej prostej heurystyki. Deduplikacja podobnych tekstów używa wspólnych sekwencji pięciu słów; nie wykrywa wszystkich przedruków, tłumaczeń ani wspólnego pierwotnego źródła. Audyt modelu dodatkowo sprawdza zależności, ale może się mylić.
-
-ArXiv ma procesową kolejkę: jedna aktywna prośba, minimum 3 sekundy między rozpoczęciami. Przed uruchomieniem wielu instancji potrzebny będzie limiter współdzielony.
-
-Dokumentacja: [Wikipedia Search](https://www.mediawiki.org/wiki/API:Search), [Wikipedia Parse](https://www.mediawiki.org/wiki/API:Parsing_wikitext), [Sejm ELI](https://api.sejm.gov.pl/eli_pl.html), [arXiv API](https://info.arxiv.org/help/api/user-manual.html), [zasady arXiv API](https://info.arxiv.org/help/api/tou.html).
+Recenzje z indeksu są metadanymi. System nie odwiedza stron znalezionych przez API. Powtórzenia tej samej publikacji są usuwane, a niezależność źródeł liczona według domen wydawców. Brak klucza jest widoczny w raporcie. Korpus działa bez klucza do serwisu źródłowego. [Dokumentacja Google Fact Check Tools](https://developers.google.com/fact-check/tools/api/reference/rest/v1alpha1/claims/search)
 
 ## API
 
@@ -175,7 +168,7 @@ npx vitest run tests/sources-live.test.ts
 Remove-Item Env:RUN_SOURCE_LIVE_TESTS
 ```
 
-Pokryte scenariusze: wybór nieistniejących lub powtórzonych identyfikatorów cytatów, brak przepisywania tekstu przez model, zmyślone cytaty, obce identyfikatory, cytat przetłumaczony zamiast dosłownego, brak danych, opinia, brak kontekstu, kopie i niemal identyczne przedruki, różnorodność wydawców, pojedynczy dowód, częściowa awaria wyszukiwania, metadane zamiast pełnego tekstu, przypięta rewizja Wikipedii, abstrakty arXiv, negatywny audyt znaczenia, jedna naprawa, timeout, awaria API, ograniczone przełączanie modelu, brak ponowień przy błędzie płatności lub limicie dziennym, przerwanie ponowień, walidacja wejścia, ochrona sekretów, zmiana tezy, mobile i jawne demo.
+Pokryte scenariusze: wybór nieistniejących lub powtórzonych identyfikatorów cytatów, brak przepisywania tekstu przez model, zmyślone cytaty, obce identyfikatory, cytat przetłumaczony zamiast dosłownego, brak danych, opinia, brak kontekstu, kopie i niemal identyczne przedruki, różnorodność wydawców, pojedynczy dowód, częściowa awaria wyszukiwania, metadane zamiast pełnego tekstu, rekordy ClaimReview i przypisanie recenzji Demagoga do wydawcy, negatywny audyt znaczenia, jedna naprawa, timeout, awaria API, ograniczone przełączanie modelu, brak ponowień przy błędzie płatności lub limicie dziennym, przerwanie ponowień, walidacja wejścia, ochrona sekretów, zmiana tezy, mobile i jawne demo.
 
 ## Ostatnia kontrola pełnej ścieżki online — 21.11.2026
 
@@ -192,7 +185,7 @@ Test zapisuje `live-result.json` i `live.png` w katalogu wyników Playwright (ig
 
 ## Dane i ograniczenia
 
-- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do 5 minut w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
+- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do skonfigurowanych indeksów recenzji. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do 5 minut w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
 - Logi zawierają identyfikator żądania, czas, liczbę źródeł, kody błędów i status HTTP dostawcy. Nie zawierają kluczy ani treści wejścia.
 - Walidator potwierdza obecność cytatu w pobranym materiale, nie prawdziwość źródła. Audyt tym samym modelem może powielać jego błędy.
 - Deduplikacja nie rozpoznaje wszystkich przedruków ani wspólnego pierwotnego źródła. Nie deklarujemy niezależności domen.
@@ -252,11 +245,11 @@ Kwalifikacja: źródła urzędowe/instytucjonalne przyjmujemy jako materiał pie
 
 **Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają 5-minutowej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
 
-Aktualizacja: przed demo i następnie co tydzień operator może przebudować katalog. Zmiany tytułu, domeny, wydawcy lub warunków użycia wymagają przeglądu; niedostępne rekordy nie są przenoszone do nowego zbioru. Nowy katalog zastępuje poprzedni dopiero po osiągnięciu minimum 100 rekordów i 10 domen. Nie ma automatycznego harmonogramu ani obietnicy pełnej świeżości.
+Zmiany katalogu wymagają przeglądu redakcyjnego. Polecenia poniżej sprawdzają wersjonowane rekordy lokalnie.
 
 ```powershell
 npm run corpus:check  # lokalna kontrola liczebności, domen, typów i metadanych
-npm run corpus:build # pobiera aktualny katalog; używa limitu/płatnego Tavily
+npm run corpus:build # uzupełnia metadane zatwierdzonych rekordów i sprawdza katalog lokalnie
 ```
 
 `src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus jest dodatkiem do wyszukiwania otwartego, nie zamkniętym indeksem wszystkich treści. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
@@ -472,7 +465,7 @@ Widok WWW ma wspólną niebieską paletę z pozostałymi ekranami, osobną kolum
 Po ustanowieniu sesji przez `POST /api/session` klient WWW wysyła `POST /api/verify` z `Accept: text/event-stream`. Strumień SSE zawiera obiekty JSON w ramkach `data: …\n\n`:
 
 - `stage`: rzeczywisty etap silnika (planowanie, wyszukiwanie, ocena, ewentualne poprawianie cytatów lub uzupełnianie dowodów, audyt). Odczyt z pamięci i oczekiwanie na identyczne trwające zgłoszenie mają osobne statusy.
-- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Dwa wyszukiwania WWW pozostają w trakcie do zakończenia obu.
+- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Status indeksu recenzji obejmuje oba zapytania.
 - `result` lub `error`: zdarzenie końcowe. W strumieniu błędy są przekazywane jako zdarzenie, ponieważ nagłówki HTTP zostały już wysłane. Brak zdarzenia końcowego oznacza przerwane połączenie, nie sukces.
 
 Bez nagłówka `Accept` lub bez poprawnego identyfikatora sesji pozostaje dotychczasowa odpowiedź JSON i kody HTTP. Adapter Discord zachowuje swój kontrakt. Rozłączenie strumienia przerywa analizę przez istniejący mechanizm anulowania; walidacja, limity, maskowanie danych, audyt i reguły werdyktu pozostają wspólne. Demo nie symuluje wykonania etapów, a ponowne użycie wyniku nie udaje nowego wyszukiwania.
@@ -548,7 +541,7 @@ Materiały: [opis zgłoszenia](docs/submission/opis.md),
 2. Uruchom `npm run dev` i przejdź na <http://127.0.0.1:3000>. Przykłady
    WWW działają od razu i są oznaczone jako **DEMO**.
 3. W profilu z dostępem online skopiuj `.env.example` do `.env.local`
-   i uzupełnij klucze Gemini oraz Tavily tylko lokalnie. Po zmianie
+   i uzupełnij klucze Gemini, Google Fact Check i EUvsDisinfo tylko lokalnie. Po zmianie
    konfiguracji uruchom serwer ponownie. Sprawdź gotowość poleceniem
    `node --env-file=.env.local scripts/check-providers.mjs`.
 

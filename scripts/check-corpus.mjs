@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { getDomain } from "tldts";
-// Reapply editorial metadata after corpus:build, which produces a discovery catalog.
+// Apply editorial metadata only to records in the reviewed catalog.
 function enrichRecord(record) {
   const url = new URL(record.url);
   const publishers = {

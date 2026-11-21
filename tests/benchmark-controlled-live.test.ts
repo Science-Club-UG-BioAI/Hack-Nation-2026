@@ -18,6 +18,7 @@ vi.mock("@/server/providers", async (importOriginal) => {
             checkable: true,
             needsClarification: false,
             explanation: "Controlled retrieval fixture",
+            factCheckQueries: ["fixture"],
             queries: ["fixture neutral query", "fixture counter evidence"],
           })
         : actual.generate(...args),

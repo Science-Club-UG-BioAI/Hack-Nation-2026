@@ -7,17 +7,20 @@ import { sourceDisagreement } from "@/core/source-disagreement";
 import controlled from "../data/benchmark/controlled-cases.json";
 import { reasonedSelectionSchema } from "@/core/quotations";
 import { verify } from "@/server/verify";
-import { generate, search } from "@/server/providers";
+import { generate } from "@/server/providers";
+import { factCheck } from "@/server/fact-check";
 import { AppError, invalidOutput } from "@/core/errors";
 
-vi.mock("@/server/providers", () => ({ generate: vi.fn(), search: vi.fn() }));
+vi.mock("@/server/fact-check", () => ({ factCheck: vi.fn() }));
+vi.mock("@/server/providers", () => ({ generate: vi.fn() }));
 const model = vi.mocked(generate);
-const web = vi.mocked(search);
+const web = vi.mocked(factCheck);
 const input = { claim: "Polska przystąpiła do NATO 12 marca 1999 roku." };
 const plan = {
   checkable: true,
   needsClarification: false,
   explanation: "Data jest sprawdzalna.",
+  factCheckQueries: ["Polska NATO", "akcesja NATO"],
   queries: [
     "Poland NATO accession date",
     "Poland NATO accession 1999 alternative date",
@@ -25,6 +28,7 @@ const plan = {
 };
 const quote = "Poland joined NATO on 12 March 1999.";
 const hit = {
+  provider: "google_factcheck" as const,
   title: "NATO",
   url: "https://nato.int/example",
   raw_content: quote + " This source describes the date of accession.",
@@ -54,6 +58,7 @@ assessment.evidence.push({
 });
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fixture");
   web.mockResolvedValue([
     hit,
     {
@@ -65,6 +70,57 @@ beforeEach(() => {
 });
 
 describe("verification pipeline", () => {
+  it("uses topic keywords for discovery and the dated claim for assessment", async () => {
+    const datedClaim = {
+      claim: "Dwa dni temu w Polsce spadły dwie rakiety i dron.",
+      statedAt: "2026-11-21",
+    };
+    model
+      .mockResolvedValueOnce({
+        ...plan,
+        clarificationDetail: "locality",
+        queries: [datedClaim.claim, "Incydenty w Polsce 19 listopada 2026"],
+        factCheckQueries: ["rakiety Polska", "dron Polska"],
+      })
+      .mockResolvedValueOnce({
+        verdict: "insufficient",
+        findings: [],
+        evidence: [],
+        limitations: [],
+        explanation: "Recenzja dotyczy wcześniejszego zdarzenia.",
+      });
+    web.mockResolvedValue([
+      {
+        provider: "google_factcheck",
+        title: "Recenzja doniesienia o rakietach z 2022 roku",
+        url: "https://example.org/recenzja",
+        published_date: "2022-11-18",
+        contentScope: "metadata",
+        raw_content:
+          "Sprawdzana teza: W Polskę uderzyły kolejne rakiety. · Ocena wydawcy: Fałsz",
+      },
+    ]);
+    const result = await verify(
+      datedClaim,
+      "keyword-search",
+      new AbortController().signal,
+    );
+    expect(web.mock.calls.map(([query]) => query)).toEqual([
+      "rakiety polska",
+      "dron polska",
+    ]);
+    expect(model.mock.calls[1][2]).toMatchObject({
+      ...datedClaim,
+      documents: [expect.objectContaining({ publishedAt: "2022-11-18" })],
+    });
+    expect(result).toMatchObject({ verdict: "insufficient", evidence: [] });
+    expect(result.explanation).toContain(
+      "„dwa dni temu” oznacza 19 listopada 2026",
+    );
+    expect(result.explanation).toContain("W jakiej miejscowości");
+    expect(model.mock.calls[0][1]).toContain("19 listopada 2026");
+    expect(model.mock.calls[1][1]).toContain("19 listopada 2026");
+  });
   it("retries one explicitly incomplete audit with a larger bounded output budget", async () => {
     model
       .mockResolvedValueOnce(plan)
@@ -84,7 +140,7 @@ describe("verification pipeline", () => {
     expect(result.sources).toHaveLength(2);
     expect(result.coverage?.reviewedSources).toBe(2);
     expect(result.retrieval).toContainEqual({
-      provider: "web",
+      provider: "google_factcheck",
       status: "ok",
       documents: 2,
     });
