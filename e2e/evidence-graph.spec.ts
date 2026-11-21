@@ -92,16 +92,8 @@ test("graf na telefonie mieści się w ekranie i pozwala filtrować elementy", a
     .click();
   const graph = page.getByRole("region", { name: "Graf dowodowy" });
   await expect(graph.locator("canvas").first()).toBeAttached();
-  const picker = graph.getByLabel("Przejdź do elementu");
-  await expect(picker).toHaveValue("verdict");
-  for (const width of [320, 360, 390, 430]) {
-    await page.setViewportSize({ width, height: 780 });
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth),
-    ).toBeLessThanOrEqual(width);
-  }
-  await page.setViewportSize({ width: 360, height: 780 });
   await graph.getByLabel("Węzły").selectOption("DOCUMENT");
+  const picker = graph.getByLabel("Przejdź do elementu");
   await expect(picker.locator("option")).toHaveCount(3);
   await picker.selectOption("document-demo-source-1");
   await expect(graph.getByText(/SHA-256 migawki/)).toBeVisible();

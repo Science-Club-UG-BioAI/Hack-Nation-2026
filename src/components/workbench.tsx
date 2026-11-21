@@ -188,8 +188,7 @@ export function Workbench() {
               Mniej domysłów. <span>Więcej faktów.</span>
             </h1>
             <p className="lead">
-              Sprawdź tezę w korpusie audytowalnym oraz w bazach Google Fact
-              Check i EUvsDisinfo.
+              Sprawdź tezę i prześledź drogę od źródeł do wniosku.
             </p>
           </div>
           <div className="trust-note">

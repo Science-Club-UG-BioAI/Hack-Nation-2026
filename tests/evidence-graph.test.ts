@@ -43,7 +43,9 @@ function fixture(documents = [calendar, newspaper]) {
           text: claim,
           checkable: true,
           queries: [],
-
+          wikipediaQuery: null,
+          sejmQuery: null,
+          arxivQuery: null,
           euvsdisinfoQuery: null,
         },
       ],
@@ -246,7 +248,9 @@ describe("graf dowodowy", () => {
           text,
           checkable: true,
           queries: [],
-
+          wikipediaQuery: null,
+          sejmQuery: null,
+          arxivQuery: null,
           euvsdisinfoQuery: null,
         })),
       },

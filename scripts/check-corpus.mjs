@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { getDomain } from "tldts";
-// Apply editorial metadata only to records in the reviewed catalog.
+// Reapply editorial metadata after corpus:build, which produces a discovery catalog.
 function enrichRecord(record) {
   const url = new URL(record.url);
   const publishers = {
@@ -66,32 +66,26 @@ function enrichRecord(record) {
     });
 }
 export function corpusStats(catalog) {
-  const r = catalog.records;
-  const domain = (record) => {
-    const host = new URL(record.url).hostname;
-    return host.endsWith(".gov.pl") ? "gov.pl" : getDomain(host);
-  };
-  const domains = new Set(r.map(domain));
-  const searchable = r.filter((record) => !record.referenceOnlyReason);
-  const searchableDomains = new Set(searchable.map(domain));
-  const types = new Set(searchable.map((record) => record.type));
+  const r = catalog.records,
+    domains = new Set(
+      r.map((x) =>
+        new URL(x.url).hostname.endsWith(".gov.pl")
+          ? "gov.pl"
+          : getDomain(x.url),
+      ),
+    ),
+    types = new Set(r.map((x) => x.type));
   const failures = [];
-  if (searchable.length < 100) failures.push("Fewer than 100 records");
-  if (searchableDomains.size < 10)
+  if (r.length < 100) failures.push("Fewer than 100 records");
+  if (domains.size < 10)
     failures.push("Fewer than 10 conservatively grouped domains");
+  if (!types.has("official")) failures.push("Missing official corpus sources");
   if (
-    types.size < 2 ||
-    !types.has("official") ||
-    ![...types].some((t) => ["encyclopedia", "fact_check", "news"].includes(t))
-  )
-    failures.push("Primary/secondary source types missing");
-  const targetFailures = failures.splice(0);
-  for (const record of r)
-    if (
-      ["pap.pl", "wikipedia.org"].includes(getDomain(record.url)) ||
-      ["pap.pl", "wikipedia.org"].includes(record.domain)
+    [...domains].some(
+      (domain) => domain === "pap.pl" || domain === "wikipedia.org",
     )
-      failures.push("Excluded source: " + record.id);
+  )
+    failures.push("Excluded corpus domains present");
   if (
     new Set(r.map((x) => x.url)).size !== r.length ||
     new Set(r.map((x) => x.id)).size !== r.length
@@ -124,15 +118,12 @@ export function corpusStats(catalog) {
   return {
     records: r.length,
     domains: domains.size,
-    searchableRecords: searchable.length,
-    searchableDomains: searchableDomains.size,
     domainNames: [...domains].sort(),
     types: [...types].sort(),
     knownPublicationDates: r.filter((x) => x.publishedAt).length,
     knownUpdateDates: r.filter((x) => x.updatedAt).length,
     knownEventPeriods: r.filter((x) => x.eventPeriod).length,
     failures,
-    targetFailures,
   };
 }
 if (process.argv[1]?.endsWith("check-corpus.mjs")) {
@@ -142,11 +133,7 @@ if (process.argv[1]?.endsWith("check-corpus.mjs")) {
   if (enrich) catalog.records.forEach(enrichRecord);
   const stats = corpusStats(catalog);
   console.log(JSON.stringify(stats, null, 2));
-  if (
-    stats.failures.length ||
-    (process.argv.includes("--require-targets") && stats.targetFailures.length)
-  )
-    process.exitCode = 1;
+  if (stats.failures.length) process.exitCode = 1;
   else if (enrich)
     await writeFile(path, JSON.stringify(catalog, null, 2) + "\n");
 }

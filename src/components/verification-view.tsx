@@ -1,4 +1,5 @@
 import { countSourcesByProvider } from "@/core/source-counts";
+import { allowedSourceDomains } from "@/core/source-policy";
 import { useState } from "react";
 import { EvidenceGraphView } from "./evidence-graph-view";
 import { sourceDisagreement } from "@/core/source-disagreement";
@@ -48,9 +49,22 @@ function sourceDomain(url: string) {
   }
 }
 
-function sourceDate(value: string | null | undefined) {
+function publicationDateLabel(value: string | null | undefined) {
   if (!value || Number.isNaN(Date.parse(value))) return null;
-  return <time dateTime={value}>{value.slice(0, 10)}</time>;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  return new Intl.DateTimeFormat("pl-PL", {
+    dateStyle: "medium",
+    timeZone: "Europe/Warsaw",
+  }).format(new Date(value));
+}
+
+function sourceDate(value: string | null | undefined) {
+  const label = publicationDateLabel(value);
+  if (!label || !value) return null;
+  const datetime = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? value
+    : new Date(value).toISOString();
+  return <time dateTime={datetime}>{label}</time>;
 }
 
 export function VerificationView({ result }: { result: ResultDetails }) {
@@ -63,6 +77,9 @@ export function VerificationView({ result }: { result: ResultDetails }) {
   const providerStatuses = new Map(
     result.retrieval?.map((item) => [item.provider, item.status]),
   );
+  const unavailableArticles = result.retrieval?.find(
+    ({ provider }) => provider === "demagog",
+  )?.unavailableArticles;
   const providers = new Set([
     ...providerStatuses.keys(),
     ...providerCounts.keys(),
@@ -85,7 +102,18 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           displayedLabel,
           result.explanation,
           ...result.limitations,
-          ...result.sources.map((s) => `${s.title}: ${s.url}`),
+          ...result.sources.map((s) =>
+            [
+              `${s.title}: ${s.url}`,
+              `Publikacja · ${publicationDateLabel(s.publishedAt) ?? "data nieustalona"}`,
+              ...(s.updatedAt
+                ? [
+                    `Aktualizacja · ${publicationDateLabel(s.updatedAt) ?? "data nieustalona"}`,
+                  ]
+                : []),
+              `Pobrano · ${dateLabel(s.retrievedAt)}`,
+            ].join("\n"),
+          ),
           dateLabel(result.checkedAt),
         ].join("\n\n"),
       );
@@ -123,6 +151,12 @@ export function VerificationView({ result }: { result: ResultDetails }) {
         <p className="status-notice">
           Sprawdzane twierdzenie po oddzieleniu poleceń: {result.checkedClaim}
         </p>
+      )}
+      {result.contextQuery && (
+        <div className="coverage-panel">
+          <strong>Zapytanie doprecyzowane na podstawie WWW</strong>
+          <p>{result.contextQuery}</p>
+        </div>
       )}
       {result.status !== "unable_to_verify" && (
         <p className="explanation">
@@ -238,9 +272,13 @@ export function VerificationView({ result }: { result: ResultDetails }) {
         </div>
       )}
       {providers.size > 0 && result.mode === "live" && (
-        <details className="retrieval-details">
+        <details
+          className="retrieval-details"
+          open={!!unavailableArticles?.length || undefined}
+        >
           <summary>Gdzie szukaliśmy dowodów</summary>
           <p>Łącznie zakwalifikowano do analizy: {result.sources.length}.</p>
+          <p>Domeny wyszukiwania WWW · {allowedSourceDomains.join(", ")}</p>
           <ul>
             {[...providers].map((provider) => {
               const status = provider && providerStatuses.get(provider);
@@ -263,6 +301,27 @@ export function VerificationView({ result }: { result: ResultDetails }) {
                   </strong>
                   : {note && `${note} · `}
                   do analizy: {providerCounts.get(provider) ?? 0}
+                  {provider === "demagog" && !!unavailableArticles?.length && (
+                    <>
+                      <p>
+                        Google znalazł te publikacje, ale ich treści nie udało
+                        się pobrać do analizy.
+                      </p>
+                      <ul>
+                        {unavailableArticles.map(({ url, title }) => (
+                          <li key={url}>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </li>
               );
             })}

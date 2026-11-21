@@ -26,7 +26,7 @@ function upload(bytes = png, headers: Record<string, string> = {}) {
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "test");
   vi.stubEnv("GEMINI_MODEL", "configured-model");
-  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "");
+  vi.stubEnv("TAVILY_API_KEY", "");
   vi.stubGlobal("fetch", fetcher.mockReset());
 });
 afterEach(() => {

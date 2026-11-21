@@ -40,7 +40,7 @@ const geminiResponse = (value: unknown) =>
 
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "test-key-not-real");
-  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "test-key-not-real");
+  vi.stubEnv("TAVILY_API_KEY", "test-key-not-real");
   vi.stubEnv("GEMINI_MODEL", "gemini-3.1-flash-lite");
   vi.stubEnv("MAX_LIVE_VERIFICATIONS", "10000");
 });
@@ -57,39 +57,40 @@ describe("real route and adapters with controlled HTTP provider responses", () =
       const fetcher = vi.fn(
         async (url: string | URL | Request, init?: RequestInit) => {
           expect(init?.signal).toBeTruthy();
-          if (
-            new URL(String(url)).hostname === "factchecktools.googleapis.com"
-          ) {
+          if (String(url).includes("tavily"))
             return Response.json({
-              claims: [
+              usage: { credits: 2 },
+              results: [
                 {
-                  text: quote,
-                  claimReview: [
-                    {
-                      title: "Review one",
-                      url: "https://demagog.org.pl/fake_news/one",
-                      textualRating: "True",
-                    },
-                    {
-                      title: "Review two",
-                      url: "https://example.org/review",
-                      textualRating: "Correct",
-                    },
-                  ],
+                  title: "CONTEXT_ONLY",
+                  url: "https://www.bbc.com/context",
+                  content: "Context for search planning.",
+                  raw_content:
+                    "CONTEXT_ONLY description of the event with enough text for an evidence document.",
+                },
+                {
+                  title: "NATO",
+                  published_date: "1999-03-12",
+                  url: "https://demagog.org.pl/source",
+                  raw_content: quote + " More relevant historical context.",
+                },
+                {
+                  title: "Official",
+                  published_date: "1999-03-12",
+                  url: "https://gov.pl/nato",
+                  raw_content: quote + " Official membership record.",
                 },
               ],
             });
-          }
-          expect(String(url)).toBe(
-            "https://generativelanguage.googleapis.com/v1beta/interactions",
-          );
+          if (modelCalls === 0)
+            expect(String(init?.body)).toContain("CONTEXT_ONLY");
+          else expect(String(init?.body)).not.toContain("CONTEXT_ONLY");
           modelCalls++;
           if (modelCalls === 1)
             return geminiResponse({
               checkable: true,
               needsClarification: false,
               explanation: "Sprawdzalna data.",
-              factCheckQueries: ["Polska NATO", "akcesja NATO"],
               queries: ["Poland NATO date", "Poland NATO alternative date"],
             });
           if (modelCalls === 2)
@@ -158,7 +159,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
           events.some(
             (e) =>
               e.type === "source" &&
-              e.source.provider === "google_factcheck" &&
+              e.source.provider === "web" &&
               e.source.status === "ok",
           ),
         ).toBe(true);
@@ -167,18 +168,38 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         body = last?.type === "result" ? last.result : null;
       } else body = await response.json();
       expect(body.verdict).toBe("supported");
+      const queries = fetcher.mock.calls
+        .filter(([url]) => String(url).includes("tavily"))
+        .map(([, init]) => JSON.parse(String(init?.body)));
+      expect(queries[0].include_domains).toBeUndefined();
+      expect(queries[0].query).not.toContain("site:");
+      for (const request of queries.slice(1)) {
+        expect(request.include_domains).toHaveLength(1);
+        expect(["demagog.org.pl", "euvsdisinfo.eu", "gov.pl"]).toContain(
+          request.include_domains[0],
+        );
+        for (const domain of request.include_domains)
+          expect(request.query).toContain("site:" + domain);
+        expect(request.query).not.toContain("(site:");
+      }
+      expect(queries.slice(1, 4).map((request) => request.query)).toEqual([
+        `${claim} site:demagog.org.pl`,
+        `${claim} site:euvsdisinfo.eu`,
+        `${claim} site:gov.pl`,
+      ]);
+      expect(JSON.stringify(body.sources)).not.toContain("bbc.com");
       expect(body.mode).toBe("live");
       expect(body.usage).toMatchObject({
         inputTokens: 300,
         outputTokens: 75,
-        searchCalls: 2,
+        searchCalls: 7,
         cached: false,
       });
-      expect(body.usage.costUsd).toBeNull();
+      expect(body.usage.costUsd).toBeCloseTo(0.11218075, 10);
       expect(body.strength.independentGroups).toBe(2);
       const row = sessionAudit(session)[0];
       expect(row.usage).toEqual(body.usage);
-      expect(row.usageCalls).toHaveLength(5);
+      expect(row.usageCalls).toHaveLength(10);
       const db = new DatabaseSync(process.env.AUDIT_DB_PATH!, {
         readOnly: true,
       });
@@ -200,7 +221,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         { id: "f1", text: claim, evidenceIds: ["q1", "q2"] },
       ]);
       expect(body.explanation).toBe(`${claim} [1] [2]`);
-      expect(fetcher).toHaveBeenCalledTimes(5);
+      expect(fetcher).toHaveBeenCalledTimes(10);
       expect(JSON.stringify(body)).not.toContain("test-key-not-real");
       expect(response.headers.get("cache-control")).toContain("no-store");
     },

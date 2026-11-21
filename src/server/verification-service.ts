@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { allowedSourceDomains } from "@/core/source-policy";
 import type { VerificationResult, VerifyInput } from "@/core/contracts";
 import { acquire, forgetSessionLimits } from "./limits";
 import { verify } from "./verify";
@@ -78,13 +79,14 @@ function keyFor(input: VerifyInput, session: string) {
     .update(
       JSON.stringify([
         "reasoned-guard-v3",
-        "trusted-sources-v1",
+        "findings-v1-domain-queries-trusted-fact-check-v3",
+        allowedSourceDomains,
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,
         input.imageContext ?? null,
         Boolean(process.env.GOOGLE_FACTCHECK_API_KEY?.trim()),
-        Boolean(process.env.EUVSDISINFO_API_KEY?.trim()),
+        Boolean(process.env.SERPER_API_KEY?.trim()),
         process.env.GEMINI_MODEL ?? "default",
         process.env.GEMINI_FALLBACK_MODEL ?? "default",
       ]),

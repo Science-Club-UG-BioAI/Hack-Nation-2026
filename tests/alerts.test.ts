@@ -1,3 +1,6 @@
+vi.mock("@/server/publication-dates", () => ({
+  enrichPublicationDates: async () => {},
+}));
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
@@ -5,15 +8,15 @@ import { handleVerification } from "@/server/handle-verification";
 import { sessionAudit } from "@/server/audit-store";
 
 vi.mock("@/server/providers", () => ({
+  searchContext: vi.fn().mockResolvedValue([]),
   generate: async () => ({
     checkable: true,
     needsClarification: false,
     explanation: "Test",
-    factCheckQueries: ["xx fixture"],
     queries: ["xx fixture", "yy fixture"],
   }),
+  search: async () => [],
 }));
-vi.mock("@/server/fact-check", () => ({ factCheck: async () => [] }));
 vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));
@@ -35,7 +38,7 @@ const send = async (
   );
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "fake");
-  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fake");
+  vi.stubEnv("TAVILY_API_KEY", "fake");
   vi.stubEnv(
     "ALERT_WEBHOOK_URL",
     "https://recipient.example/incoming/private-token",

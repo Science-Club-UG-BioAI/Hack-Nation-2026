@@ -1,3 +1,6 @@
+vi.mock("@/server/publication-dates", () => ({
+  enrichPublicationDates: async () => {},
+}));
 vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));
@@ -7,20 +10,21 @@ import { sourceDisagreement } from "@/core/source-disagreement";
 import controlled from "../data/benchmark/controlled-cases.json";
 import { reasonedSelectionSchema } from "@/core/quotations";
 import { verify } from "@/server/verify";
-import { generate } from "@/server/providers";
-import { factCheck } from "@/server/fact-check";
+import { generate, search, searchContext } from "@/server/providers";
 import { AppError, invalidOutput } from "@/core/errors";
 
-vi.mock("@/server/fact-check", () => ({ factCheck: vi.fn() }));
-vi.mock("@/server/providers", () => ({ generate: vi.fn() }));
+vi.mock("@/server/providers", () => ({
+  searchContext: vi.fn().mockResolvedValue([]),
+  generate: vi.fn(),
+  search: vi.fn(),
+}));
 const model = vi.mocked(generate);
-const web = vi.mocked(factCheck);
+const web = vi.mocked(search);
 const input = { claim: "Polska przystąpiła do NATO 12 marca 1999 roku." };
 const plan = {
   checkable: true,
   needsClarification: false,
   explanation: "Data jest sprawdzalna.",
-  factCheckQueries: ["Polska NATO", "akcesja NATO"],
   queries: [
     "Poland NATO accession date",
     "Poland NATO accession 1999 alternative date",
@@ -28,9 +32,8 @@ const plan = {
 };
 const quote = "Poland joined NATO on 12 March 1999.";
 const hit = {
-  provider: "google_factcheck" as const,
   title: "NATO",
-  url: "https://nato.int/example",
+  url: "https://euvsdisinfo.eu/example",
   raw_content: quote + " This source describes the date of accession.",
 };
 const assessment = {
@@ -58,7 +61,6 @@ assessment.evidence.push({
 });
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fixture");
   web.mockResolvedValue([
     hit,
     {
@@ -70,57 +72,69 @@ beforeEach(() => {
 });
 
 describe("verification pipeline", () => {
-  it("uses topic keywords for discovery and the dated claim for assessment", async () => {
-    const datedClaim = {
-      claim: "Dwa dni temu w Polsce spadły dwie rakiety i dron.",
-      statedAt: "2026-11-21",
-    };
+  it("uses the date inferred from WWW in search while assessing the original claim", async () => {
+    const contextualQuery = "Polska przystąpiła do NATO 22 listopada 2026";
+    vi.mocked(searchContext).mockResolvedValueOnce([
+      {
+        title: "Wynik WWW",
+        url: "https://example.org",
+        excerpt: "Niezweryfikowana data 22 listopada 2026",
+        publishedAt: null,
+      },
+    ]);
     model
       .mockResolvedValueOnce({
         ...plan,
-        clarificationDetail: "locality",
-        queries: [datedClaim.claim, "Incydenty w Polsce 19 listopada 2026"],
-        factCheckQueries: ["rakiety Polska", "dron Polska"],
+        queries: [input.claim, contextualQuery],
       })
+      .mockResolvedValueOnce(assessment)
       .mockResolvedValueOnce({
-        verdict: "insufficient",
-        findings: [],
-        evidence: [],
-        limitations: [],
-        explanation: "Recenzja dotyczy wcześniejszego zdarzenia.",
+        approved: true,
+        reason: "Zgodne ze źródłami.",
+        findingChecks: [{ findingId: "f1", supported: true, atomic: true }],
       });
-    web.mockResolvedValue([
-      {
-        provider: "google_factcheck",
-        title: "Recenzja doniesienia o rakietach z 2022 roku",
-        url: "https://example.org/recenzja",
-        published_date: "2022-11-18",
-        contentScope: "metadata",
-        raw_content:
-          "Sprawdzana teza: W Polskę uderzyły kolejne rakiety. · Ocena wydawcy: Fałsz",
-      },
-    ]);
     const result = await verify(
-      datedClaim,
-      "keyword-search",
+      input,
+      "context-search-only",
       new AbortController().signal,
     );
-    expect(web.mock.calls.map(([query]) => query)).toEqual([
-      "rakiety polska",
-      "dron polska",
-    ]);
-    expect(model.mock.calls[1][2]).toMatchObject({
-      ...datedClaim,
-      documents: [expect.objectContaining({ publishedAt: "2022-11-18" })],
-    });
-    expect(result).toMatchObject({ verdict: "insufficient", evidence: [] });
-    expect(result.explanation).toContain(
-      "„dwa dni temu” oznacza 19 listopada 2026",
-    );
-    expect(result.explanation).toContain("W jakiej miejscowości");
-    expect(model.mock.calls[0][1]).toContain("19 listopada 2026");
-    expect(model.mock.calls[1][1]).toContain("19 listopada 2026");
+    expect(web.mock.calls.map(([query]) => query)).toContain(contextualQuery);
+    expect(model.mock.calls[1][2]).toMatchObject({ claim: input.claim });
+    expect(model.mock.calls[1][2]).not.toHaveProperty("searchHints");
+    expect(result.contextQuery).toBe(contextualQuery);
+    expect(result.checkedClaim).toBeUndefined();
+    expect(result.verdict).toBe("supported");
   });
+
+  it.each([true, false])(
+    "still audits a single trusted fact check (approved=%s)",
+    async (approved) => {
+      web.mockResolvedValue([
+        { ...hit, url: "https://demagog.org.pl/wypowiedzi/data-czlonkostwa" },
+      ]);
+      model
+        .mockResolvedValueOnce(plan)
+        .mockResolvedValueOnce({
+          ...assessment,
+          evidence: [assessment.evidence[0]],
+        })
+        .mockResolvedValueOnce({
+          approved,
+          reason: "Kontrola znaczenia.",
+          findingChecks: [
+            { findingId: "f1", supported: approved, atomic: true },
+          ],
+        });
+      const result = await verify(
+        input,
+        "single-fact-check",
+        new AbortController().signal,
+      );
+      expect(result.status).toBe(approved ? "completed" : "unable_to_verify");
+      expect(result.verdict).toBe(approved ? "supported" : null);
+      expect(model).toHaveBeenCalledTimes(3);
+    },
+  );
   it("retries one explicitly incomplete audit with a larger bounded output budget", async () => {
     model
       .mockResolvedValueOnce(plan)
@@ -140,11 +154,11 @@ describe("verification pipeline", () => {
     expect(result.sources).toHaveLength(2);
     expect(result.coverage?.reviewedSources).toBe(2);
     expect(result.retrieval).toContainEqual({
-      provider: "google_factcheck",
+      provider: "web",
       status: "ok",
       documents: 2,
     });
-    expect(web).toHaveBeenCalledTimes(2);
+    expect(web).toHaveBeenCalledTimes(6);
     expect(model).toHaveBeenCalledTimes(4);
     expect(model.mock.calls[2][4]?.maxOutputTokens).toBe(1600);
     expect(model.mock.calls[3][4]?.maxOutputTokens).toBe(3200);
@@ -192,7 +206,7 @@ describe("verification pipeline", () => {
       },
       {
         ...hit,
-        url: "https://example.org/extra",
+        url: "https://demagog.org.pl/extra",
         raw_content:
           "A separate record describes a different historical event and date.",
       },
@@ -362,6 +376,7 @@ describe("verification pipeline", () => {
     model.mockResolvedValueOnce({
       ...plan,
       needsClarification: true,
+      clarificationKind: "no_search_anchor",
       explanation: "UNCITED_WORLD_FACT",
     });
     const result = await verify(
@@ -563,7 +578,7 @@ describe("verification pipeline", () => {
         new AbortController().signal,
       ),
     ).toMatchObject({ status: "completed", verdict: "insufficient" });
-    expect(web).toHaveBeenCalledTimes(2);
+    expect(web).toHaveBeenCalledTimes(6);
   });
   it("keeps the original input out of model calls after separating a control instruction", async () => {
     model
@@ -668,7 +683,7 @@ describe("verification pipeline", () => {
     expect(result.verdict).toBe("supported");
     expect(result.mode).toBe("live");
     expect(result.sources).toHaveLength(2);
-    expect(web).toHaveBeenCalledTimes(2);
+    expect(web).toHaveBeenCalledTimes(6);
     expect(model).toHaveBeenCalledTimes(3);
     expect(result.sources[0]).not.toHaveProperty("chunks");
   });
@@ -691,6 +706,7 @@ describe("verification pipeline", () => {
     model.mockResolvedValueOnce({
       ...plan,
       needsClarification: true,
+      clarificationKind: "no_search_anchor",
       queries: [],
     });
     expect(
@@ -701,6 +717,32 @@ describe("verification pipeline", () => {
       evidence: [],
     });
     expect(web).not.toHaveBeenCalled();
+  });
+  it("searches for an undated event even when planning asks for clarification", async () => {
+    const claim = "W Polsce spadły dwie rakiety i dron.";
+    model.mockResolvedValueOnce({
+      ...plan,
+      checkable: false,
+      needsClarification: true,
+      clarificationKind: "ambiguous_claim",
+      queries: [],
+    });
+    web.mockResolvedValue([]);
+    const result = await verify(
+      { claim },
+      "undated-event",
+      new AbortController().signal,
+    );
+    expect(web.mock.calls.map(([query]) => query)).toEqual([
+      ...Array(3).fill(claim),
+      ...Array(3).fill(expect.stringContaining(claim)),
+    ]);
+    expect(result).toMatchObject({
+      claim,
+      status: "completed",
+      verdict: "insufficient",
+      evidence: [],
+    });
   });
   it("propagates provider failure without a verdict", async () => {
     model.mockResolvedValueOnce(plan);
@@ -822,13 +864,13 @@ describe("verification pipeline", () => {
     web.mockResolvedValue([
       {
         title: "Protokół A",
-        url: "https://lab.example.org/omega",
+        url: "https://euvsdisinfo.eu/omega",
         raw_content:
           "Protokół pomiaru Omega z 2 kwietnia 2024: masa próbki wynosi 50 gramów.",
       },
       {
         title: "Protokół B",
-        url: "https://lab.example.net/omega",
+        url: "https://demagog.org.pl/omega",
         raw_content:
           "Protokół pomiaru Omega z 2 kwietnia 2024: masa próbki wynosi 60 gramów.",
       },
@@ -919,8 +961,12 @@ describe("verification pipeline", () => {
   it("keeps a missing exhibit, an organizer's allegation and a legal opinion as context for the claim against the warehouse operator", async () => {
     const fixture = controlled.cases.find((item) => item.id === "S05")!;
     web.mockResolvedValue(
-      fixture.documents.map((doc) => ({
-        url: doc.url,
+      fixture.documents.map((doc, i) => ({
+        url: [
+          "https://demagog.org.pl/test",
+          "https://gov.pl/test",
+          "https://euvsdisinfo.eu/test",
+        ][i],
         title: doc.title,
         raw_content: doc.text,
       })),
@@ -1066,7 +1112,7 @@ it.each([
       },
       {
         title: "Encyklopedia świąt",
-        url: "https://encyklopedia.example.org/kalendarz",
+        url: "https://demagog.org.pl/kalendarz",
         raw_content:
           "Narodowe Święto Niepodległości jest w Polsce obchodzone corocznie 11 listopada.",
       },

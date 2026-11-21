@@ -2,9 +2,6 @@ import catalog from "../../../data/corpus/catalog.json";
 
 export default function SourcesPage() {
   const domains = [...new Set(catalog.records.map((r) => r.domain))].sort();
-  const references = catalog.records.filter(
-    (record) => record.referenceOnlyReason,
-  ).length;
   return (
     <div className="shell">
       <a className="skip-link" href="#source-catalog">
@@ -21,15 +18,14 @@ export default function SourcesPage() {
           <p className="eyebrow">KORPUS DEMONSTRACYJNY</p>
           <h1>Źródła pod kontrolą.</h1>
           <p>
-            {catalog.records.length} rekordów · {domains.length} domen ·{" "}
-            {references} odnośników do ręcznego sprawdzenia.
+            {catalog.records.length} rekordów · {domains.length} domen · źródła
+            urzędowe, encyklopedyczne i agencyjne.
           </p>
           <p>
             To katalog publikacji, nie lista gwarantująca prawdziwość
             informacji. Podczas sprawdzania system wyszukuje pasujące tytuły i
-            pobiera tekst wybranych stron ponownie. Sprawdzenie obejmuje ten
-            korpus, bazę EUvsDisinfo oraz recenzje z Google Fact Check, w tym
-            publikacje Demagoga.
+            pobiera tekst wybranych stron ponownie. Korzysta też z wyszukiwania
+            WWW i publicznych API.
           </p>
           <p>
             Przechowujemy metadane i linki, bez pełnych artykułów. Brak daty
@@ -57,28 +53,10 @@ export default function SourcesPage() {
                       {record.title}
                     </a>
                     <br />
-                    {record.referenceOnlyReason && (
-                      <>
-                        <small>{record.referenceOnlyReason}</small>
-                        <br />
-                      </>
-                    )}
-                    {record.alternateUrls?.map((url) => (
-                      <div key={url}>
-                        <a href={url} target="_blank" rel="noreferrer">
-                          {new URL(url).hash
-                            ? "Zapisany widok regionalny"
-                            : "Adres podany w wykazie"}
-                        </a>
-                      </div>
-                    ))}
                     <small>
                       {record.publisher} · Publikacja:{" "}
                       {record.publishedAt?.slice(0, 10) ?? "data nieustalona"} ·
-                      {record.referenceOnlyReason
-                        ? "Sprawdzono adres"
-                        : "Pobrano"}
-                      : {record.retrievedAt.slice(0, 10)}
+                      Pobrano: {record.retrievedAt.slice(0, 10)}
                     </small>
                   </li>
                 ))}

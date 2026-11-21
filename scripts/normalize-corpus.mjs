@@ -6,6 +6,7 @@ const file = "data/corpus/catalog.json",
 catalog.records = catalog.records.filter((r) => {
   const u = new URL(r.url);
   r.domain = u.hostname.endsWith(".gov.pl") ? "gov.pl" : getDomain(u.hostname);
+  if (u.pathname === "/") return false;
   const key = r.domain + "|" + r.title.toLowerCase().trim();
   if (seen.has(key)) return false;
   seen.add(key);

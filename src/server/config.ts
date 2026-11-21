@@ -2,7 +2,7 @@ import { AppError } from "@/core/errors";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { VerificationResult } from "@/core/contracts";
 
-// Standard Gemini text prices per million tokens.
+// Standard text prices per million tokens and Tavily PAYGO per credit.
 // Sources and assumptions are recorded in reports/cost/README.md.
 const modelRates: Record<
   string,
@@ -11,8 +11,17 @@ const modelRates: Record<
   "gemini-3.1-flash-lite": { input: 0.25, cached: 0.025, output: 1.5 },
   "gemini-3.5-flash-lite": { input: 0.3, cached: 0.03, output: 2.5 },
 };
+export const TAVILY_CREDIT_USD = 0.008;
 export type UsageCall = {
-  provider: "gemini" | "google_factcheck" | "euvsdisinfo" | "corpus";
+  provider:
+    | "gemini"
+    | "tavily"
+    | "wikipedia"
+    | "arxiv"
+    | "sejm"
+    | "euvsdisinfo"
+    | "google_factcheck"
+    | "demagog";
   model?: string;
   inputTokens: number | null;
   outputTokens: number | null;
@@ -116,19 +125,14 @@ export function numberSetting(name: string, fallback: number, max: number) {
 }
 export function configuration() {
   const gemini = Boolean(process.env.GEMINI_API_KEY?.trim());
-  return {
-    ready: gemini,
-    gemini,
-    google_factcheck: Boolean(process.env.GOOGLE_FACTCHECK_API_KEY?.trim()),
-    euvsdisinfo: Boolean(process.env.EUVSDISINFO_API_KEY?.trim()),
-    corpus: true,
-  };
+  const tavily = Boolean(process.env.TAVILY_API_KEY?.trim());
+  return { ready: gemini && tavily, gemini, tavily };
 }
 export function requireConfiguration() {
   if (!configuration().ready)
     throw new AppError(
       "NOT_CONFIGURED",
-      "Tryb online wymaga klucza GEMINI_API_KEY w pliku .env.local. Możesz obejrzeć oznaczone przykłady demonstracyjne.",
+      "Tryb online wymaga kluczy GEMINI_API_KEY i TAVILY_API_KEY w pliku .env.local. Możesz obejrzeć oznaczone przykłady demonstracyjne.",
       503,
     );
 }

@@ -14,7 +14,7 @@ Wymagany Node.js 22.13+ (testowano na 24) oraz npm. Skrypty benchmarku używają
 ```powershell
 npm ci
 Copy-Item .env.example .env.local
-# Uzupełnij GEMINI_API_KEY, GOOGLE_FACTCHECK_API_KEY i EUVSDISINFO_API_KEY lokalnie.
+# Uzupełnij GEMINI_API_KEY i TAVILY_API_KEY lokalnie.
 npm run dev
 ```
 
@@ -36,7 +36,7 @@ Serwer nasłuchuje tylko na `127.0.0.1`. To lokalne demo, nie publiczne wdrożen
 | `GEMINI_API_KEY`               | Klucz Gemini API                                                            |
 | `GEMINI_MODEL`                 | Dokładny identyfikator modelu dostępny na koncie; domyślny w `.env.example` |
 | `GEMINI_FALLBACK_MODEL`        | Model zapasowy na awarię usługi; pusty wpis wyłącza przełączenie            |
-| `GOOGLE_FACTCHECK_API_KEY`     | Klucz Google Cloud z włączonym Fact Check Tools API                         |
+| `TAVILY_API_KEY`               | Klucz Tavily Search API                                                     |
 | `EUVSDISINFO_API_KEY`          | Opcjonalny klucz EUvsDisinfo MCP; pusty wyłącza to źródło                   |
 | `VERIFY_TIMEOUT_MS`            | Wspólny limit analizy; domyślnie i maksymalnie 60000 ms                     |
 | `MAX_CONCURRENT_VERIFICATIONS` | Domyślnie 3 analizy w jednym procesie                                       |
@@ -55,15 +55,15 @@ node --env-file=.env.local scripts/check-providers.mjs --generate
 ## Przebieg analizy
 
 1. Walidacja danych, origin i limitów. Opcjonalna data wypowiedzi jest przekazywana do modelu.
-2. Gemini rozpoznaje opinię, potrzebę doprecyzowania i wyjście poza zakres. Dla sprawdzalnej tezy przygotowuje dwa szczegółowe zapytania do korpusu oraz osobne hasła do Google Fact Check. Każde hasło zawiera do trzech słów, np. `rakiety Polska`. Ocena odnosi się do pełnej tezy, w tym czasu i liczby obiektów. Doprecyzowanie i nieobsługiwane wejście mają osobne statusy, bez werdyktu.
-3. System przeszukuje wyłącznie korpus audytowalny, indeks recenzji Google Fact Check oraz EUvsDisinfo dla pasujących tematów.
+2. Gemini rozpoznaje opinię, potrzebę doprecyzowania i wyjście poza zakres. Dla sprawdzalnej tezy przygotowuje dwa zapytania: neutralne oraz szukające kontrdowodu. Doprecyzowanie i nieobsługiwane wejście mają osobne statusy, bez werdyktu.
+3. Werdykt dotyczy tezy wejściowej. Wstępne wyszukiwanie kontekstu w Tavily obejmuje całe WWW i ma limit 6 sekund. Wskazówki trafiają wyłącznie do planowania. Dwie frazy dotyczące dowodów są wyszukiwane osobno dla każdej domeny z src/core/source-policy.ts (Demagog, EUvsDisinfo, gov.pl), z operatorem site: i filtrem include_domains. Pierwsza zachowuje oryginalną tezę, druga uwzględnia kontekst z planu. Serwer odrzuca wyniki spoza listy także w korpusie i bezpośrednich API. Każde zapytanie zwraca do 6 wyników. Dodatkowo model dobiera bezpośrednie API do tematu: Wikipedia, Sejm/ELI, arXiv oraz EUvsDisinfo przy tezach związanych z dezinformacją, jeśli ustawiono klucz (do 3 wyników z każdego). Używamy pobranego materiału, nie odpowiedzi wygenerowanej przez wyszukiwarkę. Przy odpowiednich kluczach Google Fact Check dodaje metadane wcześniejszych weryfikacji, a wyszukiwanie Google przez Serper uzupełnia wyniki z Demagoga. Linki bez pobranej treści są wyświetlane jako niedostępne do analizy.
 4. Usuwamy powtarzające się URL-e, identyczne i niemal identyczne teksty. Dobieramy dokumenty naprzemiennie z grup wydawców: maksymalnie 10 dokumentów, 3 na grupę, 4000 znaków na dokument i 40000 łącznie. Fragmenty otrzymują identyfikatory.
 5. Serwer dzieli fragmenty na oznaczone cytaty (do 650 znaków). Gemini ocenia tezę, dążąc do 3–5 trafnych dowodów, i wybiera identyfikatory `quoteId`. Tekst cytatu i przypisanie do źródła wstawia serwer z pobranego materiału — model ich nie przepisuje.
-6. Kod sprawdza istnienie źródła, fragmentu i dosłownego cytatu. Dopuszczalna jest tylko normalizacja Unicode NFC i białych znaków. Potwierdzenie lub obalenie wymaga odpowiednich dowodów z co najmniej 2 grup wydawców. Brak takiego potwierdzenia daje `insufficient`, zachowując prawidłowe cytaty. Kilka poddomen gov.pl lub wersji językowych Wikipedii to jedna grupa. To konserwatywna reguła MVP, nie naukowa miara pewności ani niezależności źródeł.
+6. Kod sprawdza istnienie źródła, fragmentu i dosłownego cytatu. Dopuszczalna jest tylko normalizacja Unicode NFC i białych znaków. Potwierdzenie lub obalenie wymaga odpowiednich dowodów z co najmniej 2 grup wydawców, z wyjątkiem bezpośrednich dowodów z pobranego tekstu artykułu Demagoga lub raportu EUvsDisinfo. Taka publikacja może wystarczyć samodzielnie po kontroli cytatów i audycie znaczenia; sama obecność domeny, metadane i materiał kontekstowy nie wystarczają. Brak takiego potwierdzenia daje `insufficient`, zachowując prawidłowe cytaty. Kilka poddomen gov.pl lub wersji językowych Wikipedii to jedna grupa. To konserwatywna reguła MVP, nie naukowa miara pewności ani niezależności źródeł.
 7. Dodatkowe wywołanie modelu sprawdza sens wniosku, okres, podmiot i kontrdowody. Wyjątek: po udanym wyszukiwaniu ocena `insufficient` bez wybranych dowodów kończy się stałym komunikatem serwera o ograniczeniach, bez publikowania nieaudytowanego uzasadnienia modelu. Negatywny audyt daje status `unable_to_verify` i `verdict: null`, z przyczyną i bez zatwierdzonych cytatów. Nieudana kontrola odpowiedzi nie jest oceną prawdziwości tezy.
 8. UI pokazuje wynik, cytaty, liczbę cytowanych źródeł i grup, statusy API, zakres materiału, linki, daty i ograniczenia. Pozostałe przejrzane dokumenty są dostępne osobno, bez sugerowania, że popierają ocenę. Zmiana tezy usuwa poprzedni wynik.
 
-Każda z dwóch fraz trafia raz do Google Fact Check, co daje najwyżej dwa wywołania Fact Check Tools API. Korpus pobiera do trzech pasujących publikacji z katalogu. EUvsDisinfo otrzymuje najwyżej jedno zapytanie. Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
+Analiza wykonuje do 7 wyszukiwań Tavily materiałów (jedno dla kontekstu i po dwa dla każdej z trzech dozwolonych domen). Przy brakujących datach wybranych dokumentów dodatkowo wykonuje do 3 wyszukiwań metadanych Demagoga i do 3 odczytów stron www.gov.pl, ze wspólnym limitem 6 sekund. Data z wyszukiwarki wymaga zgodności adresu artykułu; brak danych pozostaje jawny. Wyszukiwanie materiałów obejmuje też maksymalnie 10 żądań do publicznych API (Wikipedia: 1 wyszukiwanie + do 3 artykułów; Sejm: 1 wyszukiwanie + do 3 tekstów; arXiv: 1 wyszukiwanie; EUvsDisinfo: 1 wyszukiwanie). Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
 
 ## Odporność Gemini i rozliczenia
 
@@ -75,13 +75,20 @@ Każda z dwóch fraz trafia raz do Google Fact Check, co daje najwyżej dwa wywo
 
 ## Bezpośrednie źródła
 
-| Źródło             | Materiał                                                                                                                                                   |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Google Fact Check  | Rekordy ClaimReview różnych wydawców, w tym Demagoga. Raport pokazuje sprawdzaną tezę wraz z oceną redakcji i linkiem do jej publikacji.                   |
-| EUvsDisinfo        | Przypadki dezinformacji i artykuły analityczne z istniejącego API. W opisie przypadku SUMMARY oznacza przytoczone twierdzenie, RESPONSE zawiera ustalenia. |
-| Korpus audytowalny | Wyszukiwanie lokalne w zatwierdzonym katalogu. Pobierany jest tekst wyłącznie spod adresów zapisanych w katalogu.                                          |
+| API                       | Pobierany materiał                                                                              | Ograniczenia                                                                                                                                |
+| ------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wikipedia (polska edycja) | Wyszukiwanie haseł i tekst HTML artykułu; link z numerem konkretnej rewizji                     | Encyklopedia jest źródłem wtórnym. Data rewizji nie jest datą powstania opisywanego faktu.                                                  |
+| api.sejm.gov.pl / ELI     | Wyszukiwanie tytułów aktów DU/MP, tekst HTML jeśli dostępny; w pozostałych przypadkach metadane | Nie odczytujemy PDF. Metadane pozwalają sprawdzić tytuł lub datę aktu, nie treść przepisów. Nie pobieramy jeszcze głosowań ani stenogramów. |
+| arXiv                     | Atom: tytuł, link do wersji, data i abstrakt                                                    | Nie pobieramy pełnego tekstu; obecność w arXiv nie dowodzi recenzji ani konsensusu.                                                         |
+| EUvsDisinfo (EEAS) MCP    | Wyszukiwanie przypadków dezinformacji i artykułów analitycznych (tytuł, treść, link)            | Baza w języku angielskim. Sekcja SUMMARY przypadku to cytowana dezinformacja, nie fakt; ustalenia zawiera RESPONSE. Wymaga klucza API.      |
 
-Recenzje z indeksu są metadanymi. System nie odwiedza stron znalezionych przez API. Powtórzenia tej samej publikacji są usuwane, a niezależność źródeł liczona według domen wydawców. Brak klucza jest widoczny w raporcie. Korpus działa bez klucza do serwisu źródłowego. [Dokumentacja Google Fact Check Tools](https://developers.google.com/fact-check/tools/api/reference/rest/v1alpha1/claims/search)
+Poza EUvsDisinfo te API nie wymagają dodatkowych kluczy. Zapytania dobiera model; źródło niepasujące do tematu ma status „nie wybrano”. Pobieranie jest ograniczone do stałych hostów API, bez przekierowań, do 3 MB na odpowiedź. HTML/XML parsujemy przez Cheerio; HTML źródeł nie jest wykonywany.
+
+Grupy wydawców wyznaczamy z domen rejestrowalnych (tldts), z dodatkowym grupowaniem gov.pl. Wszystkie prace arXiv również należą do jednej grupy — to ograniczenie tej prostej heurystyki. Deduplikacja podobnych tekstów używa wspólnych sekwencji pięciu słów; nie wykrywa wszystkich przedruków, tłumaczeń ani wspólnego pierwotnego źródła. Audyt modelu dodatkowo sprawdza zależności, ale może się mylić.
+
+ArXiv ma procesową kolejkę: jedna aktywna prośba, minimum 3 sekundy między rozpoczęciami. Przed uruchomieniem wielu instancji potrzebny będzie limiter współdzielony.
+
+Dokumentacja: [Wikipedia Search](https://www.mediawiki.org/wiki/API:Search), [Wikipedia Parse](https://www.mediawiki.org/wiki/API:Parsing_wikitext), [Sejm ELI](https://api.sejm.gov.pl/eli_pl.html), [arXiv API](https://info.arxiv.org/help/api/user-manual.html), [zasady arXiv API](https://info.arxiv.org/help/api/tou.html).
 
 ## API
 
@@ -168,7 +175,7 @@ npx vitest run tests/sources-live.test.ts
 Remove-Item Env:RUN_SOURCE_LIVE_TESTS
 ```
 
-Pokryte scenariusze: wybór nieistniejących lub powtórzonych identyfikatorów cytatów, brak przepisywania tekstu przez model, zmyślone cytaty, obce identyfikatory, cytat przetłumaczony zamiast dosłownego, brak danych, opinia, brak kontekstu, kopie i niemal identyczne przedruki, różnorodność wydawców, pojedynczy dowód, częściowa awaria wyszukiwania, metadane zamiast pełnego tekstu, rekordy ClaimReview i przypisanie recenzji Demagoga do wydawcy, negatywny audyt znaczenia, jedna naprawa, timeout, awaria API, ograniczone przełączanie modelu, brak ponowień przy błędzie płatności lub limicie dziennym, przerwanie ponowień, walidacja wejścia, ochrona sekretów, zmiana tezy, mobile i jawne demo.
+Pokryte scenariusze: wybór nieistniejących lub powtórzonych identyfikatorów cytatów, brak przepisywania tekstu przez model, zmyślone cytaty, obce identyfikatory, cytat przetłumaczony zamiast dosłownego, brak danych, opinia, brak kontekstu, kopie i niemal identyczne przedruki, różnorodność wydawców, pojedynczy dowód, częściowa awaria wyszukiwania, metadane zamiast pełnego tekstu, przypięta rewizja Wikipedii, abstrakty arXiv, negatywny audyt znaczenia, jedna naprawa, timeout, awaria API, ograniczone przełączanie modelu, brak ponowień przy błędzie płatności lub limicie dziennym, przerwanie ponowień, walidacja wejścia, ochrona sekretów, zmiana tezy, mobile i jawne demo.
 
 ## Ostatnia kontrola pełnej ścieżki online — 21.11.2026
 
@@ -185,7 +192,7 @@ Test zapisuje `live-result.json` i `live.png` w katalogu wyników Playwright (ig
 
 ## Dane i ograniczenia
 
-- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do skonfigurowanych indeksów recenzji. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do 5 minut w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
+- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do 5 minut w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
 - Logi zawierają identyfikator żądania, czas, liczbę źródeł, kody błędów i status HTTP dostawcy. Nie zawierają kluczy ani treści wejścia.
 - Walidator potwierdza obecność cytatu w pobranym materiale, nie prawdziwość źródła. Audyt tym samym modelem może powielać jego błędy.
 - Deduplikacja nie rozpoznaje wszystkich przedruków ani wspólnego pierwotnego źródła. Nie deklarujemy niezależności domen.
@@ -224,39 +231,36 @@ Projekt jest prototypem zespołu. Wyniki nie są stanowiskiem MSZ.
 
 ## Korpus źródeł — etap 2
 
-`data/corpus/catalog.json` zawiera **129 rekordów w 13 grupach domen**, w tym 117 źródeł wyszukiwanych automatycznie i 12 odnośników do ręcznego sprawdzenia. Strony zakwalifikowane do automatycznego pobierania zwróciły HTTP 200 z HTML podczas sprawdzania. Portale wymagające JavaScriptu i strony, z których serwer nie uzyskał użytecznego HTML, mają w katalogu opis ograniczenia. Wariant regionalny systemu ostrzeżeń i adres MSZ przekierowujący do Odyseusza pozostają odnośnikami przy rekordzie kanonicznym. Powtórzone adresy i warianty tego samego zasobu są ujęte w jednym rekordzie. Poddomeny administracji grupujemy konserwatywnie jako jedno `gov.pl`; subdomeny instytucji UE jako `europa.eu`.
+`data/corpus/catalog.json` zawiera **129 rekordów z 13 grup domen**. Katalog przechowuje metadane źródeł urzędowych i instytucjonalnych. Usunięte wcześniej wpisy PAP i Wikipedii pozostają poza korpusem.
 
-| Grupa domen       | Rekordy | Wydawca lub rola                 |
-| ----------------- | ------: | -------------------------------- |
-| cert.pl           |       1 | CERT Polska                      |
-| esa.int           |       4 | ESA                              |
-| europa.eu         |      11 | Instytucje UE                    |
-| gov.pl            |      50 | Administracja publiczna i służby |
-| imgw.pl           |       3 | IMGW-PIB                         |
-| kgsok.pl          |       1 | Straż Ochrony Kolei              |
-| nasa.gov          |       3 | NASA                             |
-| nato.int          |      18 | NATO                             |
-| nbp.pl            |      10 | Bank centralny                   |
-| policja.pl        |       1 | Policja                          |
-| portalpasazera.pl |       1 | Portal Pasażera                  |
-| un.org            |      18 | ONZ                              |
-| worldbank.org     |       8 | Bank Światowy                    |
+| Grupa domen       | Rekordy |
+| ----------------- | ------: |
+| cert.pl           |       1 |
+| esa.int           |       4 |
+| europa.eu         |      11 |
+| gov.pl            |      50 |
+| imgw.pl           |       3 |
+| kgsok.pl          |       1 |
+| nasa.gov          |       3 |
+| nato.int          |      18 |
+| nbp.pl            |      10 |
+| policja.pl        |       1 |
+| portalpasazera.pl |       1 |
+| un.org            |      18 |
+| worldbank.org     |       8 |
 
-Lista do przeglądu: `/zrodla`. Pełny eksport: `GET /api/corpus`. Rekord ma identyfikator, tytuł, URL, wydawcę, typ, datę publikacji lub jawne `null`, datę pobrania, zapytanie odkrywania i opis praw do wykorzystania. **Datę publikacji zapisano dla 3 ze 129 rekordów.** Nie wstawiamy daty faktu ani pobrania w miejsce nieznanej daty publikacji. Wymaganie aktualności pozostaje częściowo niezrealizowane.
-
-Kwalifikacja: źródła urzędowe/instytucjonalne przyjmujemy jako materiał pierwotny wyłącznie w granicach ich kompetencji. Katalog pomija PAP i Wikipedię. Domena nie jest dowodem prawdziwości konkretnego zdania; dwie domeny mogą powielać jedno źródło. Przekierowania, PDF, strony blokujące automat, strony bez tytułu i duplikaty są odrzucane. Nie obchodzimy blokad. Próby pozyskania stron organizacji fact-checkingowych nie dały użytecznego zestawu; nie deklarujemy posiadania ich korpusu ani danych organizatora.
+Lista do przeglądu to `/zrodla`. Eksport udostępnia `GET /api/corpus`. Jeżeli data publikacji jest nieznana, rekord zachowuje `null`. Przynależność do danej domeny nie potwierdza tezy. Aktualna dostępność dokumentu jest sprawdzana podczas pobierania.
 
 **Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają 5-minutowej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
 
-Zmiany katalogu wymagają przeglądu redakcyjnego. Polecenia poniżej sprawdzają wersjonowane rekordy lokalnie.
+Aktualizacja: przed demo i następnie co tydzień operator może przebudować katalog. Zmiany tytułu, domeny, wydawcy lub warunków użycia wymagają przeglądu; niedostępne rekordy nie są przenoszone do nowego zbioru. Nowy katalog zastępuje poprzedni dopiero po osiągnięciu minimum 100 rekordów i 10 domen. Nie ma automatycznego harmonogramu ani obietnicy pełnej świeżości.
 
 ```powershell
-npm run corpus:check  # sprawdza integralność katalogu i raportuje cele liczebności
-npm run corpus:check -- --require-targets # wymaga też 100 rekordów, 10 domen i obu typów źródeł
-npm run corpus:build # uzupełnia metadane zatwierdzonych rekordów i sprawdza katalog lokalnie
+npm run corpus:check  # lokalna kontrola liczebności, domen, typów i metadanych
+npm run corpus:build # pobiera aktualny katalog; używa limitu/płatnego Tavily
 ```
 
-`src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus uzupełnia indeks recenzji Google Fact Check i bazę EUvsDisinfo. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
+`src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus jest dodatkiem do wyszukiwania otwartego, nie zamkniętym indeksem wszystkich treści. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
 
 ## Benchmark jakości i czasu — odtwarzanie
 
@@ -321,24 +325,24 @@ Raport zbiorczy: `reports/benchmark/summary.json`. Testy implementacji: **130 je
 
 ### Lista zgodności i braków
 
-| Wymaganie                                                                  | Stan po etapie 2 / brakująca praca                                                                                                                                                                                   |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | W katalogu 129 rekordów i 13 grup domen. W automatycznym wyszukiwaniu 117 rekordów, 11 grup i jeden typ źródeł. Lista w repo, WWW i JSON. Katalog metadanych z pobieraniem na żądanie, nie archiwum pełnych tekstów. |
-| Pięć ocen i osobne statusy obsługi                                         | Zaimplementowane i testowane.                                                                                                                                                                                        |
-| WWW i drugi kanał/adapter, wspólna logika                                  | Zaimplementowane; adapter jawnie symuluje transport. Próba spójności oraz dostępność raportowane w benchmarku.                                                                                                       |
-| Tekst **lub** URL, jedno lub kilka twierdzeń                               | Obsługiwany tekst jednej tezy. Sam URL zwraca wyjście poza zakres; URL i wiele tez to rozszerzenia, nie deklarowana funkcja.                                                                                         |
-| Tytuł, wydawca, daty i linki; aktualność                                   | Częściowo: metadane i daty pobrania są; większość dat publikacji korpusu pozostaje nieznana. Brak systematycznego ostrzegania o nieaktualności i ważności faktu w czasie.                                            |
-| Siła podstawy odpowiedzi                                                   | Częściowo: źródła, cytaty, relacje i grupy wydawców; brak skalibrowanej oceny siły, wiarygodnego wykrywania zależności i pełnej oceny pierwotności.                                                                  |
-| Podstawowy zapis przebiegu od pytania do wyniku                            | Niespełnione w trwałej postaci: logi techniczne i 5-minutowy magazyn sesji nie zastępują zminimalizowanego rejestru audytowego. Raport benchmarku nie jest audytem użytkowników.                                     |
-| Maskowanie danych, retencja, usunięcie sesji                               | Retencja pamięci 5 min jest; brak automatycznego maskowania oczywistych danych osobowych i funkcji usunięcia sesji na żądanie.                                                                                       |
-| Prompt injection i logowanie zdarzeń                                       | Separacja instrukcji i walidacja cytatów są; testy źródłowe są kontrolowane. Brak odrębnej detekcji/rejestru prób ataku; nie deklarujemy pełnej odporności.                                                          |
-| ≥30 przypadków i obowiązkowe metryki                                       | Zestaw 30 + 4 i odtwarzalny runner są. Spełnienie progów zależy od raportu; niezależna poprawność cytowań i pomiar kosztu 100 testów pozostają niewykonane.                                                          |
-| Koszt 1000 zapytań, kanału i większego ruchu                               | Niezmierzone. Limity procesowe istnieją, ale nie są testem obciążeniowym ani pomiarem kosztu. Adapter nie ponosi opłat komunikatora, co nie oznacza zerowego kosztu modeli/wyszukiwania.                             |
-| Lokalizacja przetwarzania, retencja dostawców, migracja                    | Dostawcy i przepływ są opisane. Brak potwierdzonej konfiguracji regionów oraz pełnego przeglądu warunków retencji i transferów.                                                                                      |
-| Licencje i kwalifikacja                                                    | Kwalifikacja i ograniczenie do metadanych są jawne. Brak kompletnego przeglądu licencji pełnych tekstów oraz praw do publikacji zapisanych cytatów; pełne archiwum wyłączone.                                        |
-| Dostępność                                                                 | Responsywność i obsługa podstawowych błędów sprawdzone; brak pełnego audytu WCAG i badań z użytkownikami.                                                                                                            |
-| Zgłoszenie: opis ≤4000 znaków, PDF ≤12 slajdów, film ≤3 min, nazwa zespołu | Nie przygotowano kompletu materiałów zgłoszeniowych.                                                                                                                                                                 |
-| Multimodalność, incydenty, pętla moderatora                                | Niezaimplementowane; opis kwalifikuje je jako premiowane/warunkowe. Niejednoznaczne wymaganie powiadomień wysokiego ryzyka z sekcji 2 należy uzgodnić z mentorem.                                                    |
+| Wymaganie                                                                  | Stan po etapie 2 / brakująca praca                                                                                                                                                       |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | Aktualnie 129 rekordów, 13 grup domen i 1 typ (źródła urzędowe i instytucjonalne). Lista w repo, WWW i JSON.                                                                             |
+| Pięć ocen i osobne statusy obsługi                                         | Zaimplementowane i testowane.                                                                                                                                                            |
+| WWW i drugi kanał/adapter, wspólna logika                                  | Zaimplementowane; adapter jawnie symuluje transport. Próba spójności oraz dostępność raportowane w benchmarku.                                                                           |
+| Tekst **lub** URL, jedno lub kilka twierdzeń                               | Obsługiwany tekst jednej tezy. Sam URL zwraca wyjście poza zakres; URL i wiele tez to rozszerzenia, nie deklarowana funkcja.                                                             |
+| Tytuł, wydawca, daty i linki; aktualność                                   | Częściowo: metadane i daty pobrania są; większość dat publikacji korpusu pozostaje nieznana. Brak systematycznego ostrzegania o nieaktualności i ważności faktu w czasie.                |
+| Siła podstawy odpowiedzi                                                   | Częściowo: źródła, cytaty, relacje i grupy wydawców; brak skalibrowanej oceny siły, wiarygodnego wykrywania zależności i pełnej oceny pierwotności.                                      |
+| Podstawowy zapis przebiegu od pytania do wyniku                            | Niespełnione w trwałej postaci: logi techniczne i 5-minutowy magazyn sesji nie zastępują zminimalizowanego rejestru audytowego. Raport benchmarku nie jest audytem użytkowników.         |
+| Maskowanie danych, retencja, usunięcie sesji                               | Retencja pamięci 5 min jest; brak automatycznego maskowania oczywistych danych osobowych i funkcji usunięcia sesji na żądanie.                                                           |
+| Prompt injection i logowanie zdarzeń                                       | Separacja instrukcji i walidacja cytatów są; testy źródłowe są kontrolowane. Brak odrębnej detekcji/rejestru prób ataku; nie deklarujemy pełnej odporności.                              |
+| ≥30 przypadków i obowiązkowe metryki                                       | Zestaw 30 + 4 i odtwarzalny runner są. Spełnienie progów zależy od raportu; niezależna poprawność cytowań i pomiar kosztu 100 testów pozostają niewykonane.                              |
+| Koszt 1000 zapytań, kanału i większego ruchu                               | Niezmierzone. Limity procesowe istnieją, ale nie są testem obciążeniowym ani pomiarem kosztu. Adapter nie ponosi opłat komunikatora, co nie oznacza zerowego kosztu modeli/wyszukiwania. |
+| Lokalizacja przetwarzania, retencja dostawców, migracja                    | Dostawcy i przepływ są opisane. Brak potwierdzonej konfiguracji regionów oraz pełnego przeglądu warunków retencji i transferów.                                                          |
+| Licencje i kwalifikacja                                                    | Kwalifikacja i ograniczenie do metadanych są jawne. Brak kompletnego przeglądu licencji pełnych tekstów oraz praw do publikacji zapisanych cytatów; pełne archiwum wyłączone.            |
+| Dostępność                                                                 | Responsywność i obsługa podstawowych błędów sprawdzone; brak pełnego audytu WCAG i badań z użytkownikami.                                                                                |
+| Zgłoszenie: opis ≤4000 znaków, PDF ≤12 slajdów, film ≤3 min, nazwa zespołu | Nie przygotowano kompletu materiałów zgłoszeniowych.                                                                                                                                     |
+| Multimodalność, incydenty, pętla moderatora                                | Niezaimplementowane; opis kwalifikuje je jako premiowane/warunkowe. Niejednoznaczne wymaganie powiadomień wysokiego ryzyka z sekcji 2 należy uzgodnić z mentorem.                        |
 
 Priorytet następnego etapu: niezawodność/limity modelu i błędy z benchmarku → audyt i prywatność → niezależne etykiety/cytowania i aktualność → pomiar kosztu oraz materiały zgłoszenia. Nie należy dodawać multimodalności kosztem tych braków.
 
@@ -469,7 +473,7 @@ Widok WWW ma wspólną niebieską paletę z pozostałymi ekranami, osobną kolum
 Po ustanowieniu sesji przez `POST /api/session` klient WWW wysyła `POST /api/verify` z `Accept: text/event-stream`. Strumień SSE zawiera obiekty JSON w ramkach `data: …\n\n`:
 
 - `stage`: rzeczywisty etap silnika (planowanie, wyszukiwanie, ocena, ewentualne poprawianie cytatów lub uzupełnianie dowodów, audyt). Odczyt z pamięci i oczekiwanie na identyczne trwające zgłoszenie mają osobne statusy.
-- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Status indeksu recenzji obejmuje oba zapytania.
+- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Wyszukiwanie WWW pozostaje w trakcie do zakończenia zapytań dla wszystkich dozwolonych domen.
 - `result` lub `error`: zdarzenie końcowe. W strumieniu błędy są przekazywane jako zdarzenie, ponieważ nagłówki HTTP zostały już wysłane. Brak zdarzenia końcowego oznacza przerwane połączenie, nie sukces.
 
 Bez nagłówka `Accept` lub bez poprawnego identyfikatora sesji pozostaje dotychczasowa odpowiedź JSON i kody HTTP. Adapter Discord zachowuje swój kontrakt. Rozłączenie strumienia przerywa analizę przez istniejący mechanizm anulowania; walidacja, limity, maskowanie danych, audyt i reguły werdyktu pozostają wspólne. Demo nie symuluje wykonania etapów, a ponowne użycie wyniku nie udaje nowego wyszukiwania.
@@ -545,7 +549,7 @@ Materiały: [opis zgłoszenia](docs/submission/opis.md),
 2. Uruchom `npm run dev` i przejdź na <http://127.0.0.1:3000>. Przykłady
    WWW działają od razu i są oznaczone jako **DEMO**.
 3. W profilu z dostępem online skopiuj `.env.example` do `.env.local`
-   i uzupełnij klucze Gemini, Google Fact Check i EUvsDisinfo tylko lokalnie. Po zmianie
+   i uzupełnij klucze Gemini oraz Tavily tylko lokalnie. Po zmianie
    konfiguracji uruchom serwer ponownie. Sprawdź gotowość poleceniem
    `node --env-file=.env.local scripts/check-providers.mjs`.
 

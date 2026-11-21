@@ -1,8 +1,14 @@
+vi.mock("@/server/publication-dates", () => ({
+  enrichPublicationDates: async () => {},
+}));
 import { beforeEach, expect, it, vi } from "vitest";
 import { verify } from "@/server/verify";
 import { generate } from "@/server/providers";
 import { retrieve } from "@/server/retrieval";
-vi.mock("@/server/providers", () => ({ generate: vi.fn() }));
+vi.mock("@/server/providers", () => ({
+  searchContext: vi.fn().mockResolvedValue([]),
+  generate: vi.fn(),
+}));
 vi.mock("@/server/retrieval", () => ({ retrieve: vi.fn() }));
 const input = {
   claim: "Raport projektu Koral z 2025 roku podaje masę próbki 6 gramów.",
@@ -14,7 +20,6 @@ beforeEach(() => {
       checkable: true,
       needsClarification: false,
       clarificationKind: "missing_evidence",
-      factCheckQueries: ["Koral raport"],
       queries: ["Koral pomiary", "Koral raport"],
       explanation: "Brak publicznego raportu.",
     })
@@ -81,7 +86,6 @@ it("discards incidental evidence when the model explicitly establishes no facts"
       checkable: true,
       needsClarification: false,
       clarificationKind: "missing_evidence",
-      factCheckQueries: ["Koral pomiar"],
       queries: ["Projekt Koral pomiar", "Projekt Koral dokument"],
       explanation: "Szukaj dokumentu.",
     })

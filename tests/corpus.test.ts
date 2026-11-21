@@ -3,16 +3,26 @@ import catalog from "../data/corpus/catalog.json";
 import { getDomain } from "tldts";
 import { corpus, searchCorpus } from "@/server/corpus";
 afterEach(() => vi.unstubAllGlobals());
-it("keeps unique audit records and excludes PAP and Wikipedia domains", () => {
-  expect(catalog.records.length).toBeGreaterThan(0);
+it("provides 100 unique audit records, 10 conservative domains with the agreed exclusions", () => {
+  expect(catalog.records.length).toBeGreaterThanOrEqual(100);
   expect(new Set(catalog.records.map((r) => r.url)).size).toBe(
     catalog.records.length,
   );
-  expect(catalog.records.map((r) => getDomain(r.url))).not.toContain("pap.pl");
-  expect(catalog.records.map((r) => getDomain(r.url))).not.toContain(
-    "wikipedia.org",
-  );
+  expect(
+    new Set(
+      catalog.records.map((r) =>
+        new URL(r.url).hostname.endsWith(".gov.pl")
+          ? "gov.pl"
+          : getDomain(r.url),
+      ),
+    ).size,
+  ).toBeGreaterThanOrEqual(10);
   expect(catalog.records.some((r) => r.type === "official")).toBe(true);
+  expect(
+    catalog.records.some((r) =>
+      ["wikipedia.org", "pap.pl"].includes(getDomain(r.url) ?? ""),
+    ),
+  ).toBe(false);
   for (const r of catalog.records) {
     expect(r.contentStored).toBe(false);
     expect(r.publisher).not.toBe("");
@@ -83,22 +93,4 @@ it("does not fetch user-supplied URLs or unrelated strings", async () => {
     ),
   ).toEqual({ hits: [], partial: false });
   expect(fetcher).not.toHaveBeenCalled();
-});
-
-it("keeps interactive portals and aliases available without indexing them as evidence", () => {
-  const warning = catalog.records.find(
-    (record) => record.url === "https://www.gov.pl/web/gov/ostrzezenia",
-  );
-  expect(warning?.referenceOnlyReason).toBeTruthy();
-  expect(warning?.alternateUrls).toContain(
-    "https://www.gov.pl/web/gov/ostrzezenia#/_/mazowieckie/wszystkie",
-  );
-  expect(
-    searchCorpus("ostrzeżenia publiczne komunikaty dla mieszkańców").map(
-      (record) => record.url,
-    ),
-  ).not.toContain(warning?.url);
-  expect(
-    searchCorpus("regionalny system ostrzegania").map((record) => record.url),
-  ).toContain("https://www.gov.pl/web/mswia/regionalny-system-ostrzegania");
 });

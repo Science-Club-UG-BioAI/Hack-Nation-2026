@@ -9,6 +9,7 @@ import {
 } from "./contracts";
 import { getDomain } from "tldts";
 import { invalidOutput } from "./errors";
+import { isFactCheckingArticle } from "./source-policy";
 
 export type SearchHit = {
   title: string;
@@ -106,11 +107,9 @@ export function describeStrength(
   const groups = new Set(
     cited.map((s) => s.publisherGroup || publisherGroup(s.url)),
   ).size;
-  const limitations: string[] = [];
-  if (groups)
-    limitations.push(
-      "Grupujemy według domen wydawców. Serwisy gov.pl liczymy łącznie, a różne domeny mogą powtarzać tę samą informację.",
-    );
+  const limitations = [
+    "Grupujemy według domen wydawców. Serwisy gov.pl liczymy łącznie, a różne domeny mogą powtarzać tę samą informację.",
+  ];
   if (groups === 1)
     limitations.push("Wszystkie cytaty pochodzą z jednej grupy wydawców.");
   if (result.evidenceConflict)
@@ -257,6 +256,22 @@ export function prepareDocuments(
   return documents;
 }
 
+function hasDirectFactCheck(assessment: Assessment, documents: Document[]) {
+  const relation =
+    assessment.verdict === "supported" ? "supports" : "contradicts";
+  return (
+    ["supported", "refuted"].includes(assessment.verdict) &&
+    documents.some(
+      (doc) =>
+        doc.contentScope === "text" &&
+        isFactCheckingArticle(doc.url) &&
+        assessment.evidence.some(
+          (e) => e.sourceId === doc.id && e.relation === relation,
+        ),
+    )
+  );
+}
+
 export function evidenceCoverage(
   assessment: Assessment,
   documents: Document[],
@@ -270,7 +285,7 @@ export function evidenceCoverage(
       sources.map((d) => d.publisherGroup || publisherGroup(d.url)),
     ).size,
     reviewedSources: documents.length,
-    minimumGroups: 2,
+    minimumGroups: hasDirectFactCheck(assessment, documents) ? 1 : 2,
   };
 }
 
@@ -279,13 +294,19 @@ export function hasCorroboration(
   documents: Document[],
 ) {
   if (!["supported", "refuted"].includes(assessment.verdict)) return true;
+  if (hasDirectFactCheck(assessment, documents)) return true;
   const relation =
     assessment.verdict === "supported" ? "supports" : "contradicts";
   const relevant = {
     ...assessment,
     evidence: assessment.evidence.filter((e) => e.relation === relation),
   };
-  return evidenceCoverage(relevant, documents).publisherGroups >= 2;
+  return (
+    evidenceCoverage(
+      relevant,
+      documents.filter((doc) => doc.provider !== "google_factcheck"),
+    ).publisherGroups >= 2
+  );
 }
 
 export function requireCorroboration(

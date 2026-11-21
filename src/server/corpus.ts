@@ -1,4 +1,5 @@
 import catalog from "../../data/corpus/catalog.json";
+import { isAllowedCorpusUrl } from "@/core/source-policy";
 import type { SearchHit } from "@/core/evidence";
 import { readBoundedText } from "./read-body";
 import { htmlText, type SourceBatch } from "./source-adapters";
@@ -13,7 +14,7 @@ const tokens = (value: string) => [
   ),
 ];
 const indexedRecords = catalog.records
-  .filter((record) => !record.referenceOnlyReason)
+  .filter((record) => isAllowedCorpusUrl(record.url))
   .map((record) => ({
     record,
     words: tokens(record.title + " " + new URL(record.url).pathname),

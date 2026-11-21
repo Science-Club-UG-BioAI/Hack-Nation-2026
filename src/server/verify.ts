@@ -18,7 +18,7 @@ import {
   publisherGroup,
 } from "@/core/evidence";
 import { AppError, invalidOutput, InvalidModelOutput } from "@/core/errors";
-import { generate } from "./providers";
+import { generate, searchContext } from "./providers";
 import type { z } from "zod";
 import { numberSetting } from "./config";
 import { maskPersonalData } from "@/core/privacy";
@@ -27,6 +27,7 @@ import {
   verificationDate,
 } from "@/core/verification-date";
 import { retrieve } from "./retrieval";
+import { enrichPublicationDates } from "./publication-dates";
 import type { ProgressListener, ProgressStage } from "@/core/progress";
 import {
   guardClaim,
@@ -55,23 +56,6 @@ export {
 const PLAN_BUDGET = { durationMs: 12_000, maxOutputTokens: 1600 };
 const ASSESSMENT_BUDGET = { durationMs: 24_000, maxOutputTokens: 4500 };
 const AUDIT_BUDGET = { durationMs: 15_000, maxOutputTokens: 1600 };
-
-const clarificationQuestions: Record<
-  Exclude<z.infer<typeof planSchema>["clarificationDetail"], "none">,
-  string
-> = {
-  subject: "Którą osobę, instytucję lub organizację masz na myśli?",
-  event: "Jakie konkretnie zdarzenie mamy sprawdzić?",
-  country: "Którego kraju dotyczy twierdzenie?",
-  locality:
-    "W jakiej miejscowości lub w którym regionie miało dojść do tego zdarzenia?",
-  period: "Jakiego dnia lub w jakim okresie miało to miejsce?",
-  comparison: "Jakie dwie wartości lub jakie okresy chcesz porównać?",
-  measure:
-    "Jakiej wielkości dotyczy podana wartość i w jakiej jednostce ją wyrażono?",
-  document: "Jaki tytuł lub numer ma dokument, o którym mowa?",
-  quotation: "Jak brzmi wypowiedź, którą mamy sprawdzić?",
-};
 
 async function auditFindings(
   findings: NonNullable<Assessment["findings"]>,
@@ -202,7 +186,9 @@ export async function verify(
     guarded.claim,
     input.statedAt ?? today,
   );
-  const calendarGuidance = calendarGuidanceFor(dayReferences);
+  const calendarGuidance = [calendarGuidanceFor(guarded.claim), dayReferences]
+    .filter(Boolean)
+    .join(" ");
   const analysisInput = {
     ...input,
     claim: guarded.removed ? guarded.claim : input.claim,
@@ -232,6 +218,7 @@ export async function verify(
   };
   recordGuard("input", guarded.removed);
   let retrieval: RetrievalStatus[] = [];
+  let contextQuery: string | undefined;
   const stage = (name: ProgressStage) => {
     currentStage = name;
     onProgress?.({ type: "stage", stage: name });
@@ -258,6 +245,7 @@ export async function verify(
       findings: assessment.findings ?? [],
       limitations: [...assessment.limitations, ...securityWarnings],
       ...(guarded.removed ? { checkedClaim: analysisInput.claim } : {}),
+      ...(contextQuery ? { contextQuery } : {}),
       status: "completed",
       evidenceConflict: assessment.evidenceConflict ?? false,
       requestId,
@@ -307,12 +295,29 @@ export async function verify(
       "Po oddzieleniu poleceń nie pozostało jednoznaczne twierdzenie. Podaj fakt, który mamy sprawdzić.",
     );
   stage("planning");
+  let searchHints: Awaited<ReturnType<typeof searchContext>> = [];
+  try {
+    const hints = await searchContext(
+      analysisInput.claim,
+      AbortSignal.any([signal, AbortSignal.timeout(6_000)]),
+    );
+    searchHints = hints.filter(
+      (hit) => !hasControlInstruction(`${hit.title}\n${hit.excerpt}`),
+    );
+  } catch {
+    signal.throwIfAborted();
+    // Evidence retrieval can proceed using the original claim if context lookup fails.
+  }
   let plan = await model(
     planSchema,
     planningInstruction(today, calendarGuidance),
-    analysisInput,
+    { ...analysisInput, searchHints },
   );
-  if (plan.clarificationKind === "missing_evidence") {
+  if (
+    plan.clarificationKind === "missing_evidence" ||
+    plan.clarificationKind === "ambiguous_claim" ||
+    (plan.needsClarification && plan.clarificationKind !== "no_search_anchor")
+  ) {
     plan = { ...plan, needsClarification: false, checkable: true };
     if (plan.queries.length !== 2 || plan.queries[0] === plan.queries[1])
       plan.queries = [
@@ -320,7 +325,11 @@ export async function verify(
         `Dokumenty źródłowe i weryfikacja: ${analysisInput.claim.slice(0, 280)}`,
       ];
   }
-  if ([...plan.queries, ...plan.factCheckQueries].some(hasControlInstruction))
+  if (
+    [...plan.queries, ...(plan.factCheckQueries ?? [])].some(
+      hasControlInstruction,
+    )
+  )
     throw invalidOutput([
       "Search queries must not contain model-control commands.",
     ]);
@@ -329,12 +338,10 @@ export async function verify(
       "out_of_scope",
       "To zgłoszenie wykracza poza tekstową weryfikację publicznie dostępnych informacji. Podaj pojedynczą tezę do sprawdzenia.",
     );
-  const detail = plan.clarificationDetail ?? "none";
-  const question = detail === "none" ? null : clarificationQuestions[detail];
   if (plan.needsClarification)
     return noDecision(
       "needs_clarification",
-      question ?? clarificationQuestions.event,
+      "Jakiego zdarzenia lub podmiotu dotyczy to twierdzenie?",
     );
   if (!plan.checkable)
     return simple(
@@ -343,6 +350,11 @@ export async function verify(
     );
   if (plan.queries.length !== 2 || plan.queries[0] === plan.queries[1])
     throw invalidOutput();
+  // Always search the actual claim as well as the model's contextual query.
+  // A paraphrase must not silently drop quantities or substitute another event.
+  plan = { ...plan, queries: [analysisInput.claim, plan.queries[1]] };
+  if (searchHints.length && plan.queries[1] !== analysisInput.claim)
+    contextQuery = maskPersonalData(plan.queries[1]).text;
   stage("searching");
   const found = await retrieve(plan, signal, onProgress);
   retrieval = found.statuses;
@@ -354,45 +366,33 @@ export async function verify(
   const protectedSources = guardDocuments(prepared);
   recordGuard("source", protectedSources.removed);
   const documents = protectedSources.documents;
+  await enrichPublicationDates(documents, signal);
   const incompleteProviders = retrieval
     .filter(
       (source) => source.status === "error" || source.status === "partial",
     )
     .map((source) => providerLabels[source.provider]);
-  const unconfigured = retrieval
-    .filter((source) => source.status === "not_configured")
-    .map((source) => providerLabels[source.provider]);
-  const retrievalWarnings: string[] = [];
-  if (incompleteProviders.length)
-    retrievalWarnings.push(
-      `Wyszukiwanie było niepełne (${incompleteProviders.join(", ")}).`,
-    );
-  if (unconfigured.length)
-    retrievalWarnings.push(
-      `Brak konfiguracji źródeł: ${unconfigured.join(", ")}.`,
-    );
   if (
     !documents.length &&
-    (found.hits.length > 0 || retrievalWarnings.length)
-  ) {
-    const reason =
+    (found.hits.length > 0 || incompleteProviders.length > 0)
+  )
+    return noDecision(
+      "unable_to_verify",
       protectedSources.removed > 0
         ? "Po odfiltrowaniu fragmentów z poleceniami dla modelu nie pozostał żaden materiał do sprawdzenia tezy."
         : found.hits.length > 0
           ? "Wśród znalezionych materiałów nie było tekstu, który można było wykorzystać do sprawdzenia tezy."
-          : retrievalWarnings.join(" ") +
-            " Nie udało się pobrać materiału do sprawdzenia tezy.";
-    return noDecision("unable_to_verify", reason);
-  }
-  const searchHint = question
-    ? `\n\nJeśli znasz ten szczegół, możesz zawęzić wyszukiwanie. ${question}`
-    : "\n\nJeśli znasz pierwotną publikację, możesz dopisać do tezy jej tytuł lub nazwę wydawcy.";
+          : `Wyszukiwanie było niepełne (${incompleteProviders.join(", ")}). Nie udało się pobrać materiału do sprawdzenia tezy.`,
+    );
   if (!documents.length)
     return simple(
       "insufficient",
-      "W sprawdzonych źródłach nie znaleziono materiału pozwalającego ocenić tę tezę. To nie jest dowód jej fałszywości." +
-        searchHint,
+      "Nie znaleziono dostępnego tekstu źródeł pozwalającego ocenić tę tezę. To nie jest dowód jej fałszywości.",
     );
+  const retrievalWarnings = incompleteProviders.map(
+    (provider) =>
+      `Niepełne wyszukiwanie: ${provider}. Część materiałów była niedostępna.`,
+  );
   const catalog = quotationCatalog(documents);
   const payload = {
     ...analysisInput,
@@ -426,7 +426,7 @@ export async function verify(
       await model(
         reasonedSelectionSchema,
         instruction +
-          " Poprzednia próba nie przeszła walidacji. Sprawdź dokładne cytaty i identyfikatory.",
+          " Popraw przyczynę podaną w validationIssues. Jeśli przekroczono limit cytatów, skróć ustalenia i ponownie użyj wybranych identyfikatorów w findings, evidence i basis.",
         {
           ...payload,
           previousAssessment: draft,
@@ -448,7 +448,7 @@ export async function verify(
     if (retrievalWarnings.length)
       return noDecision(
         "unable_to_verify",
-        `${retrievalWarnings.join(" ")} W dostępnych materiałach nie znaleziono dowodów pozwalających ocenić tezę.`,
+        `Wyszukiwanie było niepełne (${incompleteProviders.join(", ")}). W dostępnych materiałach nie znaleziono dowodów pozwalających ocenić tezę.`,
         documents,
         [...assessment.limitations, ...retrievalWarnings],
       );
@@ -456,8 +456,7 @@ export async function verify(
       {
         verdict: "insufficient",
         explanation:
-          "W pobranych materiałach nie wskazano dowodów pozwalających potwierdzić lub obalić tę tezę. Brak potwierdzenia nie oznacza fałszu." +
-          searchHint,
+          "W pobranych materiałach nie wskazano dowodów pozwalających potwierdzić lub obalić tę tezę. Brak potwierdzenia nie oznacza fałszu.",
         limitations: [
           ...assessment.limitations,
           "Nie ustalono, czy opisane zdarzenie miało miejsce. Sprawdzenie obejmuje tylko pobrane materiały; dalsza ocena wymaga dowodu dotyczącego wskazanego zdarzenia, podmiotu i okresu.",

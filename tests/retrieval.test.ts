@@ -1,173 +1,175 @@
-import { beforeEach, afterEach, expect, it, vi } from "vitest";
-import { retrieve } from "@/server/retrieval";
-import { prepareDocuments } from "@/core/evidence";
-import { quotationCatalog } from "@/core/quotations";
-import { planSchema } from "@/core/contracts";
 vi.mock("@/server/corpus", () => ({
-  corpus: vi.fn(async () => ({ hits: [], partial: false })),
+  corpus: vi.fn(),
+}));
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { retrieve } from "@/server/retrieval";
+import { search } from "@/server/providers";
+import { corpus } from "@/server/corpus";
+import { factCheck } from "@/server/fact-check";
+import { demagog } from "@/server/demagog";
+import { wikipedia, sejm, arxiv } from "@/server/source-adapters";
+import { planSchema } from "@/core/contracts";
+import { prepareDocuments } from "@/core/evidence";
+
+vi.mock("@/server/fact-check", () => ({ factCheck: vi.fn() }));
+vi.mock("@/server/demagog", () => ({ demagog: vi.fn() }));
+vi.mock("@/server/providers", () => ({ search: vi.fn() }));
+vi.mock("@/server/source-adapters", () => ({
+  wikipedia: vi.fn(),
+  sejm: vi.fn(),
+  arxiv: vi.fn(),
 }));
 const plan = planSchema.parse({
   checkable: true,
   needsClarification: false,
-  explanation: "test",
-  factCheckQueries: ["polska nato", "akcesja nato"],
-  queries: ["NATO data", "NATO akcesja"],
-  euvsdisinfoQuery: "NATO",
+  explanation: "Test",
+  queries: ["neutral query", "counter evidence"],
+  sejmQuery: "Polska",
 });
-const fetcher = vi.fn<typeof fetch>();
+const hit = {
+  title: "Polska",
+  url: "https://api.sejm.gov.pl/eli/acts/2026/1",
+  raw_content: "Materiał encyklopedyczny dotyczący Polski.",
+};
 beforeEach(() => {
-  vi.stubGlobal("fetch", fetcher.mockReset());
-  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fixture");
-  vi.stubEnv("EUVSDISINFO_API_KEY", "fixture");
+  vi.resetAllMocks();
+  vi.mocked(corpus).mockResolvedValue({ hits: [], partial: false });
+  vi.mocked(search).mockResolvedValue([]);
+  vi.mocked(sejm).mockResolvedValue({ hits: [hit], partial: false });
 });
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.unstubAllGlobals();
-});
-it("contacts only the approved indexes and never follows indexed review URLs", async () => {
-  fetcher.mockImplementation(async (input, init) => {
-    const url = new URL(String(input));
-    expect(init?.redirect).toBe("error");
-    if (url.origin === "https://mcp.euvsd.info")
-      return Response.json({
-        jsonrpc: "2.0",
-        result: { structuredContent: { results: [] } },
-      });
-    expect(url.origin + url.pathname).toBe(
-      "https://factchecktools.googleapis.com/v1alpha1/claims:search",
+afterEach(() => vi.unstubAllEnvs());
+describe("multi-source retrieval", () => {
+  it("retains an indexed review as metadata and reports blocked direct articles", async () => {
+    vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "fixture");
+    vi.stubEnv("SERPER_API_KEY", "fixture");
+    const article = {
+      title: "Analiza",
+      url: "https://demagog.org.pl/na-biezaco/analiza/",
+    };
+    vi.mocked(factCheck).mockResolvedValue([
+      {
+        ...article,
+        provider: "google_factcheck",
+        contentScope: "metadata",
+        raw_content: "Sprawdzana teza: Polska. Ocena wydawcy: fałsz.",
+      },
+    ]);
+    vi.mocked(demagog).mockResolvedValue({
+      hits: [],
+      partial: true,
+      unavailableArticles: [article],
+    });
+    const result = await retrieve(
+      { ...plan, factCheckQueries: ["Polska"] },
+      new AbortController().signal,
     );
-    expect(new Headers(init?.headers).get("X-Goog-Api-Key")).toBe("fixture");
-    expect(url.searchParams.has("reviewPublisherSiteFilter")).toBe(false);
-    const claimReview = ["demagog.org.pl", "other.example"].map((host) => ({
-      url: "https://" + host + "/review",
-      textualRating: "Fałsz",
-      reviewDate: "2026-01-01",
-      title: "Ocena redakcji",
-    }));
-    return Response.json({
-      claims: [
-        { text: "Oryginalna teza wymagająca sprawdzenia.", claimReview },
-      ],
+    expect(factCheck).toHaveBeenCalledWith("polska", expect.any(AbortSignal));
+    expect(result.hits).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          provider: "google_factcheck",
+          contentScope: "metadata",
+        }),
+      ]),
+    );
+    expect(result.statuses).toContainEqual({
+      provider: "demagog",
+      status: "partial",
+      documents: 0,
+      unavailableArticles: [article],
     });
   });
-  const result = await retrieve(plan, new AbortController().signal);
-  expect(
-    result.statuses.every((s) => s.status === "ok" || s.status === "empty"),
-  ).toBe(true);
-  expect(result.statuses.map((s) => s.provider).sort()).toEqual([
-    "corpus",
-    "euvsdisinfo",
-    "google_factcheck",
-  ]);
-  expect(fetcher).toHaveBeenCalledTimes(3);
-  const queries = fetcher.mock.calls
-    .map(([input]) => new URL(String(input)))
-    .filter((url) => url.hostname === "factchecktools.googleapis.com")
-    .map((url) => url.searchParams.get("query"));
-  expect(queries.sort()).toEqual([...plan.factCheckQueries].sort());
-  expect(
-    result.hits.find((h) => h.provider === "google_factcheck"),
-  ).toMatchObject({
-    contentScope: "metadata",
-    raw_content: expect.stringContaining("Ocena wydawcy: Fałsz"),
+
+  it("does not let catalog matches displace current web evidence", async () => {
+    const article = (id: number) => ({
+      title: `Komunikat ${id}`,
+      url: `https://www.gov.pl/web/test/komunikat-${id}`,
+      raw_content: `Unikalny komunikat numer ${id}. ${String.fromCharCode(65 + id).repeat(60)}`,
+    });
+    vi.mocked(corpus).mockResolvedValue({
+      hits: [article(1), article(2), article(3)],
+      partial: false,
+    });
+    vi.mocked(search).mockResolvedValueOnce([article(4)]);
+    const found = await retrieve(plan, new AbortController().signal);
+    const docs = prepareDocuments(
+      found.hits,
+      "Zdarzenie",
+      "2026-11-22T00:00:00Z",
+    );
+    expect(docs.some((doc) => doc.url === article(4).url)).toBe(true);
   });
-});
-it("sends a single compact topic when two planner phrases reduce to the same search", async () => {
-  const claim = "Wczoraj w Polsce spadły dwie rakiety i jeden dron.";
-  fetcher.mockResolvedValue(Response.json({}));
-  await retrieve(
-    {
-      ...plan,
-      queries: [claim, "Czy 20 listopada 2026 r. odnotowano upadek drona?"],
-      factCheckQueries: [
-        "Rakiety Polska dron zgłoszenie",
-        "rakiety POLSKA dron",
-      ],
-      euvsdisinfoQuery: null,
-    },
-    new AbortController().signal,
-  );
-  expect(fetcher).toHaveBeenCalledTimes(1);
-  const url = new URL(String(fetcher.mock.calls[0][0]));
-  expect(url.searchParams.get("query")).toBe("rakiety polska dron");
-});
-it("attributes a Demagog review to its publisher once across Google Fact Check queries", async () => {
-  vi.stubEnv("EUVSDISINFO_API_KEY", "");
-  const claimText = "Fragment tezy. ".repeat(52).trim();
-  fetcher.mockImplementation(async () =>
-    Response.json({
-      claims: [
-        {
-          text: claimText,
-          claimReview: [
-            {
-              url: "https://demagog.org.pl/fake_news/example",
-              publisher: { name: "Demagog" },
-              textualRating: "Fałsz",
-            },
-          ],
-        },
-      ],
-    }),
-  );
-  const result = await retrieve(plan, new AbortController().signal);
-  const documents = prepareDocuments(result.hits, claimText, "2026-11-21");
-  expect(documents).toHaveLength(1);
-  expect(documents[0]).toMatchObject({
-    provider: "google_factcheck",
-    publisher: "Demagog",
-    publisherGroup: "demagog.org.pl",
-    contentScope: "metadata",
+  it("retains an article from the second query before the publisher limit fills", async () => {
+    const article = (id: number) => ({
+      title: `Artykuł ${id}`,
+      url: `https://demagog.org.pl/na-biezaco/test-${id}`,
+      raw_content: `Unikalne zdarzenie numer ${id}. ${String.fromCharCode(65 + id).repeat(60)}`,
+    });
+    vi.mocked(search).mockImplementation(async (query, _signal, domain) =>
+      domain !== "demagog.org.pl"
+        ? []
+        : query === plan.queries[0]
+          ? [article(1), article(2), article(3)]
+          : [article(4)],
+    );
+    const found = await retrieve(plan, new AbortController().signal);
+    const docs = prepareDocuments(
+      found.hits,
+      "Zdarzenie",
+      "2026-11-22T00:00:00Z",
+    );
+    expect(docs.some((doc) => doc.url === article(4).url)).toBe(true);
   });
-  expect(
-    [...quotationCatalog(documents).quotes.values()].map((q) => q.quote),
-  ).toEqual([`Sprawdzana teza: ${claimText} · Ocena wydawcy: Fałsz`]);
-});
-it("retains available indexed evidence and reports partial retrieval when a query fails", async () => {
-  vi.stubEnv("EUVSDISINFO_API_KEY", "");
-  fetcher.mockImplementation(async (input) => {
-    const url = new URL(String(input));
-    if (url.searchParams.get("query") === plan.factCheckQueries[1])
-      return new Response(null, { status: 503 });
-    return Response.json({
-      claims: [
-        {
-          text: "Teza kontrolna",
-          claimReview: [
-            { url: "https://demagog.org.pl/ocena", textualRating: "Fałsz" },
-          ],
-        },
-      ],
+  it("calls only relevant direct APIs", async () => {
+    const result = await retrieve(plan, new AbortController().signal);
+    expect(result.hits).toEqual([hit]);
+    expect(sejm).toHaveBeenCalledTimes(1);
+    expect(search).toHaveBeenCalledTimes(6);
+    for (const query of plan.queries)
+      for (const domain of ["demagog.org.pl", "euvsdisinfo.eu", "gov.pl"])
+        expect(search).toHaveBeenCalledWith(
+          query,
+          expect.any(AbortSignal),
+          domain,
+        );
+    expect(wikipedia).not.toHaveBeenCalled();
+    expect(arxiv).not.toHaveBeenCalled();
+    expect(result.statuses).toContainEqual({
+      provider: "arxiv",
+      status: "not_applicable",
+      documents: 0,
     });
   });
-  const result = await retrieve(plan, new AbortController().signal);
-  expect(result.statuses).toContainEqual({
-    provider: "google_factcheck",
-    documents: 1,
-    status: "partial",
+  it("keeps available direct evidence when web search fails, with visible status", async () => {
+    vi.mocked(search).mockRejectedValue(new Error("down"));
+    const result = await retrieve(plan, new AbortController().signal);
+    expect(result.hits).toHaveLength(1);
+    expect(result.statuses).toContainEqual({
+      provider: "web",
+      status: "error",
+      documents: 0,
+    });
   });
-  expect(result.hits).toHaveLength(1);
-});
-it("exposes missing keys and never runs web search as a fallback", async () => {
-  vi.stubEnv("GOOGLE_FACTCHECK_API_KEY", "");
-  vi.stubEnv("EUVSDISINFO_API_KEY", "");
-  const result = await retrieve(plan, new AbortController().signal);
-  expect(fetcher).not.toHaveBeenCalled();
-  expect(
-    result.statuses
-      .filter((s) => s.status === "not_configured")
-      .map((s) => s.provider)
-      .sort(),
-  ).toEqual(["euvsdisinfo", "google_factcheck"]);
-});
-it("never falls back to the open web on an index outage", async () => {
-  fetcher.mockRejectedValue(new Error("offline"));
-  await expect(
-    retrieve(plan, new AbortController().signal),
-  ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
-  expect(
-    new Set(
-      fetcher.mock.calls.map(([input]) => new URL(String(input)).hostname),
-    ),
-  ).toEqual(new Set(["factchecktools.googleapis.com", "mcp.euvsd.info"]));
+  it("distinguishes partial web search from complete retrieval", async () => {
+    vi.mocked(search)
+      .mockRejectedValueOnce(new Error("down"))
+      .mockResolvedValueOnce([hit]);
+    const progress = vi.fn();
+    const result = await retrieve(plan, new AbortController().signal, progress);
+    const web = { provider: "web", status: "partial", documents: 1 };
+    expect(result.statuses).toContainEqual(web);
+    expect(
+      progress.mock.calls
+        .map(([event]) => event.source)
+        .filter((source) => source.provider === "web")
+        .at(-1),
+    ).toEqual(web);
+  });
+  it("never turns a total outage into a factual verdict", async () => {
+    vi.mocked(search).mockRejectedValue(new Error("down"));
+    vi.mocked(sejm).mockRejectedValue(new Error("down"));
+    await expect(
+      retrieve(plan, new AbortController().signal),
+    ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
+  });
 });

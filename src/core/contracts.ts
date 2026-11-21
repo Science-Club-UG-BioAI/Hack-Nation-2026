@@ -51,26 +51,18 @@ export const planSchema = z.object({
   checkable: z.boolean(),
   needsClarification: z.boolean(),
   clarificationKind: z
-    .enum(["none", "ambiguous_claim", "missing_evidence"])
-    .default("none"),
-  clarificationDetail: z
-    .enum([
-      "subject",
-      "event",
-      "country",
-      "locality",
-      "period",
-      "comparison",
-      "measure",
-      "document",
-      "quotation",
-      "none",
-    ])
+    .enum(["none", "ambiguous_claim", "no_search_anchor", "missing_evidence"])
     .default("none"),
   outOfScope: z.boolean().default(false),
   explanation: z.string().min(1).max(1200),
   queries: z.array(z.string().min(3).max(350)).min(0).max(2),
-  factCheckQueries: z.array(z.string().trim().min(1).max(120)).max(2),
+  factCheckQueries: z
+    .array(z.string().trim().min(1).max(120))
+    .max(2)
+    .default([]),
+  wikipediaQuery: z.string().min(2).max(150).nullable().default(null),
+  sejmQuery: z.string().min(3).max(150).nullable().default(null),
+  arxivQuery: z.string().min(3).max(150).nullable().default(null),
   euvsdisinfoQuery: z.string().min(3).max(150).nullable().default(null),
 });
 export const evidenceSchema = z.object({
@@ -120,12 +112,12 @@ export type SourceProvider =
   | "arxiv"
   | "euvsdisinfo"
   | "corpus"
-  | "demagog"
-  | "google_factcheck";
+  | "google_factcheck"
+  | "demagog";
 export const providerLabels: Record<SourceProvider, string> = {
-  demagog: "Demagog",
-  google_factcheck: "Google Fact Check",
   corpus: "Korpus audytowalny",
+  google_factcheck: "Google Fact Check",
+  demagog: "Demagog (Google)",
   web: "Wyszukiwanie WWW",
   wikipedia: "Wikipedia API",
   sejm: "Sejm / ELI API",
@@ -146,6 +138,7 @@ export type SourceMetadata = {
   notes?: string[];
 };
 export type RetrievalStatus = {
+  unavailableArticles?: { title: string; url: string }[];
   provider: SourceProvider;
   status:
     "ok" | "empty" | "partial" | "error" | "not_applicable" | "not_configured";
@@ -179,6 +172,7 @@ type ResultBase = {
   requestId: string;
   claim: string;
   checkedClaim?: string;
+  contextQuery?: string;
   statedAt: string | null;
   checkedAt: string;
   sources: Source[];

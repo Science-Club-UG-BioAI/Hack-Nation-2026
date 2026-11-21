@@ -114,8 +114,7 @@ export function quotationCatalog(documents: Document[]) {
     ...source,
     chunks: chunks.map((chunk) => ({
       id: chunk.id,
-      quotations: (source.provider === "demagog" ||
-      source.provider === "google_factcheck"
+      quotations: (source.provider === "google_factcheck"
         ? [chunk.text]
         : passages(chunk.text)
       ).map((text) => {

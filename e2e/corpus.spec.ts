@@ -6,13 +6,7 @@ test("source catalog is auditable and readable on mobile", async ({
   const response = await request.get("/api/corpus");
   expect(response.ok()).toBe(true);
   const catalog = await response.json();
-  expect(catalog.records.length).toBeGreaterThan(0);
-  expect(
-    catalog.records.map((record: { domain: string }) => record.domain),
-  ).not.toContain("pap.pl");
-  expect(
-    catalog.records.map((record: { domain: string }) => record.domain),
-  ).not.toContain("wikipedia.org");
+  expect(catalog.records.length).toBeGreaterThanOrEqual(100);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("link", { name: "Korpus źródeł", exact: true }).click();

@@ -15,7 +15,7 @@ await mkdir(folder, { recursive: true });
 const scratch = await mkdtemp(join(tmpdir(), "kitcheck-measure-"));
 Object.assign(process.env, {
   GEMINI_API_KEY: "offline-fixture",
-  GOOGLE_FACTCHECK_API_KEY: "offline-fixture",
+  TAVILY_API_KEY: "offline-fixture",
   GEMINI_MODEL: "gemini-3.1-flash-lite",
   GEMINI_FALLBACK_MODEL: "",
   EUVSDISINFO_API_KEY: "",
@@ -34,13 +34,12 @@ const vite = await createServer({
   server: { middlewareMode: true, hmr: false, watch: null, ws: false },
 });
 const localFetch = globalThis.fetch;
-const calls = { gemini: 0, factCheck: 0 };
+const calls = { gemini: 0, tavily: 0 };
 const quote = "Kontrolowany pomiar wykazał masę próbki równą pięć gramów.";
 const plan = {
   checkable: true,
   needsClarification: false,
   explanation: "Pomiar kontrolny.",
-  factCheckQueries: ["xx-fixture-qone", "xx-fixture-qtwo"],
   queries: ["xx-fixture-qone", "xx-fixture-qtwo"],
 };
 const assessment = {
@@ -71,28 +70,20 @@ const audit = {
 globalThis.fetch = async (url, init) => {
   const address = String(url);
   await delay(benchmark ? 0 : 20, undefined, { signal: init?.signal });
-  const endpoint = new URL(address);
-  if (
-    endpoint.origin === "https://factchecktools.googleapis.com" &&
-    endpoint.pathname === "/v1alpha1/claims:search"
-  ) {
-    calls.factCheck++;
+  if (address === "https://api.tavily.com/search") {
+    calls.tavily++;
     return Response.json({
-      claims: [
+      usage: { credits: 2 },
+      results: [
         {
-          text: quote,
-          claimReview: [
-            {
-              url: "https://demagog.org.pl/fixture",
-              textualRating: "Prawda",
-              title: "Ocena Alfa",
-            },
-            {
-              url: "https://beta.example/raport",
-              textualRating: "Potwierdzone",
-              title: "Ocena Beta",
-            },
-          ],
+          title: "Laboratorium Alfa",
+          url: "https://alfa.example/raport",
+          raw_content: quote + " Laboratorium Alfa udostępniło wyniki.",
+        },
+        {
+          title: "Laboratorium Beta",
+          url: "https://beta.example/raport",
+          raw_content: quote + " Badanie powtórzył zespół Beta.",
         },
       ],
     });
@@ -205,7 +196,7 @@ try {
         (r) =>
           r.request?.cached !== false ||
           r.replay?.cached !== true ||
-          r.request.costUsd !== null ||
+          r.request.costUsd == null ||
           r.replay.costUsd !== 0,
       )
     )
@@ -273,7 +264,7 @@ try {
         successful: times(ok),
         rejected429: times(limited),
         geminiCalls: calls.gemini - before.gemini,
-        factCheckCalls: calls.factCheck - before.factCheck,
+        tavilyCalls: calls.tavily - before.tavily,
       });
     }
     if (

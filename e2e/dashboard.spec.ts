@@ -209,7 +209,7 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
         : {
             ...source,
             publishedAt: "1999-03-12",
-            updatedAt: "1999-03-13",
+            updatedAt: "Sat, 13 Mar 1999 10:00:00 GMT",
             eventPeriod: { from: "1999-03-01", to: "1999-03-31" },
             publisher: "Redakcja archiwum",
             freshnessWarning: "Materiał archiwalny z marca 1999 r.",
@@ -231,7 +231,19 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
     }),
   ).toBeVisible();
   await expect(evidence.locator('time[datetime="1999-03-12"]')).toBeVisible();
-  await expect(evidence.locator('time[datetime="1999-03-13"]')).toBeVisible();
+  await expect(
+    evidence.locator('time[datetime="1999-03-13T10:00:00.000Z"]'),
+  ).toHaveText("13 mar 1999");
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.getByRole("button", { name: "Kopiuj wynik", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Skopiowano", exact: true }),
+  ).toBeVisible();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toContain("Publikacja · 1999-03-12");
+  expect(copied).toContain("Aktualizacja · 13 mar 1999");
+  expect(copied).toContain("Publikacja · data nieustalona");
+  expect(copied).toContain("Pobrano ·");
   await expect(
     evidence.getByText("1999-03-01 – 1999-03-31", { exact: false }).first(),
   ).toBeVisible();

@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { configuration } from "@/server/config";
-import { euvsdisinfo } from "@/server/euvsdisinfo";
+import { euvsdisinfo, euvsdisinfoConfigured } from "@/server/euvsdisinfo";
 
 const signal = () => new AbortController().signal;
 const KEY = "test-euvsdisinfo-key";
@@ -50,9 +49,9 @@ afterEach(() => {
 
 describe("EUvsDisinfo adapter", () => {
   it("reports configuration from the environment", () => {
-    expect(configuration().euvsdisinfo).toBe(true);
+    expect(euvsdisinfoConfigured()).toBe(true);
     vi.stubEnv("EUVSDISINFO_API_KEY", "  ");
-    expect(configuration().euvsdisinfo).toBe(false);
+    expect(euvsdisinfoConfigured()).toBe(false);
   });
 
   it("sends a stateless MCP search call with the key in a header", async () => {
