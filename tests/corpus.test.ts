@@ -63,8 +63,21 @@ it("uses actual fetched text, declared metadata and corpus provenance", async ()
   expect(result.hits[0]).toMatchObject({
     provider: "corpus",
     contentScope: "text",
+    publisher: searchCorpus("Poland NATO membership history")[0].publisher,
+    publisherIsDomain: false,
   });
   expect(result.hits[0].raw_content).toContain("joined NATO in 1999");
+});
+it("keeps evidence for event and update dates distinct from collection time", () => {
+  const kprm = catalog.records.find((r) => r.id === "7adfcc962290a959");
+  expect(kprm).toMatchObject({
+    publishedAt: "2024-03-12",
+    eventPeriod: { from: "1999-03-12", to: "1999-03-12" },
+    updatedAt: null,
+  });
+  expect(
+    catalog.records.find((r) => r.id === "e1b4835ca4338553")?.updatedAt,
+  ).toBe("2023-05-03T17:54:00Z");
 });
 it("does not fetch user-supplied URLs or unrelated strings", async () => {
   const fetcher = vi.fn();

@@ -1,5 +1,6 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { AppError, invalidOutput } from "@/core/errors";
+import { startCall, recordModelUsage } from "./config";
 
 export const DEFAULT_MODEL = "gemini-3.1-flash-lite";
 export const DEFAULT_FALLBACK_MODEL = "gemini-3.5-flash-lite";
@@ -153,6 +154,7 @@ export async function geminiResponse(
       ]);
       const startedAt = Date.now();
       let failed: Failure;
+      const call = startCall("gemini", model);
       try {
         const response = await fetch(
           "https://generativelanguage.googleapis.com/v1beta/interactions",
@@ -170,6 +172,7 @@ export async function geminiResponse(
         );
         if (response.ok) {
           const body: unknown = await response.json();
+          recordModelUsage(call, body);
           console.info(
             JSON.stringify({
               provider: "gemini",

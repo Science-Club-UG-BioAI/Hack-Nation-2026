@@ -2,9 +2,16 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyInputSchema, channelInputSchema } from "@/core/contracts";
 import { AppError, InvalidModelOutput } from "@/core/errors";
-import { numberSetting, requireConfiguration } from "@/server/config";
+import {
+  numberSetting,
+  requireConfiguration,
+  usageContext,
+  summarizeUsage,
+  type UsageCall,
+} from "@/server/config";
 import { runVerification } from "./verification-service";
 import { channelReply } from "@/core/channel";
+import { notifyRecipient } from "./alerts";
 import { verificationDate } from "@/core/verification-date";
 import { readBoundedText } from "@/server/read-body";
 import { assertSessionActive, writeAudit } from "./audit-store";
@@ -30,6 +37,7 @@ export async function handleVerification(
   let timedOut = false;
   let acceptedInput: VerifyInput | undefined;
   let auditAttempted = false;
+  const calls: UsageCall[] = [];
   let deleted = false;
   const timeoutMs = numberSetting("VERIFY_TIMEOUT_MS", 60_000, 60_000);
   const deadlineAt = start + timeoutMs;
@@ -121,15 +129,14 @@ export async function handleVerification(
     acceptedInput = input;
     assertSessionActive(session);
     requireConfiguration();
-    const { result, reused } = await runVerification(
-      input,
-      session,
-      requestId,
-      signal,
-      onProgress,
-      channel,
+    const { result, reused } = await usageContext.run(calls, () =>
+      runVerification(input, session, requestId, signal, onProgress, channel),
     );
-    const delivered = { ...result, delivery: { channel, reused } };
+    const delivered = {
+      ...result,
+      usage: summarizeUsage(calls, reused),
+      delivery: { channel, reused },
+    };
     signal.throwIfAborted();
     auditAttempted = true;
     try {
@@ -139,6 +146,7 @@ export async function handleVerification(
         ...input,
         durationMs: Date.now() - start,
         result: delivered,
+        calls,
       });
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -149,6 +157,8 @@ export async function handleVerification(
         true,
       );
     }
+    await notifyRecipient(session, requestId, delivered, signal);
+    assertSessionActive(session);
     console.info(
       JSON.stringify({
         requestId,
@@ -205,6 +215,7 @@ export async function handleVerification(
             ...acceptedInput,
             durationMs: Date.now() - start,
             errorCode: failure.code,
+            calls,
           });
         } catch {
           console.error(

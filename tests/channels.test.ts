@@ -104,6 +104,13 @@ it.each(["web", "discord"])(
       sources: initial.sources,
       checkedAt: initial.checkedAt,
       delivery: { reused: true },
+      usage: {
+        cached: true,
+        inputTokens: 0,
+        outputTokens: 0,
+        searchCalls: 0,
+        costUsd: 0,
+      },
     });
     const channel = first === "web" ? bBody : aBody;
     expect(channel.delivery).toBe("simulated");
@@ -154,6 +161,13 @@ it.each(["web", "discord"])(
     });
     expect(shared).toMatchObject({
       ...initial,
+      usage: {
+        cached: true,
+        costUsd: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        searchCalls: 0,
+      },
       delivery: { ...shared.delivery, reused: true },
     });
     expect(generate).toHaveBeenCalledTimes(3);

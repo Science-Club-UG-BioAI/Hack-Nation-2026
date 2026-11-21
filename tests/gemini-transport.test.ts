@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { geminiResponse } from "@/server/gemini-transport";
+import { summarizeUsage, usageContext, type UsageCall } from "@/server/config";
 
 const run = (signal = new AbortController().signal) =>
   geminiResponse({ store: false, input: "A public test" }, signal);
@@ -20,7 +21,20 @@ it("switches only after one retry and sends the same payload to the explicit fal
     .mockResolvedValueOnce(failed(503, "service_unavailable"))
     .mockResolvedValueOnce(Response.json({ status: "completed" }));
   vi.stubGlobal("fetch", fetcher);
-  await expect(run()).resolves.toMatchObject({ status: "completed" });
+  const calls: UsageCall[] = [];
+  await expect(usageContext.run(calls, () => run())).resolves.toMatchObject({
+    status: "completed",
+  });
+  expect(calls.map((c) => c.model)).toEqual([
+    "gemini-3.1-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+  ]);
+  expect(summarizeUsage(calls, false)).toMatchObject({
+    inputTokens: null,
+    outputTokens: null,
+    costUsd: null,
+  });
   const payloads = fetcher.mock.calls.map(([, options]) =>
     JSON.parse(options.body),
   );

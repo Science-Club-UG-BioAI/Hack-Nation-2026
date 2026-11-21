@@ -1,0 +1,1713 @@
+{
+  "startedAt": "2026-11-21T17:37:34.123Z",
+  "finishedAt": "2026-11-21T17:37:43.232Z",
+  "datasetSha256": "286a788059b49e501df315b173fd32e41e4e0318ac227ceb0c9f554d3643c095",
+  "mode": "controlled-http-synthetic-usage",
+  "originalCases": 30,
+  "calls": {
+    "gemini": 300,
+    "tavily": 200
+  },
+  "rows": [
+    {
+      "id": "T01-1",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T02-2",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T03-3",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T04-4",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T05-5",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T06-6",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T07-7",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F01-8",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F02-9",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F03-10",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F04-11",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F05-12",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F06-13",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M01-14",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M02-15",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M03-16",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M04-17",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M05-18",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M06-19",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O01-20",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O02-21",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O03-22",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N01-23",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N02-24",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N03-25",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "C01-26",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "C02-27",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I01-28",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I02-29",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I03-30",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T01-31",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T02-32",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T03-33",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T04-34",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T05-35",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T06-36",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T07-37",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F01-38",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F02-39",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F03-40",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F04-41",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F05-42",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F06-43",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M01-44",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M02-45",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M03-46",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M04-47",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M05-48",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M06-49",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O01-50",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O02-51",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O03-52",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N01-53",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N02-54",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N03-55",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "C01-56",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "C02-57",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I01-58",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I02-59",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I03-60",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T01-61",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T02-62",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T03-63",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T04-64",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T05-65",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T06-66",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T07-67",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F01-68",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F02-69",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F03-70",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F04-71",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F05-72",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F06-73",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M01-74",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M02-75",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M03-76",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M04-77",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M05-78",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "M06-79",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O01-80",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O02-81",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "O03-82",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N01-83",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N02-84",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "N03-85",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "C01-86",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "C02-87",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I01-88",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I02-89",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "I03-90",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T01-91",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T02-92",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T03-93",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T04-94",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T05-95",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T06-96",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "T07-97",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F01-98",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F02-99",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    },
+    {
+      "id": "F03-100",
+      "request": {
+        "inputTokens": 7100,
+        "outputTokens": 750,
+        "searchCalls": 2,
+        "costUsd": 0.0349,
+        "cached": false
+      },
+      "replay": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "searchCalls": 0,
+        "costUsd": 0,
+        "cached": true
+      }
+    }
+  ]
+}
