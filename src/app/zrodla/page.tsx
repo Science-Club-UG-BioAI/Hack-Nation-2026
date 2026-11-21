@@ -2,6 +2,9 @@ import catalog from "../../../data/corpus/catalog.json";
 
 export default function SourcesPage() {
   const domains = [...new Set(catalog.records.map((r) => r.domain))].sort();
+  const references = catalog.records.filter(
+    (record) => record.referenceOnlyReason,
+  ).length;
   return (
     <div className="shell">
       <a className="skip-link" href="#source-catalog">
@@ -18,8 +21,8 @@ export default function SourcesPage() {
           <p className="eyebrow">KORPUS DEMONSTRACYJNY</p>
           <h1>Źródła pod kontrolą.</h1>
           <p>
-            {catalog.records.length} rekordów · {domains.length} domen · źródła
-            urzędowe, encyklopedyczne i agencyjne.
+            {catalog.records.length} rekordów · {domains.length} domen ·{" "}
+            {references} odnośników do ręcznego sprawdzenia.
           </p>
           <p>
             To katalog publikacji, nie lista gwarantująca prawdziwość
@@ -54,10 +57,28 @@ export default function SourcesPage() {
                       {record.title}
                     </a>
                     <br />
+                    {record.referenceOnlyReason && (
+                      <>
+                        <small>{record.referenceOnlyReason}</small>
+                        <br />
+                      </>
+                    )}
+                    {record.alternateUrls?.map((url) => (
+                      <div key={url}>
+                        <a href={url} target="_blank" rel="noreferrer">
+                          {new URL(url).hash
+                            ? "Zapisany widok regionalny"
+                            : "Adres podany w wykazie"}
+                        </a>
+                      </div>
+                    ))}
                     <small>
                       {record.publisher} · Publikacja:{" "}
                       {record.publishedAt?.slice(0, 10) ?? "data nieustalona"} ·
-                      Pobrano: {record.retrievedAt.slice(0, 10)}
+                      {record.referenceOnlyReason
+                        ? "Sprawdzono adres"
+                        : "Pobrano"}
+                      : {record.retrievedAt.slice(0, 10)}
                     </small>
                   </li>
                 ))}

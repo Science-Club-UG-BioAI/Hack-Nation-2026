@@ -224,35 +224,39 @@ Projekt jest prototypem zespołu. Wyniki nie są stanowiskiem MSZ.
 
 ## Korpus źródeł — etap 2
 
-`data/corpus/catalog.json` zawiera **130 rzeczywistych rekordów, 10 domen i 3 typy źródeł**. Każda przyjęta strona odpowiedziała HTTP 200 z HTML podczas zbierania 21.11.2026. To potwierdzenie dostępności w chwili pobrania, nie gwarancja wiarygodności ani przyszłej dostępności. Duplikaty adresów i tytułów w obrębie domeny oraz strony główne zostały wykluczone. Poddomeny administracji grupujemy konserwatywnie jako jedno `gov.pl`; subdomeny instytucji UE jako `europa.eu`.
+`data/corpus/catalog.json` zawiera **129 rekordów w 13 grupach domen**, w tym 117 źródeł wyszukiwanych automatycznie i 12 odnośników do ręcznego sprawdzenia. Strony zakwalifikowane do automatycznego pobierania zwróciły HTTP 200 z HTML podczas sprawdzania. Portale wymagające JavaScriptu i strony, z których serwer nie uzyskał użytecznego HTML, mają w katalogu opis ograniczenia. Wariant regionalny systemu ostrzeżeń i adres MSZ przekierowujący do Odyseusza pozostają odnośnikami przy rekordzie kanonicznym. Powtórzone adresy i warianty tego samego zasobu są ujęte w jednym rekordzie. Poddomeny administracji grupujemy konserwatywnie jako jedno `gov.pl`; subdomeny instytucji UE jako `europa.eu`.
 
-| Grupa domen   | Rekordy | Rola                                           |
-| ------------- | ------: | ---------------------------------------------- |
-| gov.pl        |      19 | Urzędowe, administracja polska                 |
-| nbp.pl        |      10 | Urzędowe, bank centralny                       |
-| europa.eu     |      11 | Urzędowe, instytucje UE                        |
-| nato.int      |      18 | Pierwotne, NATO o swoich traktatach i historii |
-| un.org        |      18 | Pierwotne, ONZ                                 |
-| worldbank.org |       8 | Instytucjonalne, Bank Światowy                 |
-| esa.int       |       4 | Instytucjonalne, ESA                           |
-| nasa.gov      |       3 | Urzędowe/naukowe, NASA                         |
-| wikipedia.org |      20 | Wtórne, encyklopedia                           |
-| pap.pl        |      19 | Wtórne, agencja prasowa                        |
+| Grupa domen       | Rekordy | Wydawca lub rola                 |
+| ----------------- | ------: | -------------------------------- |
+| cert.pl           |       1 | CERT Polska                      |
+| esa.int           |       4 | ESA                              |
+| europa.eu         |      11 | Instytucje UE                    |
+| gov.pl            |      50 | Administracja publiczna i służby |
+| imgw.pl           |       3 | IMGW-PIB                         |
+| kgsok.pl          |       1 | Straż Ochrony Kolei              |
+| nasa.gov          |       3 | NASA                             |
+| nato.int          |      18 | NATO                             |
+| nbp.pl            |      10 | Bank centralny                   |
+| policja.pl        |       1 | Policja                          |
+| portalpasazera.pl |       1 | Portal Pasażera                  |
+| un.org            |      18 | ONZ                              |
+| worldbank.org     |       8 | Bank Światowy                    |
 
-Lista do przeglądu: `/zrodla`. Pełny eksport: `GET /api/corpus`. Rekord ma identyfikator, tytuł, URL, wydawcę, typ, datę publikacji lub jawne `null`, datę pobrania, zapytanie odkrywania i opis praw do wykorzystania. **Tylko 2/130 dat publikacji udało się odczytać automatycznie.** Nie wstawiamy daty faktu ani pobrania w miejsce nieznanej daty publikacji. Wymaganie aktualności pozostaje częściowo niezrealizowane.
+Lista do przeglądu: `/zrodla`. Pełny eksport: `GET /api/corpus`. Rekord ma identyfikator, tytuł, URL, wydawcę, typ, datę publikacji lub jawne `null`, datę pobrania, zapytanie odkrywania i opis praw do wykorzystania. **Datę publikacji zapisano dla 3 ze 129 rekordów.** Nie wstawiamy daty faktu ani pobrania w miejsce nieznanej daty publikacji. Wymaganie aktualności pozostaje częściowo niezrealizowane.
 
-Kwalifikacja: źródła urzędowe/instytucjonalne przyjmujemy jako materiał pierwotny wyłącznie w granicach ich kompetencji. PAP kwalifikujemy jako redakcyjne źródło wtórne, Wikipedię jako edytowalne źródło wtórne wymagające kontroli przypisów. Domena nie jest dowodem prawdziwości konkretnego zdania; dwie domeny mogą powielać jedno źródło. Przekierowania, PDF, strony blokujące automat, strony bez tytułu i duplikaty są odrzucane. Nie obchodzimy blokad. Próby pozyskania stron organizacji fact-checkingowych nie dały użytecznego zestawu; nie deklarujemy posiadania ich korpusu ani danych organizatora.
+Kwalifikacja: źródła urzędowe/instytucjonalne przyjmujemy jako materiał pierwotny wyłącznie w granicach ich kompetencji. Katalog pomija PAP i Wikipedię. Domena nie jest dowodem prawdziwości konkretnego zdania; dwie domeny mogą powielać jedno źródło. Przekierowania, PDF, strony blokujące automat, strony bez tytułu i duplikaty są odrzucane. Nie obchodzimy blokad. Próby pozyskania stron organizacji fact-checkingowych nie dały użytecznego zestawu; nie deklarujemy posiadania ich korpusu ani danych organizatora.
 
 **Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają 5-minutowej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
 
 Zmiany katalogu wymagają przeglądu redakcyjnego. Polecenia poniżej sprawdzają wersjonowane rekordy lokalnie.
 
 ```powershell
-npm run corpus:check  # lokalna kontrola liczebności, domen, typów i metadanych
+npm run corpus:check  # sprawdza integralność katalogu i raportuje cele liczebności
+npm run corpus:check -- --require-targets # wymaga też 100 rekordów, 10 domen i obu typów źródeł
 npm run corpus:build # uzupełnia metadane zatwierdzonych rekordów i sprawdza katalog lokalnie
 ```
 
-`src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus jest dodatkiem do wyszukiwania otwartego, nie zamkniętym indeksem wszystkich treści. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
+`src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus uzupełnia indeks recenzji Google Fact Check i bazę EUvsDisinfo. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
 
 ## Benchmark jakości i czasu — odtwarzanie
 
@@ -317,24 +321,24 @@ Raport zbiorczy: `reports/benchmark/summary.json`. Testy implementacji: **130 je
 
 ### Lista zgodności i braków
 
-| Wymaganie                                                                  | Stan po etapie 2 / brakująca praca                                                                                                                                                       |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | Spełnione liczbowo: 130/10/3; lista w repo, WWW i JSON. Katalog metadanych z pobieraniem na żądanie, nie archiwum pełnych tekstów.                                                       |
-| Pięć ocen i osobne statusy obsługi                                         | Zaimplementowane i testowane.                                                                                                                                                            |
-| WWW i drugi kanał/adapter, wspólna logika                                  | Zaimplementowane; adapter jawnie symuluje transport. Próba spójności oraz dostępność raportowane w benchmarku.                                                                           |
-| Tekst **lub** URL, jedno lub kilka twierdzeń                               | Obsługiwany tekst jednej tezy. Sam URL zwraca wyjście poza zakres; URL i wiele tez to rozszerzenia, nie deklarowana funkcja.                                                             |
-| Tytuł, wydawca, daty i linki; aktualność                                   | Częściowo: metadane i daty pobrania są; większość dat publikacji korpusu pozostaje nieznana. Brak systematycznego ostrzegania o nieaktualności i ważności faktu w czasie.                |
-| Siła podstawy odpowiedzi                                                   | Częściowo: źródła, cytaty, relacje i grupy wydawców; brak skalibrowanej oceny siły, wiarygodnego wykrywania zależności i pełnej oceny pierwotności.                                      |
-| Podstawowy zapis przebiegu od pytania do wyniku                            | Niespełnione w trwałej postaci: logi techniczne i 5-minutowy magazyn sesji nie zastępują zminimalizowanego rejestru audytowego. Raport benchmarku nie jest audytem użytkowników.         |
-| Maskowanie danych, retencja, usunięcie sesji                               | Retencja pamięci 5 min jest; brak automatycznego maskowania oczywistych danych osobowych i funkcji usunięcia sesji na żądanie.                                                           |
-| Prompt injection i logowanie zdarzeń                                       | Separacja instrukcji i walidacja cytatów są; testy źródłowe są kontrolowane. Brak odrębnej detekcji/rejestru prób ataku; nie deklarujemy pełnej odporności.                              |
-| ≥30 przypadków i obowiązkowe metryki                                       | Zestaw 30 + 4 i odtwarzalny runner są. Spełnienie progów zależy od raportu; niezależna poprawność cytowań i pomiar kosztu 100 testów pozostają niewykonane.                              |
-| Koszt 1000 zapytań, kanału i większego ruchu                               | Niezmierzone. Limity procesowe istnieją, ale nie są testem obciążeniowym ani pomiarem kosztu. Adapter nie ponosi opłat komunikatora, co nie oznacza zerowego kosztu modeli/wyszukiwania. |
-| Lokalizacja przetwarzania, retencja dostawców, migracja                    | Dostawcy i przepływ są opisane. Brak potwierdzonej konfiguracji regionów oraz pełnego przeglądu warunków retencji i transferów.                                                          |
-| Licencje i kwalifikacja                                                    | Kwalifikacja i ograniczenie do metadanych są jawne. Brak kompletnego przeglądu licencji pełnych tekstów oraz praw do publikacji zapisanych cytatów; pełne archiwum wyłączone.            |
-| Dostępność                                                                 | Responsywność i obsługa podstawowych błędów sprawdzone; brak pełnego audytu WCAG i badań z użytkownikami.                                                                                |
-| Zgłoszenie: opis ≤4000 znaków, PDF ≤12 slajdów, film ≤3 min, nazwa zespołu | Nie przygotowano kompletu materiałów zgłoszeniowych.                                                                                                                                     |
-| Multimodalność, incydenty, pętla moderatora                                | Niezaimplementowane; opis kwalifikuje je jako premiowane/warunkowe. Niejednoznaczne wymaganie powiadomień wysokiego ryzyka z sekcji 2 należy uzgodnić z mentorem.                        |
+| Wymaganie                                                                  | Stan po etapie 2 / brakująca praca                                                                                                                                                                                   |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | W katalogu 129 rekordów i 13 grup domen. W automatycznym wyszukiwaniu 117 rekordów, 11 grup i jeden typ źródeł. Lista w repo, WWW i JSON. Katalog metadanych z pobieraniem na żądanie, nie archiwum pełnych tekstów. |
+| Pięć ocen i osobne statusy obsługi                                         | Zaimplementowane i testowane.                                                                                                                                                                                        |
+| WWW i drugi kanał/adapter, wspólna logika                                  | Zaimplementowane; adapter jawnie symuluje transport. Próba spójności oraz dostępność raportowane w benchmarku.                                                                                                       |
+| Tekst **lub** URL, jedno lub kilka twierdzeń                               | Obsługiwany tekst jednej tezy. Sam URL zwraca wyjście poza zakres; URL i wiele tez to rozszerzenia, nie deklarowana funkcja.                                                                                         |
+| Tytuł, wydawca, daty i linki; aktualność                                   | Częściowo: metadane i daty pobrania są; większość dat publikacji korpusu pozostaje nieznana. Brak systematycznego ostrzegania o nieaktualności i ważności faktu w czasie.                                            |
+| Siła podstawy odpowiedzi                                                   | Częściowo: źródła, cytaty, relacje i grupy wydawców; brak skalibrowanej oceny siły, wiarygodnego wykrywania zależności i pełnej oceny pierwotności.                                                                  |
+| Podstawowy zapis przebiegu od pytania do wyniku                            | Niespełnione w trwałej postaci: logi techniczne i 5-minutowy magazyn sesji nie zastępują zminimalizowanego rejestru audytowego. Raport benchmarku nie jest audytem użytkowników.                                     |
+| Maskowanie danych, retencja, usunięcie sesji                               | Retencja pamięci 5 min jest; brak automatycznego maskowania oczywistych danych osobowych i funkcji usunięcia sesji na żądanie.                                                                                       |
+| Prompt injection i logowanie zdarzeń                                       | Separacja instrukcji i walidacja cytatów są; testy źródłowe są kontrolowane. Brak odrębnej detekcji/rejestru prób ataku; nie deklarujemy pełnej odporności.                                                          |
+| ≥30 przypadków i obowiązkowe metryki                                       | Zestaw 30 + 4 i odtwarzalny runner są. Spełnienie progów zależy od raportu; niezależna poprawność cytowań i pomiar kosztu 100 testów pozostają niewykonane.                                                          |
+| Koszt 1000 zapytań, kanału i większego ruchu                               | Niezmierzone. Limity procesowe istnieją, ale nie są testem obciążeniowym ani pomiarem kosztu. Adapter nie ponosi opłat komunikatora, co nie oznacza zerowego kosztu modeli/wyszukiwania.                             |
+| Lokalizacja przetwarzania, retencja dostawców, migracja                    | Dostawcy i przepływ są opisane. Brak potwierdzonej konfiguracji regionów oraz pełnego przeglądu warunków retencji i transferów.                                                                                      |
+| Licencje i kwalifikacja                                                    | Kwalifikacja i ograniczenie do metadanych są jawne. Brak kompletnego przeglądu licencji pełnych tekstów oraz praw do publikacji zapisanych cytatów; pełne archiwum wyłączone.                                        |
+| Dostępność                                                                 | Responsywność i obsługa podstawowych błędów sprawdzone; brak pełnego audytu WCAG i badań z użytkownikami.                                                                                                            |
+| Zgłoszenie: opis ≤4000 znaków, PDF ≤12 slajdów, film ≤3 min, nazwa zespołu | Nie przygotowano kompletu materiałów zgłoszeniowych.                                                                                                                                                                 |
+| Multimodalność, incydenty, pętla moderatora                                | Niezaimplementowane; opis kwalifikuje je jako premiowane/warunkowe. Niejednoznaczne wymaganie powiadomień wysokiego ryzyka z sekcji 2 należy uzgodnić z mentorem.                                                    |
 
 Priorytet następnego etapu: niezawodność/limity modelu i błędy z benchmarku → audyt i prywatność → niezależne etykiety/cytowania i aktualność → pomiar kosztu oraz materiały zgłoszenia. Nie należy dodawać multimodalności kosztem tych braków.
 

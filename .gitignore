@@ -231,6 +231,7 @@ node_modules/
 .next/
 .env.*
 !.env.example
+/env.local
 *.tsbuildinfo
 playwright-report/
 test-results/
