@@ -1,12 +1,12 @@
 # Obciążenie lokalnego silnika
 
-Przy limicie trzech jednoczesnych analiz pięć fal po 12 żądań dało 15 odpowiedzi HTTP 200 i 45 odpowiedzi HTTP 429. **Wśród przyjętych żądań tej próby mediana wyniosła 157,8 ms, a p95 wyniósł 173,3 ms.** Osobne czasy przyjęć i odmów są istotne, bo szybka odmowa obniża medianę całego ruchu.
+Przy limicie trzech jednoczesnych analiz pięć fal po 12 żądań dało 15 odpowiedzi HTTP 200 i 45 odpowiedzi HTTP 429. **Wśród przyjętych żądań tej próby mediana wyniosła 161,3 ms, a p95 wyniósł 174,0 ms.** Osobne czasy przyjęć i odmów są istotne, bo szybka odmowa obniża medianę całego ruchu.
 
 | Żądania na falę | Łącznie | HTTP 200 | HTTP 429 | Odsetek błędów | Mediana / p95 wszystkich (ms) | Mediana / p95 HTTP 200 (ms) | Gemini / Tavily |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 5 | 5 | 0 | 0% | 125,5 / 181,7 | 125,5 / 181,7 | 15 / 10 |
-| 3 | 15 | 15 | 0 | 0% | 142,0 / 150,6 | 142,0 / 150,6 | 45 / 30 |
-| 12 | 60 | 15 | 45 | 75% | 54,8 / 158,5 | 157,8 / 173,3 | 45 / 30 |
+| 1 | 5 | 5 | 0 | 0% | 128,6 / 200,0 | 128,6 / 200,0 | 15 / 10 |
+| 3 | 15 | 15 | 0 | 0% | 140,9 / 160,5 | 140,9 / 160,5 | 45 / 30 |
+| 12 | 60 | 15 | 45 | 75% | 66,1 / 165,9 | 161,3 / 174,0 | 45 / 30 |
 
 Test z 21 listopada 2026 r. działał na jednym procesie Node.js v24.8.0. Uruchamia się go poleceniem `node scripts/load-test.mjs` z katalogu repozytorium. Skrypt używa lokalnego HTTP, rzeczywistych procedur tras i osobnej bazy SQLite. Każde żądanie ma nową sesję. Następna fala czeka na zakończenie wszystkich odpowiedzi poprzedniej. Każde podmienione połączenie z dostawcą ma opóźnienie 20 ms. Mediana i p95 to obserwacje o rangach zaokrąglonych w górę. Próba z jednym klientem ma pięć obserwacji. Wszystkie błędy w pomiarze to odmowy lokalnego limitera. [Surowe metryki](local.json)
 

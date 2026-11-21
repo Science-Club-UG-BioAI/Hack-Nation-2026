@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-11-21T17:26:26.419Z",
+  "runAt": "2026-11-21T17:39:38.099Z",
   "node": "v24.8.0",
   "providerDelayMs": 20,
   "measurements": [
@@ -11,12 +11,12 @@
       "otherErrors": 0,
       "errorPercent": 0,
       "all": {
-        "medianMs": 125.5,
-        "p95Ms": 181.7
+        "medianMs": 128.6,
+        "p95Ms": 200
       },
       "successful": {
-        "medianMs": 125.5,
-        "p95Ms": 181.7
+        "medianMs": 128.6,
+        "p95Ms": 200
       },
       "rejected429": {
         "medianMs": null,
@@ -33,12 +33,12 @@
       "otherErrors": 0,
       "errorPercent": 0,
       "all": {
-        "medianMs": 142,
-        "p95Ms": 150.6
+        "medianMs": 140.9,
+        "p95Ms": 160.5
       },
       "successful": {
-        "medianMs": 142,
-        "p95Ms": 150.6
+        "medianMs": 140.9,
+        "p95Ms": 160.5
       },
       "rejected429": {
         "medianMs": null,
@@ -55,16 +55,16 @@
       "otherErrors": 0,
       "errorPercent": 75,
       "all": {
-        "medianMs": 54.8,
-        "p95Ms": 158.5
+        "medianMs": 66.1,
+        "p95Ms": 165.9
       },
       "successful": {
-        "medianMs": 157.8,
-        "p95Ms": 173.3
+        "medianMs": 161.3,
+        "p95Ms": 174
       },
       "rejected429": {
-        "medianMs": 54.6,
-        "p95Ms": 59.9
+        "medianMs": 54.4,
+        "p95Ms": 75.3
       },
       "geminiCalls": 45,
       "tavilyCalls": 30
