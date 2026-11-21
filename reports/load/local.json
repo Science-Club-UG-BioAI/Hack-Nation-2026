@@ -1,0 +1,73 @@
+{
+  "runAt": "2026-11-21T17:26:26.419Z",
+  "node": "v24.8.0",
+  "providerDelayMs": 20,
+  "measurements": [
+    {
+      "concurrent": 1,
+      "requests": 5,
+      "ok": 5,
+      "http429": 0,
+      "otherErrors": 0,
+      "errorPercent": 0,
+      "all": {
+        "medianMs": 125.5,
+        "p95Ms": 181.7
+      },
+      "successful": {
+        "medianMs": 125.5,
+        "p95Ms": 181.7
+      },
+      "rejected429": {
+        "medianMs": null,
+        "p95Ms": null
+      },
+      "geminiCalls": 15,
+      "tavilyCalls": 10
+    },
+    {
+      "concurrent": 3,
+      "requests": 15,
+      "ok": 15,
+      "http429": 0,
+      "otherErrors": 0,
+      "errorPercent": 0,
+      "all": {
+        "medianMs": 142,
+        "p95Ms": 150.6
+      },
+      "successful": {
+        "medianMs": 142,
+        "p95Ms": 150.6
+      },
+      "rejected429": {
+        "medianMs": null,
+        "p95Ms": null
+      },
+      "geminiCalls": 45,
+      "tavilyCalls": 30
+    },
+    {
+      "concurrent": 12,
+      "requests": 60,
+      "ok": 15,
+      "http429": 45,
+      "otherErrors": 0,
+      "errorPercent": 75,
+      "all": {
+        "medianMs": 54.8,
+        "p95Ms": 158.5
+      },
+      "successful": {
+        "medianMs": 157.8,
+        "p95Ms": 173.3
+      },
+      "rejected429": {
+        "medianMs": 54.6,
+        "p95Ms": 59.9
+      },
+      "geminiCalls": 45,
+      "tavilyCalls": 30
+    }
+  ]
+}
