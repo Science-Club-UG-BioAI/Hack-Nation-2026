@@ -1,12 +1,15 @@
 import { defineConfig } from "@playwright/test";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3000";
+const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
 
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   use: {
     baseURL,
-    channel: process.env.PLAYWRIGHT_CHANNEL || "chrome",
+    ...(executablePath
+      ? { launchOptions: { executablePath } }
+      : { channel: process.env.PLAYWRIGHT_CHANNEL || "chrome" }),
     trace: "retain-on-failure",
   },
   webServer: {
