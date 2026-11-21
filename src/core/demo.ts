@@ -16,12 +16,18 @@ export const demoExamples = [
     label: "Brak kontekstu",
     claim: "Wydatki wzrosły dwukrotnie w porównaniu z poprzednim okresem.",
   },
+  {
+    id: "synthetic-graph",
+    label: "Graf dowodowy · dane syntetyczne",
+    claim:
+      "Od 1 grudnia 2026 r. wszyscy pasażerowie autobusów w Brzozowej Dolinie jeżdżą za darmo.",
+  },
 ] as const;
 
 // Curated examples, never substituted for a live provider response.
 export function demoResult(id: string): VerificationResult | null {
   const example = demoExamples.find((e) => e.id === id);
-  if (!example) return null;
+  if (!example || id === "synthetic-graph") return null;
   const checkedAt = "2026-11-21T09:00:00.000Z";
   const base = {
     requestId: `demo-${id}`,

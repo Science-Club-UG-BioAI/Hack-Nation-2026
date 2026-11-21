@@ -11,6 +11,9 @@ export const stageLabels = {
   repairing_citations: "Ponowna kontrola cytatów",
   corroborating: "Uzupełnianie dowodów",
   auditing: "Kontrola wniosku",
+  graph_planning: "Rozpoznawanie twierdzeń składowych",
+  graph_searching: "Wyszukiwanie dowodów i kontrdowodów",
+  graph_validating: "Walidacja dowodów w grafie",
   reused: "Odczyt wyniku z tej sesji",
   waiting: "Oczekiwanie na trwające sprawdzenie",
 } as const;

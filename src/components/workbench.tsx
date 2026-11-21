@@ -82,6 +82,7 @@ export function Workbench() {
               },
               body: JSON.stringify({
                 claim,
+                evidenceGraph: true,
                 ...(statedAt ? { statedAt } : {}),
               }),
               signal: controller.signal,
