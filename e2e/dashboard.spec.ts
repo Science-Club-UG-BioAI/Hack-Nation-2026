@@ -194,7 +194,9 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
     ...baseline,
     mode: "live" as const,
     strength: {
-      description: "Dwie grupy wydawców, treść dotyczy okresu tezy.",
+      summary: "Dwie grupy wydawców, treść dotyczy okresu tezy.",
+      independentGroups: 2,
+      limitations: ["Obie publikacje mogą cytować ten sam komunikat."],
     },
     sources: baseline.sources.map((source, index) =>
       index
@@ -208,16 +210,17 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
             ...source,
             publishedAt: "1999-03-12",
             updatedAt: "1999-03-13",
-            eventPeriod: "marzec 1999",
+            eventPeriod: { from: "1999-03-01", to: "1999-03-31" },
             publisher: "Redakcja archiwum",
-            archiveWarning: "Materiał archiwalny z marca 1999 r.",
+            freshnessWarning: "Materiał archiwalny z marca 1999 r.",
           },
     ),
   };
   await emit(page, { type: "result", result: rich });
   await expect(
     page.getByRole("complementary", { name: "Siła podstawy" }),
-  ).toContainText(rich.strength.description);
+  ).toContainText(rich.strength.summary);
+  await expect(page.getByText(rich.strength.limitations[0])).toBeVisible();
   const evidence = page.locator(".evidence-list");
   await expect(
     evidence.getByText("Wydawca · Redakcja archiwum", { exact: false }),
@@ -230,7 +233,7 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
   await expect(evidence.locator('time[datetime="1999-03-12"]')).toBeVisible();
   await expect(evidence.locator('time[datetime="1999-03-13"]')).toBeVisible();
   await expect(
-    evidence.getByText("marzec 1999", { exact: false }).first(),
+    evidence.getByText("1999-03-01 – 1999-03-31", { exact: false }).first(),
   ).toBeVisible();
   await expect(
     evidence.getByText("Materiał archiwalny z marca 1999 r."),

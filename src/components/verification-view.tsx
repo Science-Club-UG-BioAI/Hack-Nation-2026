@@ -15,20 +15,28 @@ function dateLabel(value: string) {
   }).format(new Date(value));
 }
 
-// Optional presentation fields from KITCHECK track 2. Older responses remain usable.
+// Older snapshots may use the earlier warning names.
 type SourceDetails = Source & {
-  publisher?: string;
-  publisherIsDomain?: boolean;
-  updatedAt?: string | null;
-  eventPeriod?: string;
   archived?: boolean;
   archiveWarning?: string;
 };
 type ResultDetails = VerificationResult & {
-  strength?: string | { description: string };
   archiveWarning?: string;
-  sources: SourceDetails[];
 };
+
+function strengthSummary(
+  value: VerificationResult["strength"] | string | { description: string },
+) {
+  if (!value || typeof value === "string") return value;
+  return "summary" in value ? value.summary : value.description;
+}
+
+function periodLabel(period: Source["eventPeriod"] | string) {
+  if (!period || typeof period === "string") return period;
+  const { from, to } = period;
+  if (from && to) return from === to ? from : `${from} – ${to}`;
+  return from ? `od ${from}` : to ? `do ${to}` : null;
+}
 
 function sourceDomain(url: string) {
   try {
@@ -45,10 +53,7 @@ function sourceDate(value: string | null | undefined) {
 
 export function VerificationView({ result }: { result: ResultDetails }) {
   const [copied, setCopied] = useState(false);
-  const strength =
-    typeof result.strength === "string"
-      ? result.strength
-      : result.strength?.description;
+  const strength = strengthSummary(result.strength);
   const displayedVerdict = result.verdict;
   const displayedLabel = resultLabel(result);
   const sourcesById = new Map<string, SourceDetails>(
@@ -127,6 +132,9 @@ export function VerificationView({ result }: { result: ResultDetails }) {
         <aside className="coverage-panel" aria-label="Siła podstawy">
           <strong>Siła podstawy</strong>
           <p>{strength}</p>
+          {result.strength?.limitations?.map((text) => (
+            <p key={text}>{text}</p>
+          ))}
         </aside>
       )}
       {result.archiveWarning && (
@@ -274,15 +282,18 @@ export function VerificationView({ result }: { result: ResultDetails }) {
                       {source.eventPeriod && (
                         <>
                           <br />
-                          Okres zdarzenia · {source.eventPeriod}
+                          Okres zdarzenia · {periodLabel(source.eventPeriod)}
                         </>
                       )}
                       <br />
                       Pobrano · {dateLabel(source.retrievedAt)}
                     </small>
-                    {(source.archived || source.archiveWarning) && (
+                    {(source.freshnessWarning ||
+                      source.archived ||
+                      source.archiveWarning) && (
                       <small className="source-archive-warning">
-                        {source.archiveWarning ||
+                        {source.freshnessWarning ||
+                          source.archiveWarning ||
                           "Materiał archiwalny. Sprawdź, czy dotyczy okresu tezy."}
                       </small>
                     )}
