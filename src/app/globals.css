@@ -603,7 +603,8 @@ input[type="date"] {
   color: #2557bd;
 }
 .source-partial,
-.source-error {
+.source-error,
+.source-not_configured {
   background: #fff3e0;
   color: #8c5312;
 }
