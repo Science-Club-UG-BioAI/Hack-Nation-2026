@@ -7,7 +7,7 @@ import {
 // A deterministic transport formatter, with no extra model call or changed verdict.
 export function channelReply(result: VerificationResult): ChannelReply {
   const blocks = [
-    "Prawdowid · adapter demonstracyjny Discord (bez wysyłania do Discorda)",
+    "KitCheck · adapter demonstracyjny Discord (bez wysyłania do Discorda)",
     `Twierdzenie: ${result.claim}`,
     ...(result.checkedClaim
       ? [

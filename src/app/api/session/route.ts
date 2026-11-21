@@ -37,7 +37,7 @@ export function GET(request: NextRequest) {
       {
         headers: {
           "Cache-Control": "no-store",
-          "Content-Disposition": 'attachment; filename="prawdowid-sesja.json"',
+          "Content-Disposition": 'attachment; filename="kitcheck-sesja.json"',
         },
       },
     );

@@ -9,7 +9,7 @@ export default function SourcesPage() {
       </a>
       <header className="header">
         <a className="brand" href="/">
-          Prawdowid.
+          KitCheck.
         </a>
         <a href="/">Weryfikacja WWW</a>
       </header>
