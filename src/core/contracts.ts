@@ -56,6 +56,7 @@ export const planSchema = z.object({
   wikipediaQuery: z.string().min(2).max(150).nullable().default(null),
   sejmQuery: z.string().min(3).max(150).nullable().default(null),
   arxivQuery: z.string().min(3).max(150).nullable().default(null),
+  euvsdisinfoQuery: z.string().min(3).max(150).nullable().default(null),
 });
 export const evidenceSchema = z.object({
   id: z.string().min(1).optional(),
@@ -97,13 +98,15 @@ export const auditSchema = z.object({
 export type VerifyInput = z.infer<typeof verifyInputSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
 export type Verdict = z.infer<typeof verdictSchema>;
-export type SourceProvider = "web" | "wikipedia" | "sejm" | "arxiv" | "corpus";
+export type SourceProvider =
+  "web" | "wikipedia" | "sejm" | "arxiv" | "euvsdisinfo" | "corpus";
 export const providerLabels: Record<SourceProvider, string> = {
   corpus: "Korpus audytowalny",
   web: "Wyszukiwanie WWW",
   wikipedia: "Wikipedia API",
   sejm: "Sejm / ELI API",
   arxiv: "arXiv API",
+  euvsdisinfo: "EUvsDisinfo (EEAS)",
 };
 export type SourceMetadata = {
   provider?: SourceProvider;

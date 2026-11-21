@@ -9,6 +9,7 @@ import { AppError } from "@/core/errors";
 import { search } from "./providers";
 import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
+import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
 import type { ProgressListener } from "@/core/progress";
 
 export async function retrieve(
@@ -28,6 +29,11 @@ export async function retrieve(
     ["wikipedia", plan.wikipediaQuery, wikipedia],
     ["sejm", plan.sejmQuery, sejm],
     ["arxiv", plan.arxivQuery, arxiv],
+    [
+      "euvsdisinfo",
+      euvsdisinfoConfigured() ? plan.euvsdisinfoQuery : null,
+      euvsdisinfo,
+    ],
   ] as const) {
     if (query) tasks.push({ provider, run: () => adapter(query, limited) });
     else statuses.push({ provider, status: "not_applicable", documents: 0 });
@@ -111,6 +117,7 @@ export async function retrieve(
     "wikipedia",
     "sejm",
     "arxiv",
+    "euvsdisinfo",
     "web",
   ] as const) {
     const own = results.filter(
