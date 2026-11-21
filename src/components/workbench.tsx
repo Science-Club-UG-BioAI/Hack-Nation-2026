@@ -26,6 +26,7 @@ export function Workbench() {
   const [cancelled, setCancelled] = useState(false);
   const [demo, setDemo] = useState(false);
   const active = useRef<AbortController | null>(null);
+  const claimRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
 
@@ -189,7 +190,7 @@ export function Workbench() {
           HACKNATION <span>PROTOTYP</span>
         </span>
       </header>
-      <main id="workspace">
+      <main id="workspace" tabIndex={-1}>
         <section className="dashboard-intro">
           <div>
             <p className="eyebrow">TWÓJ PANEL WERYFIKACJI</p>
@@ -227,6 +228,7 @@ export function Workbench() {
                 <label htmlFor="claim">Twierdzenie do sprawdzenia</label>
                 <textarea
                   id="claim"
+                  ref={claimRef}
                   name="claim"
                   required
                   minLength={20}
@@ -296,6 +298,7 @@ export function Workbench() {
                       active.current = null;
                       setBusy(false);
                       setCancelled(true);
+                      requestAnimationFrame(() => claimRef.current?.focus());
                     }}
                   >
                     Anuluj analizę

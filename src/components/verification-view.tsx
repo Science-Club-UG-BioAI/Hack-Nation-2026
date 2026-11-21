@@ -3,6 +3,7 @@ import { EvidenceGraphView } from "./evidence-graph-view";
 import {
   resultLabel,
   providerLabels,
+  type Source,
   type VerificationResult,
 } from "@/core/contracts";
 
@@ -14,11 +15,43 @@ function dateLabel(value: string) {
   }).format(new Date(value));
 }
 
-export function VerificationView({ result }: { result: VerificationResult }) {
+// Optional presentation fields from KITCHECK track 2. Older responses remain usable.
+type SourceDetails = Source & {
+  publisher?: string;
+  publisherIsDomain?: boolean;
+  updatedAt?: string | null;
+  eventPeriod?: string;
+  archived?: boolean;
+  archiveWarning?: string;
+};
+type ResultDetails = VerificationResult & {
+  strength?: string | { description: string };
+  archiveWarning?: string;
+  sources: SourceDetails[];
+};
+
+function sourceDomain(url: string) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
+function sourceDate(value: string | null | undefined) {
+  if (!value || Number.isNaN(Date.parse(value))) return null;
+  return <time dateTime={value}>{value.slice(0, 10)}</time>;
+}
+
+export function VerificationView({ result }: { result: ResultDetails }) {
   const [copied, setCopied] = useState(false);
+  const strength =
+    typeof result.strength === "string"
+      ? result.strength
+      : result.strength?.description;
   const displayedVerdict = result.verdict;
   const displayedLabel = resultLabel(result);
-  const sourcesById = new Map(
+  const sourcesById = new Map<string, SourceDetails>(
     result.sources.map((source) => [source.id, source]),
   );
   const citedIds = new Set(result.evidence.map((item) => item.sourceId));
@@ -49,7 +82,7 @@ export function VerificationView({ result }: { result: VerificationResult }) {
   return (
     <>
       <div className={`verdict verdict-${displayedVerdict}`}>
-        <span>
+        <span aria-hidden="true">
           {displayedVerdict === "supported"
             ? "✓"
             : displayedVerdict === "refuted"
@@ -90,6 +123,15 @@ export function VerificationView({ result }: { result: VerificationResult }) {
             })
           : result.explanation}
       </p>
+      {result.status === "completed" && strength && (
+        <aside className="coverage-panel" aria-label="Siła podstawy">
+          <strong>Siła podstawy</strong>
+          <p>{strength}</p>
+        </aside>
+      )}
+      {result.archiveWarning && (
+        <p className="status-notice">{result.archiveWarning}</p>
+      )}
       {result.status === "completed" && result.evidenceGraph && (
         <EvidenceGraphView graph={result.evidenceGraph} />
       )}
@@ -167,9 +209,17 @@ export function VerificationView({ result }: { result: VerificationResult }) {
           <h3>Dowody, które możesz sprawdzić</h3>
           {result.evidence.map((e, index) => {
             const source = sourcesById.get(e.sourceId);
+            const publisher = source?.publisher?.trim();
+            const domain = source ? sourceDomain(source.url) : "";
+            const publisherIsDomain =
+              source?.publisherIsDomain ??
+              Boolean(
+                publisher && /^(?:[a-z0-9-]+\.)+[a-z]{2,}$/i.test(publisher),
+              );
             return (
               <article
                 id={`evidence-${index + 1}`}
+                tabIndex={-1}
                 className="evidence"
                 key={`${e.chunkId}-${index}`}
               >
@@ -203,13 +253,39 @@ export function VerificationView({ result }: { result: VerificationResult }) {
                           ? "Tylko abstrakt"
                           : "Pobrany tekst"}
                       <br />
-                      {new URL(source.url).hostname} ·{" "}
-                      {source.publishedAt
-                        ? `Publikacja: ${source.publishedAt}`
-                        : "Data publikacji nieustalona"}
+                      {publisher && !publisherIsDomain ? (
+                        <>Wydawca · {publisher}</>
+                      ) : (
+                        <>
+                          Domena źródła (zamiast nazwy wydawcy) ·{" "}
+                          {publisher || domain || "brak danych"}
+                        </>
+                      )}
                       <br />
-                      Pobrano: {dateLabel(source.retrievedAt)}
+                      Publikacja ·{" "}
+                      {sourceDate(source.publishedAt) ?? "brak daty"}
+                      {source.updatedAt && (
+                        <>
+                          <br />
+                          Aktualizacja ·{" "}
+                          {sourceDate(source.updatedAt) ?? "brak daty"}
+                        </>
+                      )}
+                      {source.eventPeriod && (
+                        <>
+                          <br />
+                          Okres zdarzenia · {source.eventPeriod}
+                        </>
+                      )}
+                      <br />
+                      Pobrano · {dateLabel(source.retrievedAt)}
                     </small>
+                    {(source.archived || source.archiveWarning) && (
+                      <small className="source-archive-warning">
+                        {source.archiveWarning ||
+                          "Materiał archiwalny. Sprawdź, czy dotyczy okresu tezy."}
+                      </small>
+                    )}
                     {source.notes?.map((note, i) => (
                       <small key={i}>{note}</small>
                     ))}
@@ -262,7 +338,9 @@ export function VerificationView({ result }: { result: VerificationResult }) {
             "Automatyczna analiza znalezionych materiałów"}
         </span>
         <button className="text-button" onClick={() => void copyResult()}>
-          {copied ? "Skopiowano" : "Kopiuj wynik"}
+          <span aria-live="polite">
+            {copied ? "Skopiowano" : "Kopiuj wynik"}
+          </span>
         </button>
       </footer>
     </>

@@ -18,6 +18,7 @@ export function ChannelWorkbench() {
   const [reply, setReply] = useState<ChannelReply | null>(null);
   const [error, setError] = useState<ApiErrorBody | null>(null);
   const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const active = useRef<AbortController | null>(null);
   useEffect(
     () => () => {
@@ -76,6 +77,9 @@ export function ChannelWorkbench() {
 
   return (
     <div className="shell">
+      <a className="skip-link" href="#channel-workspace">
+        Przejdź do formularza wiadomości
+      </a>
       <header className="header">
         <a className="brand" href="/">
           Prawdowid<span className="brand-dot">.</span>
@@ -84,7 +88,7 @@ export function ChannelWorkbench() {
           Weryfikacja WWW
         </a>
       </header>
-      <main className="channel-main">
+      <main id="channel-workspace" tabIndex={-1} className="channel-main">
         <p className="eyebrow">DRUGI KANAŁ · ADAPTER DEMONSTRACYJNY</p>
         <h1>Sprawdzenie przez wiadomość.</h1>
         <p className="lead">
@@ -103,6 +107,8 @@ export function ChannelWorkbench() {
               <label htmlFor="message">Treść wiadomości</label>
               <textarea
                 id="message"
+                ref={inputRef}
+                aria-describedby="message-hint"
                 minLength={20}
                 maxLength={500}
                 required
@@ -111,7 +117,7 @@ export function ChannelWorkbench() {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Np. Polska przystąpiła do NATO 12 marca 1999 roku."
               />
-              <div className="input-meta">
+              <div className="input-meta" id="message-hint">
                 <span>Jedna teza · 20–500 znaków</span>
                 <span>{content.length}/500</span>
               </div>
@@ -148,7 +154,13 @@ export function ChannelWorkbench() {
             {busy && (
               <button
                 className="text-button"
-                onClick={() => active.current?.abort("cancelled")}
+                type="button"
+                onClick={() => {
+                  active.current?.abort("cancelled");
+                  active.current = null;
+                  setBusy(false);
+                  requestAnimationFrame(() => inputRef.current?.focus());
+                }}
               >
                 Anuluj
               </button>
