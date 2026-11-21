@@ -351,3 +351,34 @@ it("preserves the verdict when the graph cannot be rendered", async () => {
   });
   expect(generate).toHaveBeenCalledTimes(3);
 });
+
+it("defaults to the Warsaw calendar day across channels and preserves a supplied date", async () => {
+  vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-21T23:30:00Z"));
+  const session = randomUUID();
+  const withoutDate = await web(request({ claim }, session));
+  expect(await withoutDate.json()).toMatchObject({ statedAt: "2026-11-22" });
+  const blankDate = await discord(
+    request({ content: claim, statedAt: "" }, session),
+  );
+  expect((await blankDate.json()).result).toMatchObject({
+    statedAt: "2026-11-22",
+    delivery: { reused: true },
+  });
+  expect(generate).toHaveBeenCalledTimes(3);
+  expect(vi.mocked(generate).mock.calls[0]?.[2]).toMatchObject({
+    statedAt: "2026-11-22",
+    verificationDate: "2026-11-22",
+  });
+
+  const explicitDate = await web(
+    request({ claim, statedAt: "2026-11-19" }, session),
+  );
+  expect(await explicitDate.json()).toMatchObject({
+    statedAt: "2026-11-19",
+    delivery: { reused: false },
+  });
+  expect(vi.mocked(generate).mock.calls[3]?.[2]).toMatchObject({
+    statedAt: "2026-11-19",
+    verificationDate: "2026-11-22",
+  });
+});

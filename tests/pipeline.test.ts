@@ -856,3 +856,70 @@ describe("verification pipeline", () => {
     expect(web).not.toHaveBeenCalled();
   });
 });
+
+it.each([
+  ["2026-11-11", "supported", "supports"],
+  ["2026-11-21", "refuted", "contradicts"],
+] as const)(
+  "grounds the date-relative holiday claim on %s",
+  async (statedAt, verdict, relation) => {
+    const claim = "Dzisiaj jest dzien niepodleglosci w Polsce.";
+    const finding =
+      "Narodowe Święto Niepodległości w Polsce przypada 11 listopada.";
+    web.mockResolvedValue([
+      {
+        title: "Kalendarz świąt",
+        url: "https://gov.pl/kalendarz",
+        raw_content:
+          "11 listopada obchodzimy w Polsce Narodowe Święto Niepodległości. Dzień ten jest świętem państwowym.",
+      },
+      {
+        title: "Encyklopedia świąt",
+        url: "https://encyklopedia.example.org/kalendarz",
+        raw_content:
+          "Narodowe Święto Niepodległości jest w Polsce obchodzone corocznie 11 listopada.",
+      },
+    ]);
+    model
+      .mockResolvedValueOnce({
+        ...plan,
+        queries: [
+          "Narodowe Święto Niepodległości data",
+          "Polska kalendarz świąt narodowych",
+        ],
+      })
+      .mockResolvedValueOnce({
+        verdict,
+        explanation: finding,
+        limitations: [],
+        evidence: ["q1", "q2"].map((quoteId) => ({
+          quoteId,
+          relation,
+          relevance: "Stała data święta.",
+        })),
+        findings: [{ id: "calendar", text: finding, quoteIds: ["q1", "q2"] }],
+      })
+      .mockResolvedValueOnce({
+        approved: true,
+        reason: "Datę odniesienia porównano ze stałą datą święta.",
+        findingChecks: [
+          { findingId: "calendar", supported: true, atomic: true },
+        ],
+      });
+    const result = await verify(
+      { claim, statedAt },
+      "holiday",
+      new AbortController().signal,
+    );
+    expect(result).toMatchObject({ status: "completed", verdict, statedAt });
+    expect(result.explanation).toContain(
+      `Data odniesienia dla tezy: ${statedAt}.`,
+    );
+    expect(result.explanation).toContain(`${finding} [1] [2]`);
+    expect(result.evidence).toHaveLength(2);
+    for (const [, instruction, payload] of model.mock.calls) {
+      expect(instruction).toContain("„Dziś” i „dzisiaj” oznaczają tę datę");
+      expect(payload).toMatchObject({ claim, statedAt });
+    }
+  },
+);

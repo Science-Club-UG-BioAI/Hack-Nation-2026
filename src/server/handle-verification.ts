@@ -12,6 +12,7 @@ import {
 import { runVerification } from "./verification-service";
 import { channelReply } from "@/core/channel";
 import { notifyRecipient } from "./alerts";
+import { verificationDate } from "@/core/verification-date";
 import { readBoundedText } from "@/server/read-body";
 import { assertSessionActive, writeAudit } from "./audit-store";
 import type { VerifyInput } from "@/core/contracts";
@@ -117,10 +118,14 @@ export async function handleVerification(
         parsed.error.issues[0]?.message ?? "Nieprawidłowa teza.",
         400,
       );
-    const input =
+    const supplied =
       "claim" in parsed.data
         ? parsed.data
         : { claim: parsed.data.content, statedAt: parsed.data.statedAt };
+    const input = {
+      ...supplied,
+      statedAt: supplied.statedAt ?? verificationDate(start),
+    };
     acceptedInput = input;
     assertSessionActive(session);
     requireConfiguration();
