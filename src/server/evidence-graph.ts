@@ -1,11 +1,6 @@
 import { z } from "zod";
-import {
-  planSchema,
-  verdictLabels,
-  type Document,
-  type VerifyInput,
-} from "@/core/contracts";
-import { prepareDocuments, publisherGroup } from "@/core/evidence";
+import { planSchema, verdictLabels, type Document } from "@/core/contracts";
+import { publisherGroup } from "@/core/evidence";
 import { invalidOutput } from "@/core/errors";
 import {
   reviewDecisions,
@@ -14,22 +9,15 @@ import {
   type EvidenceNode,
   type Validation,
 } from "@/core/evidence-graph";
-import type { ProgressListener } from "@/core/progress";
 import { maskPersonalData } from "@/core/privacy";
 import { quotationCatalog } from "@/core/quotations";
-import {
-  guardClaim,
-  guardDocuments,
-  hasControlInstruction,
-} from "@/core/untrusted";
+import { hasControlInstruction } from "@/core/untrusted";
 import {
   claimDecision,
   hashText,
   snapshotHash,
   validateGraph,
 } from "./graph-validation";
-import { generate } from "./providers";
-import { retrieve } from "./retrieval";
 
 const id = z.string().min(1).max(80);
 const note = z.string().min(1).max(600);
@@ -549,238 +537,4 @@ export function finishGraph(draft: Draft, limitations: string[]) {
   if (graph.validation.technical === "invalid")
     throw invalidOutput(["Evidence graph failed technical validation."]);
   return graph;
-}
-
-export async function buildEvidenceGraph(
-  input: VerifyInput,
-  analysisId: string,
-  signal: AbortSignal,
-  deadlineAt: number,
-  onProgress?: ProgressListener,
-) {
-  const original = clean(input.claim);
-  const guarded = guardClaim(original);
-  if (guarded.claim.length < 12 || /^https?:\/\/\S+$/i.test(guarded.claim))
-    throw invalidOutput();
-  const checkedAt = new Date().toISOString();
-  const context = { claim: guarded.claim, statedAt: input.statedAt, checkedAt };
-  const model = <T>(
-    schema: z.ZodType<T>,
-    instruction: string,
-    data: unknown,
-    operationSignal = signal,
-  ) =>
-    generate(schema, instruction, data, operationSignal, {
-      deadlineAt,
-      maxOutputTokens: 6500,
-    });
-  onProgress?.({ type: "stage", stage: "graph_planning" });
-  const claims = claimsSchema.parse(
-    await model(
-      claimsSchema,
-      "Wydziel wszystkie twierdzenia atomowe zachowując podmioty, daty, negacje i zakres. Nie dodawaj faktów. single tylko dla jednej równoważnej tezy; conjunction tylko gdy wszystkie elementy są łącznie równoważne wypowiedzi; dla alternatyw, implikacji i niepewnego podziału użyj complex. Gdy ponad 6 elementów użyj complex i podaj maksymalnie 6. Dla sprawdzalnych twierdzeń podaj dwa różne zapytania: neutralne i celowo szukające kontrdowodów. Dla pozostałych podaj puste queries. Dobierz wikipediaQuery jako nazwę polskiego hasła, sejmQuery jako fragment tytułu aktu i arxivQuery jako angielskie słowa kluczowe, euvsdisinfoQuery jako angielskie słowa kluczowe tylko gdy twierdzenie może dotyczyć prokremlowskiej lub zagranicznej dezinformacji; tylko gdy właściwe, inaczej null.",
-      context,
-    ),
-  );
-  if (
-    (claims.composition === "single" && claims.claims.length !== 1) ||
-    claims.claims.some(
-      (claim) =>
-        untrusted(claim.text) ||
-        (claim.checkable &&
-          (claim.queries.length !== 2 ||
-            claim.queries[0] === claim.queries[1])) ||
-        [
-          ...claim.queries,
-          claim.wikipediaQuery,
-          claim.sejmQuery,
-          claim.arxivQuery,
-          claim.euvsdisinfoQuery,
-        ].some((query) => query && untrusted(query)),
-    )
-  )
-    throw invalidOutput(["Invalid atomic claim or search query."]);
-  onProgress?.({ type: "stage", stage: "graph_searching" });
-  const limitations = new Set<string>();
-  if (guarded.removed)
-    limitations.add(
-      "Analiza obejmuje treść po oddzieleniu poleceń sterujących.",
-    );
-  if (claims.composition === "complex")
-    limitations.add(
-      "Analiza może obejmować najwyżej sześć twierdzeń atomowych.",
-    );
-  const corpora = await Promise.all(
-    claims.claims.flatMap((claim, index) =>
-      claim.checkable
-        ? [
-            (async () => {
-              const found = await retrieve(
-                {
-                  explanation: "Wyszukiwanie twierdzenia atomowego.",
-                  clarificationKind: "none",
-                  outOfScope: false,
-                  needsClarification: false,
-                  ...claim,
-                },
-                signal,
-              );
-              const prepared = guardDocuments(
-                prepareDocuments(
-                  found.hits,
-                  claim.text,
-                  new Date().toISOString(),
-                ),
-              );
-              if (prepared.removed)
-                limitations.add(
-                  "Pominięto fragmenty zawierające rozpoznane polecenia sterujące.",
-                );
-              if (
-                found.statuses.some(
-                  (status) =>
-                    status.status === "partial" || status.status === "error",
-                )
-              ) {
-                if (!prepared.documents.length)
-                  throw invalidOutput(["Atomic retrieval incomplete."]);
-                limitations.add(
-                  "Część usług źródłowych nie dostarczyła danych.",
-                );
-              }
-              return {
-                claimId: `claim-${index + 1}`,
-                documents: prepared.documents,
-              };
-            })(),
-          ]
-        : [],
-    ),
-  );
-  const evaluate = async (
-    sourceCorpora: Corpus[],
-    operationSignal = signal,
-  ) => {
-    const draft = graphDraft(
-      analysisId,
-      checkedAt,
-      original,
-      claims,
-      sourceCorpora,
-    );
-    onProgress?.({ type: "stage", stage: "graph_validating" });
-    const modelClaims = draft.atoms.map(({ id, text, checkable }) => ({
-      id,
-      text,
-      checkable,
-    }));
-    const proposal = draft.quotes.size
-      ? proposalSchema.parse(
-          await model(
-            proposalSchema,
-            "Wybierz trafne cytaty wyłącznie przez quoteId z dokumentów przypisanych do claimId. Uwzględnij dowody w obu kierunkach i pominięty kontekst. IRRELEVANT oznacza odrzucenie cytatu. Nie generuj cytatów ani dokumentów. Podaj wyłącznie krótkie, publicznie sprawdzalne przesłanki i wnioski, bez wewnętrznego toku rozumowania. premiseIds może wskazać wybrany quoteId tej samej tezy lub wcześniejszy wniosek inference-N (N to pozycja w tablicy od 1). Jeśli brak przesłanki nie twórz wniosku. Brak potwierdzenia nie jest zaprzeczeniem. Sprawdź daty, zakres i contentScope.",
-            {
-              ...context,
-              claims: modelClaims,
-              documents: draft.modelDocuments,
-            },
-            operationSignal,
-          ),
-        )
-      : { relations: [], inferences: [] };
-    materialize(draft, proposal);
-    const critique = critiqueSchema.parse(
-      await model(
-        critiqueSchema,
-        "Skontroluj wszystkie elementy ze statusem NEEDS_REVIEW lub NEEDS_MORE_EVIDENCE, podając targetId. Oceń wierność i kompletność podziału, podmiot, daty, aktualność, negację, zakres, brakujący kontekst i niesprawdzone przesłanki. Szukaj pominiętych kontrdowodów w dostarczonych wynikach, w tym cytatów oznaczonych IRRELEVANT. Jeśli pominięcie może zmienić ocenę, oznacz twierdzenie NEEDS_REVIEW. Odrzuć relacje bez uzasadnienia. Brak potwierdzenia nie dowodzi fałszu. W repeats wypisz znane przedruki (from powiela to) używając identyfikatorów dokumentów; nie wymyślaj źródeł. Zgoda modeli nie stanowi dowodu. Podaj ograniczenia, jeśli są istotne. Gdy dodatkowe wyszukiwanie może rozstrzygnąć konkretną lukę, podaj opcjonalne followUp z identyfikatorem twierdzenia atomowego i nowym zapytaniem o potencjalny kontrdowód. W przeciwnym razie pomiń followUp.",
-        {
-          ...context,
-          composition: claims.composition,
-          graph: {
-            ...draft.graph,
-            nodes: draft.graph.nodes.map((node) =>
-              node.id === "claim" ? { ...node, text: guarded.claim } : node,
-            ),
-          },
-          documents: draft.modelDocuments,
-          classifications: proposal.relations,
-        },
-        operationSignal,
-      ),
-    );
-    applyCritique(draft, critique);
-    return { draft, critique };
-  };
-  const first = await evaluate(corpora);
-  const followUp = first.critique.followUp;
-  const firstGraph = finishGraph(first.draft, [
-    ...limitations,
-    ...first.critique.limitations.map(clean),
-  ]);
-  if (!followUp) return firstGraph;
-  const atomIndex = first.draft.atoms.findIndex(
-    (atom) => atom.id === followUp.claimId && atom.checkable,
-  );
-  if (atomIndex < 0 || untrusted(followUp.query))
-    throw invalidOutput(["Invalid follow-up request."]);
-  const claim = claims.claims[atomIndex];
-  if (
-    claim.queries.includes(followUp.query) ||
-    deadlineAt - Date.now() < 22_000
-  )
-    return firstGraph;
-
-  // One optional counter-search and one re-audit, within the original deadline.
-  const roundSignal = AbortSignal.any([signal, AbortSignal.timeout(8_000)]);
-  try {
-    onProgress?.({ type: "stage", stage: "graph_searching" });
-    const found = await retrieve(
-      {
-        ...claim,
-        queries: [followUp.query],
-        clarificationKind: "none",
-        explanation: "Dodatkowe wyszukiwanie kontrdowodów.",
-        needsClarification: false,
-        outOfScope: false,
-        wikipediaQuery: null,
-        sejmQuery: null,
-        arxivQuery: null,
-        euvsdisinfoQuery: null,
-      },
-      roundSignal,
-    );
-    const fresh = guardDocuments(
-      prepareDocuments(found.hits, claim.text, new Date().toISOString()),
-    ).documents;
-    const match = corpora.find(
-      (corpus) => corpus.claimId === followUp.claimId,
-    )!;
-    const known = new Set(
-      match.documents.map((doc) =>
-        JSON.stringify([doc.url, snapshotHash(doc)]),
-      ),
-    );
-    const additions = fresh
-      .filter((doc) => !known.has(JSON.stringify([doc.url, snapshotHash(doc)])))
-      .slice(0, 4);
-    if (!additions.length) return firstGraph;
-    const revised = await evaluate(
-      corpora.map((corpus) =>
-        corpus === match
-          ? { ...corpus, documents: [...corpus.documents, ...additions] }
-          : corpus,
-      ),
-      AbortSignal.any([
-        signal,
-        AbortSignal.timeout(Math.max(1, deadlineAt - Date.now() - 1_000)),
-      ]),
-    );
-    return finishGraph(revised.draft, [
-      ...limitations,
-      ...revised.critique.limitations.map(clean),
-    ]);
-  } catch {
-    signal.throwIfAborted();
-    return firstGraph;
-  }
 }

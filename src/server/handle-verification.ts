@@ -123,7 +123,6 @@ export async function handleVerification(
       signal,
       onProgress,
       channel,
-      deadlineAt,
     );
     const delivered = { ...result, delivery: { channel, reused } };
     signal.throwIfAborted();

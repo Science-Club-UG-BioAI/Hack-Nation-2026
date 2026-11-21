@@ -2,8 +2,7 @@ import { createHash } from "node:crypto";
 import type { VerificationResult, VerifyInput } from "@/core/contracts";
 import { acquire, forgetSessionLimits } from "./limits";
 import { verify } from "./verify";
-import { buildEvidenceGraph } from "./evidence-graph";
-import { numberSetting } from "./config";
+import { projectVerificationGraph } from "./verification-graph";
 import { assertSessionActive } from "./audit-store";
 import type { ProgressListener } from "@/core/progress";
 
@@ -21,7 +20,6 @@ type State = {
     string,
     {
       session: string;
-      wantsGraph: boolean;
       channels: Set<string>;
       controller: AbortController;
       promise: Promise<VerificationResult>;
@@ -55,7 +53,7 @@ function keyFor(input: VerifyInput, session: string) {
     .update(
       JSON.stringify([
         "reasoned-guard-v2",
-        "findings-v1-p02-graph",
+        "findings-v1-graph-projection",
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,
@@ -86,7 +84,6 @@ export async function runVerification(
   signal: AbortSignal,
   onProgress?: ProgressListener,
   channel: "web" | "discord_demo" = "web",
-  deadlineAt = Date.now() + numberSetting("VERIFY_TIMEOUT_MS", 60_000, 60_000),
 ): Promise<{ result: VerificationResult; reused: boolean }> {
   signal.throwIfAborted();
   assertSessionActive(session);
@@ -97,7 +94,14 @@ export async function runVerification(
       const { evidenceGraph: _graph, graphStatus: _status, ...legacy } = result;
       return { result: structuredClone(legacy), reused };
     }
-    return { result: structuredClone(result), reused };
+    return {
+      result: structuredClone(
+        result.status === "completed"
+          ? result
+          : { ...result, graphStatus: "unavailable" },
+      ),
+      reused,
+    };
   };
   const cached = state.cache.get(key);
   const previous =
@@ -111,97 +115,47 @@ export async function runVerification(
     clearTimeout(cached.timer);
     state.cache.delete(key);
   }
-  if (
-    previous &&
-    (!wantsGraph ||
-      previous.status === "unable_to_verify" ||
-      previous.graphStatus === "ready" ||
-      previous.graphStatus === "unavailable" ||
-      previous.status === "out_of_scope" ||
-      previous.status === "needs_clarification")
-  ) {
+  if (previous) {
     cached!.channels.add(channel);
     onProgress?.({ type: "stage", stage: "reused" });
-    return deliver(
-      wantsGraph && !previous.graphStatus
-        ? { ...previous, graphStatus: "unavailable" }
-        : previous,
-      true,
-    );
+    return deliver(previous, true);
   }
   const pending = state.pending.get(key);
   if (pending) {
     pending.channels.add(channel);
     onProgress?.({ type: "stage", stage: "waiting" });
-    const shared = await waiting(pending.promise, signal);
-    if (!wantsGraph || pending.wantsGraph) return deliver(shared, true);
-    if (shared.status === "unable_to_verify")
-      return deliver({ ...shared, graphStatus: "failed" }, true);
-    return runVerification(
-      input,
-      session,
-      requestId,
-      signal,
-      onProgress,
-      channel,
-      deadlineAt,
-    );
+    return deliver(await waiting(pending.promise, signal), true);
   }
-  let release: () => void;
-  try {
-    release = acquire(session);
-  } catch (error) {
-    if (previous) return deliver({ ...previous, graphStatus: "failed" }, true);
-    throw error;
-  }
+  const release = acquire(session);
   const controller = new AbortController();
   const combined = AbortSignal.any([signal, controller.signal]);
-  const channels = previous && cached ? cached.channels : new Set<string>();
-  channels.add(channel);
-  const graphController = new AbortController();
-  const graphDeadline = deadlineAt - 2_500;
-  const graph = wantsGraph
-    ? buildEvidenceGraph(
-        input,
-        previous?.requestId ?? requestId,
-        AbortSignal.any([
-          combined,
-          graphController.signal,
-          AbortSignal.timeout(Math.max(1, graphDeadline - Date.now())),
-        ]),
-        graphDeadline,
-        onProgress,
-      ).catch((error: unknown) => {
-        console.info(
+  const channels = new Set<string>([channel]);
+  // Store the projection with the shared result so either channel can request it
+  // later without repeating the audited analysis or retaining raw documents.
+  const task = verify(
+    input,
+    requestId,
+    combined,
+    onProgress,
+    (result, documents) => {
+      try {
+        if (wantsGraph)
+          onProgress?.({ type: "stage", stage: "graph_validating" });
+        const evidenceGraph = projectVerificationGraph(result, documents);
+        return { evidenceGraph, graphStatus: "ready" };
+      } catch (error) {
+        console.warn(
           JSON.stringify({
             requestId,
             event: "evidence_graph_failed",
             errorType: error instanceof Error ? error.name : "UnknownError",
           }),
         );
-        return undefined;
-      })
-    : undefined;
-  const legacyTask = previous
-    ? Promise.resolve(previous)
-    : verify(input, requestId, combined, onProgress);
-  const task = legacyTask
-    .then(async (legacy): Promise<VerificationResult> => {
-      let result = legacy;
-      if (graph) {
-        if (
-          legacy.status === "out_of_scope" ||
-          legacy.status === "needs_clarification"
-        ) {
-          graphController.abort();
-          result = { ...legacy, graphStatus: "unavailable" };
-        } else {
-          const evidenceGraph = await graph;
-          result = evidenceGraph
-            ? { ...legacy, evidenceGraph, graphStatus: "ready" }
-            : { ...legacy, graphStatus: "failed" };
-        }
+        return { graphStatus: "failed" };
       }
+    },
+  )
+    .then((result) => {
       combined.throwIfAborted();
       assertSessionActive(session);
       // Preserve the same attempt for the other channel, including failed audits.
@@ -227,7 +181,6 @@ export async function runVerification(
       return result;
     })
     .finally(() => {
-      graphController.abort();
       state.pending.delete(key);
       release();
     });
@@ -235,7 +188,6 @@ export async function runVerification(
     session,
     controller,
     promise: task,
-    wantsGraph,
     channels,
   });
   return deliver(await task, false);

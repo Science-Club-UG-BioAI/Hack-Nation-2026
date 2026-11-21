@@ -42,6 +42,10 @@ export async function verify(
   requestId: string,
   signal: AbortSignal,
   onProgress?: ProgressListener,
+  presentCompleted?: (
+    result: Extract<VerificationResult, { status: "completed" }>,
+    documents: Document[],
+  ) => Pick<VerificationResult, "evidenceGraph" | "graphStatus">,
 ): Promise<VerificationResult> {
   const masked = maskPersonalData(input.claim);
   input = { ...input, claim: masked.text };
@@ -132,10 +136,10 @@ export async function verify(
       }),
     );
   };
-  const finish = (
+  const completedResult = (
     assessment: Assessment,
     documents: Document[],
-  ): VerificationResult => {
+  ): Extract<VerificationResult, { status: "completed" }> => {
     signal.throwIfAborted();
     return {
       ...assessment,
@@ -155,6 +159,10 @@ export async function verify(
       sources: documents.map(({ chunks: _chunks, ...source }) => source),
     };
   };
+  const finish = (assessment: Assessment, documents: Document[]) => {
+    const result = completedResult(assessment, documents);
+    return { ...result, ...presentCompleted?.(result, documents) };
+  };
   const simple = (
     verdict: "insufficient" | "not_checkable",
     explanation: string,
@@ -166,7 +174,7 @@ export async function verify(
     documents: Document[] = [],
     limitations: string[] = [],
   ): VerificationResult => ({
-    ...finish(
+    ...completedResult(
       { verdict: "insufficient", explanation, limitations, evidence: [] },
       documents,
     ),

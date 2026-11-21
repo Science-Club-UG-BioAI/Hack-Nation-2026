@@ -511,9 +511,9 @@ Walidacja: **206** testów jednostkowych/integracyjnych, **19** przeglądarkowyc
 
 Na ekranie weryfikacji wybierz **Graf dowodowy · dane syntetyczne**, aby
 przejść od werdyktu do przesłanek, cytatu i dokumentu bez kluczy API.
-Główny werdykt pozostaje wynikiem wspólnej analizy WWW i adaptera. Graf jest
-dodatkową analizą; ewentualna różnica ocen jest oznaczona osobno. Awaria grafu
-nie zastępuje ani nie usuwa wyniku sprawdzenia całego twierdzenia.
+Graf przedstawia opublikowane ustalenia i przypisane do nich cytaty.
+Korzysta z tego samego werdyktu co panel. Powstaje bez dodatkowego
+wyszukiwania i wywołań modelu.
 
 Klienci API mogą zażądać grafu, dodając `"evidenceGraph": true` do treści
 istniejącego żądania `POST /api/verify`. Wynik grafu jest dostępny w

@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { generate } from "@/server/providers";
+import { critiqueSchema } from "@/server/evidence-graph";
 
 const schema = z.object({ ok: z.boolean() });
 const completed = () =>
@@ -84,6 +85,53 @@ it("keeps the API key in headers and disables stored conversation state", async 
   expect(options.body).not.toContain("private-test-key");
   expect(JSON.parse(options.body).store).toBe(false);
 });
+it("compacts the Gemini graph critic schema and keeps local response limits", async () => {
+  const review = {
+    targetId: "claim",
+    decision: "ACCEPT",
+    reason: "Sprawdzono.",
+  };
+  const fetcher = vi.fn().mockResolvedValue(
+    Response.json({
+      status: "completed",
+      steps: [
+        {
+          type: "model_output",
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                reviews: Array(101).fill(review),
+                repeats: [],
+                limitations: [],
+              }),
+            },
+          ],
+        },
+      ],
+    }),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  await expect(
+    generate(critiqueSchema, "Review graph", {}, new AbortController().signal, {
+      deadlineAt: Date.now() + 5_000,
+      maxOutputTokens: 6500,
+      compactResponseSchema: true,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_MODEL_OUTPUT" });
+  const outgoing = JSON.parse(fetcher.mock.calls[0][1].body).response_format
+    .schema;
+  expect(outgoing.properties.reviews).toMatchObject({
+    type: "array",
+    items: {
+      properties: {
+        decision: { enum: expect.arrayContaining(["ACCEPT", "REJECT"]) },
+      },
+    },
+  });
+  expect(JSON.stringify(outgoing)).not.toMatch(/"maxItems"|"maxLength"/);
+});
+
 it("rejects a non-completed interaction even if it contains plausible JSON", async () => {
   vi.stubGlobal(
     "fetch",

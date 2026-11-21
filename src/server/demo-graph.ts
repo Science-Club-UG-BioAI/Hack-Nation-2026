@@ -1,10 +1,5 @@
 import type { Document, VerificationResult } from "@/core/contracts";
-import {
-  applyCritique,
-  finishGraph,
-  graphDraft,
-  materialize,
-} from "./evidence-graph";
+import { projectVerificationGraph } from "./verification-graph";
 
 export const syntheticId = "synthetic-graph";
 export function syntheticGraphDemo(): VerificationResult {
@@ -44,82 +39,41 @@ export function syntheticGraphDemo(): VerificationResult {
       ],
     },
   ];
-  const analysisDate = "2026-12-03T11:00:00.000Z";
-  const draft = graphDraft(
-    syntheticId,
-    analysisDate,
-    claim,
+  const findings = [
     {
-      composition: "single",
-      claims: [
-        {
-          text: claim,
-          checkable: true,
-          queries: [],
-          wikipediaQuery: null,
-          sejmQuery: null,
-          arxivQuery: null,
-          euvsdisinfoQuery: null,
-        },
-      ],
+      id: "free-rides",
+      text: "Uchwała nie wprowadza darmowych przejazdów dla wszystkich.",
+      evidenceIds: ["example-1", "example-2"],
     },
-    [{ claimId: "claim-1", documents }],
-    true,
-  );
-  materialize(draft, {
-    relations: [
-      {
-        quoteId: "document-1-q1",
-        claimId: "claim-1",
-        type: "CONTRADICTS",
-        reason: "Uchwała ogranicza ulgę do wskazanej grupy.",
-      },
-      {
-        quoteId: "document-2-q1",
-        claimId: "claim-1",
-        type: "CONTRADICTS",
-        reason:
-          "Po rozpoczęciu programu część pasażerów nadal kupowała bilety.",
-      },
-    ],
-    inferences: [
-      {
-        claimId: "claim-1",
-        type: "CONTRADICTS",
-        premiseIds: ["document-1-q1"],
-        premises:
-          "Bezpłatny przejazd przyznano wyłącznie dzieciom do lat siedmiu.",
-        text: "Uchwała nie wprowadza darmowych przejazdów dla wszystkich.",
-        reason: "Zakres uprawnionych nie obejmuje wszystkich pasażerów.",
-      },
-    ],
-  });
-  applyCritique(draft, {
-    reviews: [...draft.graph.nodes, ...draft.graph.edges]
-      .filter((item) => item.validation.semantic === "NEEDS_REVIEW")
-      .map((item) => ({
-        targetId: item.id,
-        decision: "ACCEPT",
-        reason: "Przykładowa kontrola danych syntetycznych.",
-      })),
-    repeats: [],
-    limitations,
-  });
-  const evidenceGraph = finishGraph(draft, limitations);
-  return {
+  ];
+  const result: Extract<VerificationResult, { status: "completed" }> = {
     requestId: syntheticId,
     mode: "demo",
     status: "completed",
     claim,
     statedAt: null,
-    checkedAt: analysisDate,
+    checkedAt: "2026-12-03T11:00:00.000Z",
     verdict: "refuted",
-    explanation:
-      "Fikcyjna uchwała przyznaje bezpłatne przejazdy wyłącznie dzieciom do lat siedmiu.",
+    citationContract: "findings-v1",
+    explanation: `${findings[0].text} [1] [2]`,
     limitations,
+    findings,
     sources: documents.map(({ chunks: _chunks, ...source }) => source),
-    evidence: [],
+    evidence: documents.map((source, index) => ({
+      id: `example-${index + 1}`,
+      sourceId: source.id,
+      chunkId: source.chunks[0].id,
+      quote: source.chunks[0].text,
+      relation: "contradicts",
+      relevance:
+        index === 0
+          ? "Uchwała ogranicza ulgę do wskazanej grupy."
+          : "Po rozpoczęciu programu część pasażerów nadal kupowała bilety.",
+    })),
+  };
+  return {
+    ...result,
     graphStatus: "ready",
-    evidenceGraph,
+    evidenceGraph: projectVerificationGraph(result, documents),
   };
 }

@@ -252,102 +252,88 @@ it("applies the same cross-origin protection in the second channel", async () =>
   expect(generate).not.toHaveBeenCalled();
 });
 
-it("adds a verified graph to a shared result and replays it without calling providers", async () => {
+it("projects the same supported result and citations into the graph without extra provider calls", async () => {
   const session = randomUUID();
   const channel = await discord(request({ content: claim }, session));
-  const legacy = (await channel.json()).result;
-  const original = vi.mocked(generate).getMockImplementation()!;
-  const { proposalSchema, critiqueSchema } =
-    await import("@/server/evidence-graph");
-  vi.mocked(generate).mockImplementation(async (...args) => {
-    const [schema, instruction, payload] = args;
-    if (instruction.startsWith("Wydziel wszystkie"))
-      return {
-        composition: "single",
-        claims: [
-          {
-            text: claim,
-            checkable: true,
-            queries: ["NATO accession date", "NATO evidence alternative"],
-            wikipediaQuery: null,
-            sejmQuery: null,
-            arxivQuery: null,
-          },
-        ],
-      } as never;
-    if (schema === proposalSchema)
-      return {
-        relations: ["document-1-q1", "document-2-q1"].map((quoteId) => ({
-          quoteId,
-          claimId: "claim-1",
-          type: "SUPPORTS",
-          reason: "Źródło podaje datę akcesji.",
-        })),
-        inferences: [],
-      } as never;
-    if (schema === critiqueSchema) {
-      const { graph } = payload as {
-        graph: import("@/core/evidence-graph").EvidenceGraph;
-      };
-      return {
-        reviews: [...graph.nodes, ...graph.edges]
-          .filter((item) => item.validation.semantic === "NEEDS_REVIEW")
-          .map((item) => ({
-            targetId: item.id,
-            decision: "ACCEPT",
-            reason: "Poprawne odwołanie do daty.",
-          })),
-        repeats: [],
-        limitations: [],
-      } as never;
-    }
-    return original(...args);
-  });
-  const graphResponse = await web(
-    request({ claim, evidenceGraph: true }, session),
-  );
-  expect(graphResponse.status).toBe(200);
-  const result = await graphResponse.json();
+  const published = (await channel.json()).result;
+  const response = await web(request({ claim, evidenceGraph: true }, session));
+  expect(response.status).toBe(200);
+  const result = await response.json();
   expect(result).toMatchObject({
-    requestId: legacy.requestId,
-    citationContract: legacy.citationContract,
-    findings: legacy.findings,
-    explanation: legacy.explanation,
-    verdict: legacy.verdict,
+    requestId: published.requestId,
+    verdict: "supported",
+    findings: published.findings,
+    evidence: published.evidence,
+    explanation: published.explanation,
     graphStatus: "ready",
-    evidenceGraph: {
-      analysisId: legacy.requestId,
-      synthetic: false,
-      validation: { technical: "valid" },
-      nodes: expect.arrayContaining([
-        expect.objectContaining({ id: "verdict", verdict: "supported" }),
-      ]),
-    },
   });
+  const graph: import("@/core/evidence-graph").EvidenceGraph =
+    result.evidenceGraph;
+  expect(graph.validation.technical).toBe("valid");
+  expect(graph.nodes.filter((node) => node.type === "VERDICT")).toEqual([
+    expect.objectContaining({
+      id: "verdict",
+      verdict: "supported",
+      text: published.explanation,
+    }),
+  ]);
+  for (const [index, item] of published.evidence.entries()) {
+    const evidence = graph.nodes.find(
+      (node) => node.id === `evidence-${index + 1}`,
+    );
+    expect(evidence).toMatchObject({ type: "EVIDENCE", text: item.quote });
+    expect(graph.edges).toContainEqual(
+      expect.objectContaining({
+        from: evidence?.id,
+        to: `document-${item.sourceId}`,
+        type: "EXTRACTED_FROM",
+      }),
+    );
+  }
+  for (const [index, finding] of published.findings.entries()) {
+    const from = `finding-${index + 1}`;
+    expect(graph.nodes).toContainEqual(
+      expect.objectContaining({
+        id: from,
+        type: "INFERENCE",
+        text: finding.text,
+      }),
+    );
+    for (const evidenceId of finding.evidenceIds) {
+      const position = published.evidence.findIndex(
+        (item: { id: string }) => item.id === evidenceId,
+      );
+      expect(graph.edges).toContainEqual(
+        expect.objectContaining({
+          from,
+          to: `evidence-${position + 1}`,
+          type: "DEPENDS_ON",
+        }),
+      );
+    }
+  }
   const replay = await web(request({ claim, evidenceGraph: true }, session));
   expect(await replay.json()).toMatchObject({
-    evidenceGraph: result.evidenceGraph,
+    evidenceGraph: graph,
     delivery: { reused: true },
   });
   const plain = await discord(request({ content: claim }, session));
   expect((await plain.json()).result).not.toHaveProperty("evidenceGraph");
-  expect(generate).toHaveBeenCalledTimes(6);
-  expect(search).toHaveBeenCalledTimes(4);
+  expect(generate).toHaveBeenCalledTimes(3);
+  expect(search).toHaveBeenCalledTimes(2);
 });
 
-it("returns the existing result when graph generation fails", async () => {
-  const session = randomUUID();
-  const original = vi.mocked(generate).getMockImplementation()!;
-  vi.mocked(generate).mockImplementation(async (...args) => {
-    if (args[1].startsWith("Wydziel wszystkie"))
-      throw new Error("Graph provider failure");
-    return original(...args);
+it("preserves the verdict when the graph cannot be rendered", async () => {
+  const projection = await import("@/server/verification-graph");
+  vi.spyOn(projection, "projectVerificationGraph").mockImplementation(() => {
+    throw new Error("Invalid graph");
   });
-  const response = await web(request({ claim, evidenceGraph: true }, session));
+  const response = await web(request({ claim, evidenceGraph: true }));
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchObject({
     status: "completed",
     verdict: "supported",
     graphStatus: "failed",
   });
+  expect(generate).toHaveBeenCalledTimes(3);
 });

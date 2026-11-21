@@ -49,7 +49,11 @@ export async function generate<T>(
   instruction: string,
   input: unknown,
   signal: AbortSignal,
-  options?: { deadlineAt: number; maxOutputTokens: number },
+  options?: {
+    deadlineAt: number;
+    maxOutputTokens: number;
+    compactResponseSchema?: boolean;
+  },
 ): Promise<T> {
   const response = await geminiResponse(
     {
@@ -65,7 +69,16 @@ export async function generate<T>(
       response_format: {
         type: "text",
         mime_type: "application/json",
-        schema: z.toJSONSchema(schema),
+        schema: z.toJSONSchema(schema, {
+          override: ({ jsonSchema }) => {
+            // Gemini can reject bounded schemas with too many grammar states.
+            // Keep the original field and array limits in schema.parse below.
+            if (options?.compactResponseSchema) {
+              delete jsonSchema.maxItems;
+              delete jsonSchema.maxLength;
+            }
+          },
+        }),
       },
     },
     signal,

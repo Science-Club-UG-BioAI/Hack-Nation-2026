@@ -1,39 +1,35 @@
 import { expect, test } from "@playwright/test";
 
-for (const outcome of [
-  { status: "completed", verdict: "supported", label: "Potwierdzone" },
-  {
-    status: "unable_to_verify",
-    verdict: null,
-    label: "Nie można ukończyć sprawdzenia",
-  },
-]) {
-  test(`optional graph does not replace the shared ${outcome.status} outcome`, async ({
-    page,
-  }) => {
-    await page.route("**/api/demo?id=synthetic-graph", async (route) => {
-      const response = await route.fetch();
-      const result = await response.json();
-      await route.fulfill({
-        json: { ...result, status: outcome.status, verdict: outcome.verdict },
-      });
+test("graf pokazuje ten sam werdykt co panel", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: /Graf dowodowy · dane syntetyczne/i })
+    .click();
+  const heading = page.locator("#result-title");
+  await expect(heading).toHaveText("Fałszywe");
+  const graph = page.getByRole("region", { name: "Graf dowodowy" });
+  await expect(graph.getByText("Fałszywe", { exact: true })).toBeVisible();
+});
+
+test("błąd sprawdzenia pokazuje status obsługi", async ({ page }) => {
+  await page.route("**/api/demo?id=synthetic-graph", async (route) => {
+    const response = await route.fetch();
+    const result = await response.json();
+    await route.fulfill({
+      json: { ...result, status: "unable_to_verify", verdict: null },
     });
-    await page.goto("/");
-    await page
-      .getByRole("button", { name: /Graf dowodowy · dane syntetyczne/i })
-      .click();
-    await expect(page.locator("#result-title")).toHaveText(outcome.label);
-    await expect(
-      page.getByText("Dodatkowa ocena grafu", { exact: true }),
-    ).toBeVisible();
-    if (outcome.verdict === null)
-      await expect(
-        page.getByText(
-          "To status obsługi zgłoszenia. Nie wydano werdyktu o prawdziwości.",
-        ),
-      ).toBeVisible();
   });
-}
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: /Graf dowodowy · dane syntetyczne/i })
+    .click();
+  await expect(page.locator("#result-title")).toHaveText(
+    "Nie można ukończyć sprawdzenia",
+  );
+  await expect(page.getByRole("region", { name: "Graf dowodowy" })).toHaveCount(
+    0,
+  );
+});
 
 test("syntetyczny graf pozwala przejść od werdyktu do dokumentu i wyeksportować graf", async ({
   page,
@@ -49,9 +45,6 @@ test("syntetyczny graf pozwala przejść od werdyktu do dokumentu i wyeksportowa
   await expect(graph.locator("canvas").first()).toBeAttached();
   const next = graph.getByLabel("Przejdź do elementu");
   await graph
-    .getByRole("button", { name: /Wyprowadzono z · Fałszywe/ })
-    .click();
-  await graph
     .getByRole("button", { name: /Wyprowadzono z · Uchwała nie wprowadza/ })
     .click();
   await expect(graph.getByText("Przesłanki", { exact: true })).toBeVisible();
@@ -66,7 +59,7 @@ test("syntetyczny graf pozwala przejść od werdyktu do dokumentu i wyeksportowa
     .getByText("Pokaż zapisany fragment źródła", { exact: true })
     .click();
   await expect(graph.locator("mark")).toContainText("wyłącznie dzieciom");
-  await next.selectOption("document-1");
+  await next.selectOption("document-demo-source-1");
   await expect(graph.getByText(/SHA-256 migawki/)).toBeVisible();
   await graph.getByRole("button", { name: "Dopasuj widok" }).click();
   const [json] = await Promise.all([
@@ -94,7 +87,7 @@ test("graf na telefonie mieści się w ekranie i pozwala filtrować elementy", a
   await graph.getByLabel("Węzły").selectOption("DOCUMENT");
   const picker = graph.getByLabel("Przejdź do elementu");
   await expect(picker.locator("option")).toHaveCount(3);
-  await picker.selectOption("document-1");
+  await picker.selectOption("document-demo-source-1");
   await expect(graph.getByText(/SHA-256 migawki/)).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),

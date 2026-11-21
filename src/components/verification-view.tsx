@@ -3,7 +3,6 @@ import { EvidenceGraphView } from "./evidence-graph-view";
 import {
   resultLabel,
   providerLabels,
-  verdictLabels,
   type VerificationResult,
 } from "@/core/contracts";
 
@@ -17,14 +16,8 @@ function dateLabel(value: string) {
 
 export function VerificationView({ result }: { result: VerificationResult }) {
   const [copied, setCopied] = useState(false);
-  const graphDecision = result.evidenceGraph?.nodes.find(
-    (node) => node.id === "verdict" && node.type === "VERDICT",
-  );
-  const graphVerdict =
-    graphDecision?.type === "VERDICT" ? graphDecision.verdict : undefined;
   const displayedVerdict = result.verdict;
   const displayedLabel = resultLabel(result);
-  const differs = graphVerdict !== undefined && graphVerdict !== result.verdict;
   const sourcesById = new Map(
     result.sources.map((source) => [source.id, source]),
   );
@@ -41,9 +34,6 @@ export function VerificationView({ result }: { result: VerificationResult }) {
             : "Automatyczna analiza znalezionych materiałów",
           result.claim,
           displayedLabel,
-          ...(differs
-            ? [`Dodatkowa ocena grafu · ${verdictLabels[graphVerdict!]}`]
-            : []),
           result.explanation,
           ...result.limitations,
           ...result.sources.map((s) => `${s.title}: ${s.url}`),
@@ -100,13 +90,7 @@ export function VerificationView({ result }: { result: VerificationResult }) {
             })
           : result.explanation}
       </p>
-      {differs && (
-        <p>
-          <strong>Dodatkowa ocena grafu</strong> ·{" "}
-          {verdictLabels[graphVerdict!]}
-        </p>
-      )}
-      {result.evidenceGraph && (
+      {result.status === "completed" && result.evidenceGraph && (
         <EvidenceGraphView graph={result.evidenceGraph} />
       )}
       {result.graphStatus === "failed" && (
@@ -115,12 +99,13 @@ export function VerificationView({ result }: { result: VerificationResult }) {
           całego twierdzenia.
         </p>
       )}
-      {result.graphStatus === "unavailable" && (
-        <p className="status-notice">
-          Graf pojawi się po sprawdzeniu doprecyzowanego twierdzenia w
-          obsługiwanym zakresie.
-        </p>
-      )}
+      {result.graphStatus === "unavailable" &&
+        result.status !== "unable_to_verify" && (
+          <p className="status-notice">
+            Graf pojawi się po sprawdzeniu doprecyzowanego twierdzenia w
+            obsługiwanym zakresie.
+          </p>
+        )}
 
       {result.status !== "completed" && (
         <p className="status-notice">
