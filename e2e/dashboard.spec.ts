@@ -17,11 +17,17 @@ async function openStreamFixture(page: Page) {
       if (String(input) !== "/api/verify") return original(input, options);
       const body = new ReadableStream<Uint8Array>({
         start(controller) {
-          window.pushVerificationFixture = (event) =>
+          window.pushVerificationFixture = (event) => {
             controller.enqueue(
               new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`),
             );
-          window.endVerificationFixture = () => controller.close();
+            if (event.type === "result" || event.type === "error")
+              delete (window as Partial<Window>).pushVerificationFixture;
+          };
+          window.endVerificationFixture = () => {
+            delete (window as Partial<Window>).pushVerificationFixture;
+            controller.close();
+          };
           options?.signal?.addEventListener(
             "abort",
             () => controller.error(new DOMException("Aborted", "AbortError")),
@@ -177,4 +183,114 @@ test("dashboard has no horizontal overflow at phone, tablet and desktop widths",
     page.getByRole("heading", { name: "Przykład demonstracyjny" }),
   ).toBeVisible();
   await expect(page.locator(".step-done")).toHaveCount(0);
+});
+
+test("shows optional evidence metadata and keeps a clear fallback for older results", async ({
+  page,
+}) => {
+  await openStreamFixture(page);
+  const baseline = demoResult("nato")!;
+  const rich = {
+    ...baseline,
+    mode: "live" as const,
+    strength: {
+      description: "Dwie grupy wydawców, treść dotyczy okresu tezy.",
+    },
+    sources: baseline.sources.map((source, index) =>
+      index
+        ? {
+            ...source,
+            publishedAt: null,
+            publisher: "gov.pl",
+            publisherIsDomain: true,
+          }
+        : {
+            ...source,
+            publishedAt: "1999-03-12",
+            updatedAt: "1999-03-13",
+            eventPeriod: "marzec 1999",
+            publisher: "Redakcja archiwum",
+            archiveWarning: "Materiał archiwalny z marca 1999 r.",
+          },
+    ),
+  };
+  await emit(page, { type: "result", result: rich });
+  await expect(
+    page.getByRole("complementary", { name: "Siła podstawy" }),
+  ).toContainText(rich.strength.description);
+  const evidence = page.locator(".evidence-list");
+  await expect(
+    evidence.getByText("Wydawca · Redakcja archiwum", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    evidence.getByText("Domena źródła (zamiast nazwy wydawcy) · gov.pl", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(evidence.locator('time[datetime="1999-03-12"]')).toBeVisible();
+  await expect(evidence.locator('time[datetime="1999-03-13"]')).toBeVisible();
+  await expect(
+    evidence.getByText("marzec 1999", { exact: false }).first(),
+  ).toBeVisible();
+  await expect(
+    evidence.getByText("Materiał archiwalny z marca 1999 r."),
+  ).toBeVisible();
+  await expect(
+    evidence.getByText("Publikacja · brak daty", { exact: false }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
+  await expect(
+    page.getByRole("button", { name: "Anuluj analizę" }),
+  ).toBeVisible();
+  await page.waitForFunction(() => Boolean(window.pushVerificationFixture));
+  await emit(page, { type: "result", result: { ...baseline, mode: "live" } });
+  await expect(
+    page.getByRole("heading", { name: "Potwierdzone", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("complementary", { name: "Siła podstawy" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Materiał archiwalny z marca 1999 r."),
+  ).toHaveCount(0);
+  await expect(evidence.getByText(/Domena źródła/).first()).toBeVisible();
+});
+
+test("supports keyboard navigation to the result and graph controls", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: "Przejdź do weryfikacji" });
+  await expect(skip).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#workspace")).toBeFocused();
+  const demo = page.getByRole("button", {
+    name: /Graf dowodowy · dane syntetyczne/i,
+  });
+  for (let index = 0; index < 24; index++) {
+    if (await demo.evaluate((button) => button === document.activeElement))
+      break;
+    await page.keyboard.press("Tab");
+  }
+  await expect(demo).toBeFocused();
+  await page.keyboard.press("Enter");
+  const graph = page.getByRole("region", { name: "Graf dowodowy" });
+  await expect(graph).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Fałszywe", exact: true }),
+  ).toBeVisible();
+  const filter = graph.getByLabel("Węzły");
+  for (let index = 0; index < 18; index++) {
+    if (await filter.evaluate((select) => select === document.activeElement))
+      break;
+    await page.keyboard.press("Tab");
+  }
+  await expect(filter).toBeFocused();
+  expect(
+    await filter.evaluate((select) => getComputedStyle(select).outlineStyle),
+  ).toBe("solid");
+  await page.keyboard.press("ArrowDown");
+  await expect(filter).toHaveValue("CLAIM");
 });

@@ -18,7 +18,7 @@ npm run dev
 
 Otwórz http://127.0.0.1:3000. Nie nadpisuj istniejącego `.env.local`. Po dodaniu lub zmianie kluczy uruchom serwer ponownie. Sekrety są używane wyłącznie na serwerze. Nie dodawaj ich do `.env.example` ani repozytorium.
 
-Bez kluczy działają trzy **ręcznie przygotowane i oznaczone przykłady demo**. Analiza online zwróci `NOT_CONFIGURED`; nigdy nie zastępujemy jej przykładem.
+Bez kluczy działają cztery **ręcznie przygotowane i oznaczone przykłady demo**. Analiza online zwróci `NOT_CONFIGURED`; nigdy nie zastępujemy jej przykładem.
 
 ```powershell
 npm run build
@@ -528,3 +528,42 @@ archiwum audytu zachowuje dotychczasową politykę przechowywania metadanych.
 oraz pobieranie JSON i PNG.
 
 Integracja równoległych zmian grafu: 219 testów jednostkowych/integracyjnych, 23 przeglądarkowe, typecheck i build zaliczone. Pomiar P0.2 (30/30) wykonano przed tą integracją i bez evidenceGraph=true; nie jest pomiarem dodatkowej analizy grafowej, o którą teraz prosi WWW. Pełny benchmark połączonej ścieżki z grafem pozostaje do wykonania.
+
+## Próba jury
+
+**Prawdowid** sprawdza pojedynczą tezę i pokazuje, skąd pochodzą cytaty.
+Materiały: [opis zgłoszenia](docs/submission/opis.md),
+[slajdy PDF](docs/submission/slajdy.pdf),
+[film z napisami](docs/submission/demo.webm) i [transkrypcja](docs/submission/transkrypcja.md),
+[ryzyka](docs/submission/ryzyka.md),
+[polityka źródeł](docs/sources-policy.md) i
+[prywatność dostawców](docs/privacy-providers.md).
+
+### Uruchomienie z czystej kopii
+
+1. Sklonuj repozytorium i przejdź na przekazany commit. Użyj Node.js 22.13+
+   oraz npm. Uruchom `npm ci`.
+2. Uruchom `npm run dev` i przejdź na <http://127.0.0.1:3000>. Przykłady
+   WWW działają od razu i są oznaczone jako **DEMO**.
+3. W profilu z dostępem online skopiuj `.env.example` do `.env.local`
+   i uzupełnij klucze Gemini oraz Tavily tylko lokalnie. Po zmianie
+   konfiguracji uruchom serwer ponownie. Sprawdź gotowość poleceniem
+   `node --env-file=.env.local scripts/check-providers.mjs`.
+
+### Scenariusz prezentacji
+
+1. Kliknij **Graf dowodowy · dane syntetyczne**. Odczytaj werdykt, przejdź
+   od wniosku do cytatu, rozwiń zapisany fragment i przetestuj eksport.
+2. Kliknij **Potwierdzenie**, a potem **Brak kontekstu**. Porównaj
+   przykład z dowodami i status wymagający doprecyzowania.
+3. W trybie online wpisz „Polska przystąpiła do NATO 12 marca 1999 roku.”
+   i użyj **Sprawdź dowody**. Śledź wyszukiwanie i audyt. Otwórz
+   **Symulator Discord** w tym samym profilu przeglądarki i wyślij tę
+   samą treść. Adapter symuluje wymianę wiadomości bez wysyłki na Discorda.
+4. W uruchomieniu bez kluczy wyślij tę samą tezę. Panel zgłosi brak
+   konfiguracji jako błąd techniczny. W filmie osobno pokazano kontrolowaną
+   odpowiedź „Brak wystarczających dowodów”. Ten wynik oznacza, że
+   w dostępnych materiałach nie znaleziono odpowiedniej podstawy oceny.
+
+Szczegóły powtórzenia, w tym kontrolowany scenariusz braku dowodów,
+są w [protokole próby](docs/submission/proba-jury.md).

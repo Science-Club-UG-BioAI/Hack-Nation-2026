@@ -49,6 +49,8 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
+select:focus-visible,
+[tabindex="-1"]:focus-visible,
 summary:focus-visible {
   outline: 3px solid #3974e8;
   outline-offset: 4px;
@@ -295,7 +297,7 @@ textarea {
   font-size: 16px;
 }
 textarea::placeholder {
-  color: #78869b;
+  color: #52657f;
 }
 textarea:focus {
   border-color: #4376df;
@@ -552,7 +554,7 @@ input[type="date"] {
   height: 41px;
   background: #f1f5fb;
   border: 1px solid #e1e8f3;
-  color: #758ba9;
+  color: #52657f;
   border-radius: 50%;
   margin-bottom: 6px;
 }
@@ -635,7 +637,7 @@ input[type="date"] {
 }
 .activity-details summary > span {
   float: right;
-  color: #6a7b93;
+  color: #52657f;
   font-size: 12px;
 }
 .activity-details ol {
@@ -651,7 +653,7 @@ input[type="date"] {
   line-height: 1.5;
 }
 .activity-details time {
-  color: #70829a;
+  color: #52657f;
   min-width: 28px;
   font-variant-numeric: tabular-nums;
 }
@@ -677,7 +679,7 @@ input[type="date"] {
   flex-shrink: 0;
   border-radius: 10px;
   background: #edf3ff;
-  color: #547dc7;
+  color: #395fa2;
 }
 .analysis-metrics > div > div {
   min-width: 0;
@@ -710,7 +712,7 @@ input[type="date"] {
 .result-card .eyebrow .icon {
   width: 17px;
   height: 17px;
-  color: #6685b2;
+  color: #47658c;
 }
 .empty-result {
   text-align: center;
@@ -731,7 +733,7 @@ input[type="date"] {
   height: 68px;
   width: 68px;
   border-radius: 20px;
-  color: #3d75df;
+  color: #255cbb;
   background: #edf3ff;
   border: 1px solid #dbe7fc;
   transform: rotate(-6deg);
@@ -950,7 +952,7 @@ input[type="date"] {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #6c7d92;
+  color: #52657f;
 }
 .relation {
   font-size: 11px;
@@ -1049,7 +1051,7 @@ blockquote {
   display: block;
   margin-top: 24px;
   font-size: 12px;
-  color: #6a7b94;
+  color: #52657f;
   overflow-wrap: anywhere;
 }
 .page-footer {
@@ -1432,4 +1434,18 @@ blockquote {
   margin-inline: 0;
   border-inline-start: 3px solid #176866;
   padding-inline-start: 0.6rem;
+}
+
+.coverage-panel p {
+  margin: 0.35rem 0 0;
+}
+
+.evidence .source-archive-warning {
+  color: #7c490e;
+  font-weight: 650;
+}
+
+.evidence:target {
+  outline: 2px solid #3974e8;
+  outline-offset: 3px;
 }
