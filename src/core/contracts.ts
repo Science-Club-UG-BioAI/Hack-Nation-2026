@@ -109,6 +109,11 @@ export const providerLabels: Record<SourceProvider, string> = {
   euvsdisinfo: "EUvsDisinfo (EEAS)",
 };
 export type SourceMetadata = {
+  publisher?: string | null;
+  publisherIsDomain?: boolean;
+  updatedAt?: string | null;
+  eventPeriod?: { from: string | null; to: string | null } | null;
+  freshnessWarning?: string | null;
   provider?: SourceProvider;
   sourceType?: "web" | "official" | "encyclopedia" | "research";
   contentScope?: "text" | "metadata" | "abstract";
@@ -130,6 +135,18 @@ export type Source = {
 } & SourceMetadata;
 export type Document = Source & { chunks: { id: string; text: string }[] };
 type ResultBase = {
+  usage?: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    searchCalls: number;
+    costUsd: number | null;
+    cached: boolean;
+  };
+  strength?: {
+    summary: string;
+    independentGroups: number;
+    limitations: string[];
+  };
   citationContract?: "findings-v1";
   evidenceGraph?: EvidenceGraph;
   graphStatus?: "ready" | "failed" | "unavailable";
