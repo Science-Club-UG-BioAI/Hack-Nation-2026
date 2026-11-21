@@ -105,6 +105,7 @@ describe("EUvsDisinfo adapter", () => {
       title: review.title,
       url: review.link,
       canonicalUrl: review.link,
+      provider: "euvsdisinfo",
       sourceType: "official",
       contentScope: "text",
       publisherGroup: "euvsdisinfo.eu",

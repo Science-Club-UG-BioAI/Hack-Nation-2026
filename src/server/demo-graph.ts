@@ -59,6 +59,7 @@ export function syntheticGraphDemo(): VerificationResult {
           wikipediaQuery: null,
           sejmQuery: null,
           arxivQuery: null,
+          euvsdisinfoQuery: null,
         },
       ],
     },

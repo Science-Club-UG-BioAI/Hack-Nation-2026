@@ -46,6 +46,7 @@ function fixture(documents = [calendar, newspaper]) {
           wikipediaQuery: null,
           sejmQuery: null,
           arxivQuery: null,
+          euvsdisinfoQuery: null,
         },
       ],
     },
@@ -250,6 +251,7 @@ describe("graf dowodowy", () => {
           wikipediaQuery: null,
           sejmQuery: null,
           arxivQuery: null,
+          euvsdisinfoQuery: null,
         })),
       },
       [

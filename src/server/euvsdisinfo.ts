@@ -107,6 +107,7 @@ export async function euvsdisinfo(
       title: item.title,
       url,
       canonicalUrl: url,
+      provider: "euvsdisinfo",
       raw_content: htmlText(item.content),
       sourceType: "official",
       contentScope: "text",
