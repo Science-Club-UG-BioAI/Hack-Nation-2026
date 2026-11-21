@@ -185,6 +185,17 @@ export function resolveSelection(
       !basis.decisiveQuoteIds.length
     )
       throw invalidOutput(["A factual decision requires decisive evidence."]);
+    // A conflict must show both sides: decisive passages from at least two
+    // different documents, never one source contradicting itself.
+    if (
+      basis.kind === "conflict" &&
+      new Set(
+        basis.decisiveQuoteIds.map((id) => catalog.quotes.get(id)!.sourceId),
+      ).size < 2
+    )
+      throw invalidOutput([
+        "conflict requires decisiveQuoteIds from at least two different documents showing the incompatible values.",
+      ]);
     if (
       basis.kind === "mixed_context" &&
       (!basis.premiseQuoteIds.length ||

@@ -6,15 +6,35 @@ export const classes = [
   "insufficient",
   "not_checkable",
 ] as const;
+// Rubric per citation (docs/citation-review.md). `valid` is the gate value and
+// must be false whenever any recorded rubric dimension is false.
+export const citationRubric = [
+  "entails",
+  "relationCorrect",
+  "atomic",
+  "factual",
+] as const;
+export type CitationRubricKey = (typeof citationRubric)[number];
+export type CitationReviewItem = {
+  id: string;
+  valid: boolean | null;
+  reason: string;
+} & Partial<Record<CitationRubricKey, boolean | null>>;
 export type CitationReview = {
   resultSha256: string;
   reviewer: string | null;
-  items: { id: string; valid: boolean | null; reason: string }[];
+  method?: {
+    kind: "human" | "model" | "mixed";
+    model?: string | null;
+    notes?: string;
+  };
+  items: CitationReviewItem[];
 };
 export function citationReviewMetrics(
   hash: string,
   expectedIds: string[],
   review: CitationReview | null,
+  auditedModels: string[] = [],
 ) {
   const empty = {
     value: null as number | null,
@@ -22,6 +42,11 @@ export function citationReviewMetrics(
     total: expectedIds.length,
     complete: false,
     reviewer: null as string | null,
+    method: null as CitationReview["method"] | null,
+    rubric: null as Record<
+      CitationRubricKey,
+      { passed: number; total: number }
+    > | null,
   };
   if (!review)
     return { ...empty, reason: "Missing independent semantic review" };
@@ -35,9 +60,44 @@ export function citationReviewMetrics(
     return { ...empty, reason: "Duplicate or unknown citation IDs" };
   if (!review.reviewer?.trim())
     return { ...empty, reason: "Reviewer identity/method missing" };
+  const reviewerModel = review.method?.model?.trim().toLowerCase();
+  if (
+    review.method &&
+    review.method.kind !== "human" &&
+    (!reviewerModel ||
+      auditedModels.some((m) => m.trim().toLowerCase() === reviewerModel))
+  )
+    return {
+      ...empty,
+      reason:
+        "Model review must name a reviewer model different from the audited models",
+    };
+  if (
+    review.items.some(
+      (item) =>
+        item.valid === true &&
+        citationRubric.some((key) => item[key] === false),
+    )
+  )
+    return {
+      ...empty,
+      reason: "Inconsistent review: valid item fails a rubric dimension",
+    };
   const rated = review.items.filter(
     (item) => typeof item.valid === "boolean" && item.reason.trim(),
   );
+  const rubric = Object.fromEntries(
+    citationRubric.map((key) => {
+      const judged = rated.filter((item) => typeof item[key] === "boolean");
+      return [
+        key,
+        {
+          passed: judged.filter((item) => item[key] === true).length,
+          total: judged.length,
+        },
+      ];
+    }),
+  ) as Record<CitationRubricKey, { passed: number; total: number }>;
   return {
     value: rated.length
       ? rated.filter((item) => item.valid).length / rated.length
@@ -46,6 +106,8 @@ export function citationReviewMetrics(
     total: expectedIds.length,
     complete: expectedIds.length > 0 && rated.length === expectedIds.length,
     reviewer: review.reviewer,
+    method: review.method ?? null,
+    rubric,
     reason:
       rated.length === expectedIds.length
         ? "Complete recorded review"
@@ -177,6 +239,110 @@ export function findingCoverageForResult(
   return { version: "findings-v1", total: result.findings.length, covered };
 }
 
+export type BenchmarkCase = {
+  id: string;
+  claim: string;
+  statedAt?: string;
+  expected: Label | null;
+  expectedStatus: string;
+  factual: boolean;
+  abstention?: boolean;
+  injection?: boolean;
+  rationale: string;
+  reference?: string;
+};
+
+// Structural checks only; the labels themselves stay the dataset author's claim.
+export function datasetProblems(dataset: unknown): string[] {
+  const problems: string[] = [];
+  if (!dataset || typeof dataset !== "object")
+    return ["dataset is not an object"];
+  const d = dataset as Record<string, unknown>;
+  if (typeof d.version !== "string" || !d.version)
+    problems.push("missing version");
+  if (typeof d.labelPolicy !== "string" || !d.labelPolicy)
+    problems.push("missing labelPolicy");
+  if (!Array.isArray(d.cases) || !d.cases.length)
+    return [...problems, "no cases"];
+  const ids = new Set<string>();
+  for (const raw of d.cases as Record<string, unknown>[]) {
+    const id = String(raw?.id ?? "");
+    if (!id || ids.has(id)) problems.push(`duplicate or empty id: ${id}`);
+    ids.add(id);
+    if (typeof raw.claim !== "string" || !raw.claim.trim())
+      problems.push(`${id}: missing claim`);
+    const expected = raw.expected;
+    if (expected !== null && !classes.includes(expected as Label))
+      problems.push(`${id}: unknown expected label`);
+    if (expected === null && raw.expectedStatus === "completed")
+      problems.push(`${id}: completed case needs a label`);
+    if (expected !== null && raw.expectedStatus !== "completed")
+      problems.push(`${id}: labelled case must expect completed`);
+    if (typeof raw.factual !== "boolean") problems.push(`${id}: factual flag`);
+    if (typeof raw.rationale !== "string" || !raw.rationale.trim())
+      problems.push(`${id}: missing rationale`);
+    if (raw.factual === true && typeof raw.reference !== "string")
+      problems.push(`${id}: factual case needs a reference`);
+    if (raw.abstention === true && expected !== "insufficient")
+      problems.push(`${id}: abstention case must expect insufficient`);
+  }
+  return problems;
+}
+
+export type GraphObservation = {
+  requested: true;
+  graphStatus: "ready" | "failed" | "unavailable" | null;
+  nodes: number | null;
+  edges: number | null;
+  stages: string[];
+};
+
+export type RunConfiguration = {
+  variant: "api-json" | "web-graph";
+  euvsdisinfoConfigured: boolean;
+};
+
+export function graphObservation(
+  value: unknown,
+  stages: string[],
+): GraphObservation {
+  const result =
+    value && typeof value === "object"
+      ? (value as Record<string, unknown>)
+      : {};
+  const status = result.graphStatus;
+  const graph =
+    result.evidenceGraph && typeof result.evidenceGraph === "object"
+      ? (result.evidenceGraph as Record<string, unknown>)
+      : null;
+  return {
+    requested: true,
+    graphStatus:
+      status === "ready" || status === "failed" || status === "unavailable"
+        ? status
+        : null,
+    nodes: Array.isArray(graph?.nodes) ? graph.nodes.length : null,
+    edges: Array.isArray(graph?.edges) ? graph.edges.length : null,
+    stages: [...new Set(stages)],
+  };
+}
+
+export function retrievalStatusFor(value: unknown, provider: string) {
+  if (!value || typeof value !== "object") return null;
+  const retrieval = (value as Record<string, unknown>).retrieval;
+  if (!Array.isArray(retrieval)) return null;
+  const entry = retrieval.find(
+    (item) => item && typeof item === "object" && item.provider === provider,
+  );
+  return typeof entry?.status === "string" ? entry.status : null;
+}
+
+export function usageFor(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const usage = (value as Record<string, unknown>).usage;
+  return usage && typeof usage === "object" ? usage : null;
+}
+
 export type Observation = {
   id: string;
   expected: Label | null;
@@ -192,6 +358,9 @@ export type Observation = {
   injection: boolean;
   injectionPassed: boolean | null;
   channelMatch: boolean | null;
+  graph?: GraphObservation | null;
+  euvsdisinfoStatus?: string | null;
+  usage?: object | null;
 };
 export function percentile(values: number[], q: number) {
   if (!values.length) return null;
@@ -318,6 +487,29 @@ export function benchmarkMetrics(rows: Observation[]) {
         0.95,
       ),
     },
+    evidenceGraph: (() => {
+      const requested = rows.filter((r) => r.graph?.requested);
+      const count = (status: string | null) =>
+        requested.filter((r) => (r.graph?.graphStatus ?? null) === status)
+          .length;
+      return {
+        requested: requested.length,
+        ready: count("ready"),
+        failed: count("failed"),
+        unavailable: count("unavailable"),
+        missing: count(null),
+      };
+    })(),
+    euvsdisinfo: (() => {
+      const statuses = rows.map((r) => r.euvsdisinfoStatus ?? null);
+      return Object.fromEntries(
+        [...new Set(statuses)].map((status) => [
+          String(status),
+          statuses.filter((s) => s === status).length,
+        ]),
+      );
+    })(),
+    usageRecorded: rate(rows, (r) => r.usage != null),
     citationCorrectness: {
       value: null,
       reason:

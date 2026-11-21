@@ -45,9 +45,15 @@ const items = run.outputs.flatMap((output) =>
     quote: e.quote,
     relation: e.relation,
     findings:
-      output.result.findings?.filter((f) => f.evidenceIds.includes(e.id)) ??
-      null,
+      output.result.findings
+        ?.filter((f) => f.evidenceIds.includes(e.id))
+        .map((f) => ({ id: f.id, text: f.text })) ?? null,
+    verdict: output.result.verdict ?? null,
     url: output.result.sources?.find((s) => s.id === e.sourceId)?.url,
+    entails: null,
+    relationCorrect: null,
+    atomic: null,
+    factual: null,
     valid: null,
     reason: "",
   })),
@@ -55,8 +61,10 @@ const items = run.outputs.flatMap((output) =>
 const template = {
   resultSha256,
   reviewer: null,
+  method: { kind: null, model: null, notes: "" },
+  auditedModels: [run.model, run.fallback].filter(Boolean),
   policy:
-    "Independently review entailment of every assigned atomic finding and the stated relation. Structural references and the model's own audit are not gold labels.",
+    "Follow docs/citation-review.md. Judge every item on entails, relationCorrect, atomic and factual; valid=true only if all applicable dimensions hold. A model reviewer must differ from auditedModels. Structural references and the model's own audit are not gold labels.",
   items,
 };
 await writeFile(
@@ -75,6 +83,7 @@ const citationReview = citationReviewMetrics(
   resultSha256,
   items.map((i) => i.id),
   review,
+  [run.model, run.fallback].filter(Boolean),
 );
 const atLeast = (value, target) =>
   complete && value !== null ? value >= target : null;
