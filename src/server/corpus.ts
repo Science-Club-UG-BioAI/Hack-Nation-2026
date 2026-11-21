@@ -1,4 +1,5 @@
 import catalog from "../../data/corpus/catalog.json";
+import { isAllowedSourceUrl } from "@/core/source-policy";
 import type { SearchHit } from "@/core/evidence";
 import { readBoundedText } from "./read-body";
 import { htmlText, type SourceBatch } from "./source-adapters";
@@ -12,10 +13,12 @@ const tokens = (value: string) => [
       .match(/[\p{L}\p{N}]{4,}/gu) ?? [],
   ),
 ];
-const indexedRecords = catalog.records.map((record) => ({
-  record,
-  words: tokens(record.title + " " + new URL(record.url).pathname),
-}));
+const indexedRecords = catalog.records
+  .filter((record) => isAllowedSourceUrl(record.url))
+  .map((record) => ({
+    record,
+    words: tokens(record.title + " " + new URL(record.url).pathname),
+  }));
 
 export function searchCorpus(query: string) {
   const terms = tokens(query);

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { allowedSourceDomains } from "@/core/source-policy";
 import type { VerificationResult, VerifyInput } from "@/core/contracts";
 import { acquire, forgetSessionLimits } from "./limits";
 import { verify } from "./verify";
@@ -78,7 +79,8 @@ function keyFor(input: VerifyInput, session: string) {
     .update(
       JSON.stringify([
         "reasoned-guard-v3",
-        "findings-v1-source-metadata-v2",
+        "findings-v1-domain-queries-trusted-fact-check-v3",
+        allowedSourceDomains,
         session,
         input.claim.normalize("NFC").trim(),
         input.statedAt ?? null,

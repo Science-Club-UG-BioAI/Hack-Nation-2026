@@ -51,7 +51,7 @@ export const planSchema = z.object({
   checkable: z.boolean(),
   needsClarification: z.boolean(),
   clarificationKind: z
-    .enum(["none", "ambiguous_claim", "missing_evidence"])
+    .enum(["none", "ambiguous_claim", "no_search_anchor", "missing_evidence"])
     .default("none"),
   outOfScope: z.boolean().default(false),
   explanation: z.string().min(1).max(1200),

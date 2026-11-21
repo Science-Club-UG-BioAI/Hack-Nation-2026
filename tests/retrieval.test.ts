@@ -1,11 +1,13 @@
 vi.mock("@/server/corpus", () => ({
-  corpus: async () => ({ hits: [], partial: false }),
+  corpus: vi.fn(),
 }));
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { retrieve } from "@/server/retrieval";
 import { search } from "@/server/providers";
+import { corpus } from "@/server/corpus";
 import { wikipedia, sejm, arxiv } from "@/server/source-adapters";
 import { planSchema } from "@/core/contracts";
+import { prepareDocuments } from "@/core/evidence";
 
 vi.mock("@/server/providers", () => ({ search: vi.fn() }));
 vi.mock("@/server/source-adapters", () => ({
@@ -18,25 +20,73 @@ const plan = planSchema.parse({
   needsClarification: false,
   explanation: "Test",
   queries: ["neutral query", "counter evidence"],
-  wikipediaQuery: "Polska",
+  sejmQuery: "Polska",
 });
 const hit = {
   title: "Polska",
-  url: "https://pl.wikipedia.org/wiki/Polska",
+  url: "https://api.sejm.gov.pl/eli/acts/2026/1",
   raw_content: "Materiał encyklopedyczny dotyczący Polski.",
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(corpus).mockResolvedValue({ hits: [], partial: false });
   vi.mocked(search).mockResolvedValue([]);
-  vi.mocked(wikipedia).mockResolvedValue({ hits: [hit], partial: false });
+  vi.mocked(sejm).mockResolvedValue({ hits: [hit], partial: false });
 });
 describe("multi-source retrieval", () => {
+  it("does not let catalog matches displace current web evidence", async () => {
+    const article = (id: number) => ({
+      title: `Komunikat ${id}`,
+      url: `https://www.gov.pl/web/test/komunikat-${id}`,
+      raw_content: `Unikalny komunikat numer ${id}. ${String.fromCharCode(65 + id).repeat(60)}`,
+    });
+    vi.mocked(corpus).mockResolvedValue({
+      hits: [article(1), article(2), article(3)],
+      partial: false,
+    });
+    vi.mocked(search).mockResolvedValueOnce([article(4)]);
+    const found = await retrieve(plan, new AbortController().signal);
+    const docs = prepareDocuments(
+      found.hits,
+      "Zdarzenie",
+      "2026-11-22T00:00:00Z",
+    );
+    expect(docs.some((doc) => doc.url === article(4).url)).toBe(true);
+  });
+  it("retains an article from the second query before the publisher limit fills", async () => {
+    const article = (id: number) => ({
+      title: `Artykuł ${id}`,
+      url: `https://demagog.org.pl/na-biezaco/test-${id}`,
+      raw_content: `Unikalne zdarzenie numer ${id}. ${String.fromCharCode(65 + id).repeat(60)}`,
+    });
+    vi.mocked(search).mockImplementation(async (query, _signal, domain) =>
+      domain !== "demagog.org.pl"
+        ? []
+        : query === plan.queries[0]
+          ? [article(1), article(2), article(3)]
+          : [article(4)],
+    );
+    const found = await retrieve(plan, new AbortController().signal);
+    const docs = prepareDocuments(
+      found.hits,
+      "Zdarzenie",
+      "2026-11-22T00:00:00Z",
+    );
+    expect(docs.some((doc) => doc.url === article(4).url)).toBe(true);
+  });
   it("calls only relevant direct APIs", async () => {
     const result = await retrieve(plan, new AbortController().signal);
     expect(result.hits).toEqual([hit]);
-    expect(wikipedia).toHaveBeenCalledTimes(1);
-    expect(search).toHaveBeenCalledTimes(2);
-    expect(sejm).not.toHaveBeenCalled();
+    expect(sejm).toHaveBeenCalledTimes(1);
+    expect(search).toHaveBeenCalledTimes(6);
+    for (const query of plan.queries)
+      for (const domain of ["demagog.org.pl", "euvsdisinfo.eu", "gov.pl"])
+        expect(search).toHaveBeenCalledWith(
+          query,
+          expect.any(AbortSignal),
+          domain,
+        );
+    expect(wikipedia).not.toHaveBeenCalled();
     expect(arxiv).not.toHaveBeenCalled();
     expect(result.statuses).toContainEqual({
       provider: "arxiv",
@@ -71,7 +121,7 @@ describe("multi-source retrieval", () => {
   });
   it("never turns a total outage into a factual verdict", async () => {
     vi.mocked(search).mockRejectedValue(new Error("down"));
-    vi.mocked(wikipedia).mockRejectedValue(new Error("down"));
+    vi.mocked(sejm).mockRejectedValue(new Error("down"));
     await expect(
       retrieve(plan, new AbortController().signal),
     ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });

@@ -1,3 +1,6 @@
+vi.mock("@/server/publication-dates", () => ({
+  enrichPublicationDates: async () => {},
+}));
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
@@ -5,6 +8,7 @@ import { handleVerification } from "@/server/handle-verification";
 import { sessionAudit } from "@/server/audit-store";
 
 vi.mock("@/server/providers", () => ({
+  searchContext: vi.fn().mockResolvedValue([]),
   generate: async () => ({
     checkable: true,
     needsClarification: false,

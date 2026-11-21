@@ -62,17 +62,29 @@ describe("real route and adapters with controlled HTTP provider responses", () =
               usage: { credits: 2 },
               results: [
                 {
+                  title: "CONTEXT_ONLY",
+                  url: "https://www.bbc.com/context",
+                  content: "Context for search planning.",
+                  raw_content:
+                    "CONTEXT_ONLY description of the event with enough text for an evidence document.",
+                },
+                {
                   title: "NATO",
-                  url: "https://nato.int/source",
+                  published_date: "1999-03-12",
+                  url: "https://demagog.org.pl/source",
                   raw_content: quote + " More relevant historical context.",
                 },
                 {
                   title: "Official",
+                  published_date: "1999-03-12",
                   url: "https://gov.pl/nato",
                   raw_content: quote + " Official membership record.",
                 },
               ],
             });
+          if (modelCalls === 0)
+            expect(String(init?.body)).toContain("CONTEXT_ONLY");
+          else expect(String(init?.body)).not.toContain("CONTEXT_ONLY");
           modelCalls++;
           if (modelCalls === 1)
             return geminiResponse({
@@ -156,18 +168,38 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         body = last?.type === "result" ? last.result : null;
       } else body = await response.json();
       expect(body.verdict).toBe("supported");
+      const queries = fetcher.mock.calls
+        .filter(([url]) => String(url).includes("tavily"))
+        .map(([, init]) => JSON.parse(String(init?.body)));
+      expect(queries[0].include_domains).toBeUndefined();
+      expect(queries[0].query).not.toContain("site:");
+      for (const request of queries.slice(1)) {
+        expect(request.include_domains).toHaveLength(1);
+        expect(["demagog.org.pl", "euvsdisinfo.eu", "gov.pl"]).toContain(
+          request.include_domains[0],
+        );
+        for (const domain of request.include_domains)
+          expect(request.query).toContain("site:" + domain);
+        expect(request.query).not.toContain("(site:");
+      }
+      expect(queries.slice(1, 4).map((request) => request.query)).toEqual([
+        `${claim} site:demagog.org.pl`,
+        `${claim} site:euvsdisinfo.eu`,
+        `${claim} site:gov.pl`,
+      ]);
+      expect(JSON.stringify(body.sources)).not.toContain("bbc.com");
       expect(body.mode).toBe("live");
       expect(body.usage).toMatchObject({
         inputTokens: 300,
         outputTokens: 75,
-        searchCalls: 2,
+        searchCalls: 7,
         cached: false,
       });
-      expect(body.usage.costUsd).toBeCloseTo(0.03218075, 10);
+      expect(body.usage.costUsd).toBeCloseTo(0.11218075, 10);
       expect(body.strength.independentGroups).toBe(2);
       const row = sessionAudit(session)[0];
       expect(row.usage).toEqual(body.usage);
-      expect(row.usageCalls).toHaveLength(5);
+      expect(row.usageCalls).toHaveLength(10);
       const db = new DatabaseSync(process.env.AUDIT_DB_PATH!, {
         readOnly: true,
       });
@@ -189,7 +221,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         { id: "f1", text: claim, evidenceIds: ["q1", "q2"] },
       ]);
       expect(body.explanation).toBe(`${claim} [1] [2]`);
-      expect(fetcher).toHaveBeenCalledTimes(5);
+      expect(fetcher).toHaveBeenCalledTimes(10);
       expect(JSON.stringify(body)).not.toContain("test-key-not-real");
       expect(response.headers.get("cache-control")).toContain("no-store");
     },

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { allowedSourceDomains, isAllowedSourceUrl } from "@/core/source-policy";
 import { AppError, invalidOutput } from "@/core/errors";
 import type { SearchHit } from "@/core/evidence";
 import type { ImageMime } from "@/core/vision";
@@ -159,6 +160,7 @@ const searchSchema = z.object({
         title: z.string(),
         url: z.string(),
         raw_content: z.string().nullable().optional(),
+        content: z.string().optional(),
         published_date: z.string().nullable().optional(),
       }),
     )
@@ -168,7 +170,39 @@ const searchSchema = z.object({
 export async function search(
   query: string,
   signal: AbortSignal,
+  domain?: (typeof allowedSourceDomains)[number],
 ): Promise<SearchHit[]> {
+  const hits = await webSearch(query, signal, "evidence", domain);
+  return hits.filter((hit) => isAllowedSourceUrl(hit.url));
+}
+
+export async function searchContext(query: string, signal: AbortSignal) {
+  const hits = await webSearch(query, signal, "context");
+  return hits.map((hit) => ({
+    title: hit.title.slice(0, 300),
+    url: hit.url,
+    excerpt: (hit.content || hit.raw_content || "").slice(0, 1200),
+    publishedAt: hit.published_date ?? null,
+  }));
+}
+
+export async function searchPublicationMetadata(
+  title: string,
+  url: string,
+  signal: AbortSignal,
+) {
+  if (!isAllowedSourceUrl(url)) return [];
+  return webSearch(title, signal, "metadata", new URL(url).hostname);
+}
+
+async function webSearch(
+  query: string,
+  signal: AbortSignal,
+  purpose: "context" | "evidence" | "metadata",
+  domain?: string,
+) {
+  const terms = query.replace(/-?site:\s*\S+/gi, "").trim();
+  const domains = domain ? [domain] : allowedSourceDomains;
   const call = startCall("tavily");
   const response = await fetch("https://api.tavily.com/search", {
     method: "POST",
@@ -179,11 +213,16 @@ export async function search(
       Authorization: `Bearer ${process.env.TAVILY_API_KEY}`,
     },
     body: JSON.stringify({
-      query,
+      query:
+        purpose === "evidence"
+          ? `${terms} ${domains.length === 1 ? `site:${domains[0]}` : `(${domains.map((domain) => `site:${domain}`).join(" OR ")})`}`
+          : terms,
+      ...(purpose === "evidence" && { include_domains: domains }),
+      ...(purpose === "metadata" && { include_domains: domains }),
       max_results: 6,
       search_depth: "advanced",
       include_usage: true,
-      include_raw_content: true,
+      include_raw_content: purpose === "evidence",
       include_published_date: true,
       include_answer: false,
       auto_parameters: false,

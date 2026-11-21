@@ -6,6 +6,7 @@ import type {
 } from "@/core/contracts";
 import { AppError } from "@/core/errors";
 import { search } from "./providers";
+import { allowedSourceDomains, isAllowedSourceUrl } from "@/core/source-policy";
 import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
 import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
@@ -32,9 +33,14 @@ async function retrieveSource(
       report("running");
       try {
         const batch = await run();
-        documents += batch.hits.length;
+        const eligible = batch.hits.filter(
+          (hit) =>
+            isAllowedSourceUrl(hit.url) &&
+            (!hit.canonicalUrl || isAllowedSourceUrl(hit.canonicalUrl)),
+        );
+        documents += eligible.length;
         partial ||= batch.partial;
-        return batch.hits;
+        return eligible;
       } catch {
         failures++;
         return [];
@@ -48,7 +54,12 @@ async function retrieveSource(
   else if (partial || failures) status = "partial";
   report(status);
   return {
-    hits: batches.flat(),
+    // Give both queries an opportunity before a publisher's document limit is reached.
+    hits: Array.from(
+      { length: Math.max(0, ...batches.map((batch) => batch.length)) },
+      (_, index) =>
+        batches.flatMap((batch) => (batch[index] ? [batch[index]] : [])),
+    ).flat(),
     status: { provider, documents, status },
     failures,
   };
@@ -67,27 +78,30 @@ export async function retrieve(
       requests: [() => corpus(plan.queries.join(" "), limited)],
     },
   ];
-  for (const [provider, query, adapter] of [
-    ["wikipedia", plan.wikipediaQuery, wikipedia],
-    ["sejm", plan.sejmQuery, sejm],
-    ["arxiv", plan.arxivQuery, arxiv],
+  for (const [provider, query, adapter, origin] of [
+    ["wikipedia", plan.wikipediaQuery, wikipedia, "https://pl.wikipedia.org"],
+    ["sejm", plan.sejmQuery, sejm, "https://api.sejm.gov.pl"],
+    ["arxiv", plan.arxivQuery, arxiv, "https://arxiv.org"],
     [
       "euvsdisinfo",
       euvsdisinfoConfigured() ? plan.euvsdisinfoQuery : null,
       euvsdisinfo,
+      "https://euvsdisinfo.eu",
     ],
   ] as const) {
-    if (query)
+    if (query && isAllowedSourceUrl(origin))
       sources.push({ provider, requests: [() => adapter(query, limited)] });
     else statuses.push({ provider, status: "not_applicable", documents: 0 });
   }
   if (plan.queries.length)
     sources.push({
       provider: "web",
-      requests: plan.queries.map((query) => async () => ({
-        hits: await search(query, limited),
-        partial: false,
-      })),
+      requests: plan.queries.flatMap((query) =>
+        allowedSourceDomains.map((domain) => async () => ({
+          hits: await search(query, limited, domain),
+          partial: false,
+        })),
+      ),
     });
 
   for (const source of statuses) onProgress?.({ type: "source", source });
@@ -96,7 +110,14 @@ export async function retrieve(
     sources.map((source) => retrieveSource(source, onProgress)),
   );
   signal.throwIfAborted();
-  const hits = results.flatMap((result) => result.hits);
+  // Search results address the current claim; broad catalog matches are supplementary.
+  const hits = results
+    .toSorted(
+      (a, b) =>
+        Number(a.status.provider === "corpus") -
+        Number(b.status.provider === "corpus"),
+    )
+    .flatMap((result) => result.hits);
   if (!hits.length && results.some((result) => result.failures > 0))
     throw new AppError(
       "PROVIDER_ERROR",

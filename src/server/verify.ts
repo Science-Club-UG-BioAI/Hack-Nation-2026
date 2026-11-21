@@ -18,12 +18,13 @@ import {
   publisherGroup,
 } from "@/core/evidence";
 import { AppError, invalidOutput, InvalidModelOutput } from "@/core/errors";
-import { generate } from "./providers";
+import { generate, searchContext } from "./providers";
 import type { z } from "zod";
 import { numberSetting } from "./config";
 import { maskPersonalData } from "@/core/privacy";
 import { verificationDate } from "@/core/verification-date";
 import { retrieve } from "./retrieval";
+import { enrichPublicationDates } from "./publication-dates";
 import type { ProgressListener, ProgressStage } from "@/core/progress";
 import {
   guardClaim,
@@ -283,12 +284,29 @@ export async function verify(
       "Po oddzieleniu poleceń nie pozostało jednoznaczne twierdzenie. Podaj fakt, który mamy sprawdzić.",
     );
   stage("planning");
+  let searchHints: Awaited<ReturnType<typeof searchContext>> = [];
+  try {
+    searchHints = await searchContext(
+      analysisInput.claim,
+      AbortSignal.any([signal, AbortSignal.timeout(6_000)]),
+    );
+    searchHints = searchHints.filter(
+      (hit) => !hasControlInstruction(`${hit.title}\n${hit.excerpt}`),
+    );
+  } catch {
+    signal.throwIfAborted();
+    // Evidence retrieval can proceed using the original claim if context lookup fails.
+  }
   let plan = await model(
     planSchema,
     planningInstruction(today, calendarGuidance),
-    analysisInput,
+    { ...analysisInput, searchHints },
   );
-  if (plan.clarificationKind === "missing_evidence") {
+  if (
+    plan.clarificationKind === "missing_evidence" ||
+    plan.clarificationKind === "ambiguous_claim" ||
+    (plan.needsClarification && plan.clarificationKind !== "no_search_anchor")
+  ) {
     plan = { ...plan, needsClarification: false, checkable: true };
     if (plan.queries.length !== 2 || plan.queries[0] === plan.queries[1])
       plan.queries = [
@@ -308,7 +326,7 @@ export async function verify(
   if (plan.needsClarification)
     return noDecision(
       "needs_clarification",
-      "Doprecyzuj podmiot, okres i zakres twierdzenia. Nie możemy jednoznacznie ustalić, co mamy sprawdzić.",
+      "Jakiego zdarzenia lub podmiotu dotyczy to twierdzenie?",
     );
   if (!plan.checkable)
     return simple(
@@ -317,6 +335,9 @@ export async function verify(
     );
   if (plan.queries.length !== 2 || plan.queries[0] === plan.queries[1])
     throw invalidOutput();
+  // Always search the actual claim as well as the model's contextual query.
+  // A paraphrase must not silently drop quantities or substitute another event.
+  plan = { ...plan, queries: [analysisInput.claim, plan.queries[1]] };
   stage("searching");
   const found = await retrieve(plan, signal, onProgress);
   retrieval = found.statuses;
@@ -328,6 +349,7 @@ export async function verify(
   const protectedSources = guardDocuments(prepared);
   recordGuard("source", protectedSources.removed);
   const documents = protectedSources.documents;
+  await enrichPublicationDates(documents, signal);
   const incompleteProviders = retrieval
     .filter(
       (source) => source.status === "error" || source.status === "partial",
@@ -387,7 +409,7 @@ export async function verify(
       await model(
         reasonedSelectionSchema,
         instruction +
-          " Poprzednia próba nie przeszła walidacji. Sprawdź dokładne cytaty i identyfikatory.",
+          " Popraw przyczynę podaną w validationIssues. Jeśli przekroczono limit cytatów, skróć ustalenia i ponownie użyj wybranych identyfikatorów w findings, evidence i basis.",
         {
           ...payload,
           previousAssessment: draft,

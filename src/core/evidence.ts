@@ -9,6 +9,7 @@ import {
 } from "./contracts";
 import { getDomain } from "tldts";
 import { invalidOutput } from "./errors";
+import { isFactCheckingArticle } from "./source-policy";
 
 export type SearchHit = {
   title: string;
@@ -255,6 +256,22 @@ export function prepareDocuments(
   return documents;
 }
 
+function hasDirectFactCheck(assessment: Assessment, documents: Document[]) {
+  const relation =
+    assessment.verdict === "supported" ? "supports" : "contradicts";
+  return (
+    ["supported", "refuted"].includes(assessment.verdict) &&
+    documents.some(
+      (doc) =>
+        doc.contentScope === "text" &&
+        isFactCheckingArticle(doc.url) &&
+        assessment.evidence.some(
+          (e) => e.sourceId === doc.id && e.relation === relation,
+        ),
+    )
+  );
+}
+
 export function evidenceCoverage(
   assessment: Assessment,
   documents: Document[],
@@ -268,7 +285,7 @@ export function evidenceCoverage(
       sources.map((d) => d.publisherGroup || publisherGroup(d.url)),
     ).size,
     reviewedSources: documents.length,
-    minimumGroups: 2,
+    minimumGroups: hasDirectFactCheck(assessment, documents) ? 1 : 2,
   };
 }
 
@@ -277,6 +294,7 @@ export function hasCorroboration(
   documents: Document[],
 ) {
   if (!["supported", "refuted"].includes(assessment.verdict)) return true;
+  if (hasDirectFactCheck(assessment, documents)) return true;
   const relation =
     assessment.verdict === "supported" ? "supports" : "contradicts";
   const relevant = {

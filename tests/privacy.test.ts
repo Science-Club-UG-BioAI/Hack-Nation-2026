@@ -1,3 +1,6 @@
+vi.mock("@/server/publication-dates", () => ({
+  enrichPublicationDates: async () => {},
+}));
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { randomUUID, createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
@@ -15,7 +18,11 @@ import { POST as verify } from "@/app/api/verify/route";
 import { DELETE, GET } from "@/app/api/session/route";
 import { generate, search } from "@/server/providers";
 import { demoResult } from "@/core/demo";
-vi.mock("@/server/providers", () => ({ generate: vi.fn(), search: vi.fn() }));
+vi.mock("@/server/providers", () => ({
+  searchContext: vi.fn().mockResolvedValue([]),
+  generate: vi.fn(),
+  search: vi.fn(),
+}));
 vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));

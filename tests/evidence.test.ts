@@ -114,6 +114,46 @@ describe("source preparation", () => {
     expect(result.verdict).toBe("insufficient");
     expect(result.evidence).toEqual(assessment.evidence);
   });
+  it.each([
+    ["supported", "supports", "https://demagog.org.pl/na-biezaco/artykul"],
+    ["refuted", "contradicts", "https://euvsdisinfo.eu/report/false-claim"],
+  ] as const)(
+    "allows a direct %s fact check without a second publisher",
+    (verdict, relation, url) => {
+      const checked = {
+        ...assessment,
+        verdict,
+        evidence: [{ ...assessment.evidence[0], relation }],
+      };
+      expect(
+        requireCorroboration(checked, [
+          { ...document, url, contentScope: "text" },
+        ]).verdict,
+      ).toBe(verdict);
+    },
+  );
+  it.each([
+    ["https://demagog.org.pl/na-biezaco", "text", "supports"],
+    ["https://demagog.org.pl/na-biezaco/artykul", "metadata", "supports"],
+    ["https://demagog.org.pl/na-biezaco/artykul", "text", "context"],
+    [
+      "https://demagog.org.pl.attacker.example/na-biezaco/artykul",
+      "text",
+      "supports",
+    ],
+  ] as const)(
+    "does not waive corroboration for %s %s %s",
+    (url, contentScope, relation) => {
+      const checked = {
+        ...assessment,
+        evidence: [{ ...assessment.evidence[0], relation }],
+      };
+      expect(
+        requireCorroboration(checked, [{ ...document, url, contentScope }])
+          .verdict,
+      ).toBe("insufficient");
+    },
+  );
   it("does not count context from another publisher as corroboration", () => {
     const other = { ...document, id: "s2", url: "https://other.org/a" };
     const result = requireCorroboration(

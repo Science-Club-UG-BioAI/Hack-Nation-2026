@@ -1,3 +1,6 @@
+vi.mock("@/server/publication-dates", () => ({
+  enrichPublicationDates: async () => {},
+}));
 vi.mock("@/server/corpus", () => ({
   corpus: async () => ({ hits: [], partial: false }),
 }));
@@ -10,7 +13,11 @@ import { generate, search } from "@/server/providers";
 import { planSchema, auditSchema } from "@/core/contracts";
 import { AppError } from "@/core/errors";
 
-vi.mock("@/server/providers", () => ({ generate: vi.fn(), search: vi.fn() }));
+vi.mock("@/server/providers", () => ({
+  searchContext: vi.fn().mockResolvedValue([]),
+  generate: vi.fn(),
+  search: vi.fn(),
+}));
 const claim = "Polska przystąpiła do NATO 12 marca 1999 roku.";
 const request = (body: unknown, session = randomUUID(), path = "verify") =>
   new NextRequest(`http://localhost:3000/api/${path}`, {
@@ -29,7 +36,7 @@ beforeEach(() => {
   vi.mocked(search).mockResolvedValue([
     {
       title: "Official",
-      url: "https://nato.int/source",
+      url: "https://euvsdisinfo.eu/source",
       raw_content:
         "Poland joined NATO on 12 March 1999. The accession is recorded in the official history.",
     },
@@ -120,7 +127,7 @@ it.each(["web", "discord"])(
     for (const item of initial.evidence) expect(reply).toContain(item.quote);
     for (const source of initial.sources) expect(reply).toContain(source.url);
     expect(generate).toHaveBeenCalledTimes(3);
-    expect(search).toHaveBeenCalledTimes(2);
+    expect(search).toHaveBeenCalledTimes(6);
   },
 );
 
@@ -245,6 +252,7 @@ it("responds automatically to a clarification without a factual verdict", async 
   vi.mocked(generate).mockResolvedValueOnce({
     checkable: true,
     needsClarification: true,
+    clarificationKind: "no_search_anchor",
     explanation: "Podaj kraj i okres.",
     queries: [],
   });
@@ -357,7 +365,7 @@ it("projects the same supported result and citations into the graph without extr
   const plain = await discord(request({ content: claim }, session));
   expect((await plain.json()).result).not.toHaveProperty("evidenceGraph");
   expect(generate).toHaveBeenCalledTimes(3);
-  expect(search).toHaveBeenCalledTimes(2);
+  expect(search).toHaveBeenCalledTimes(6);
 });
 
 it("preserves the verdict when the graph cannot be rendered", async () => {
