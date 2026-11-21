@@ -4,6 +4,8 @@ vi.mock("@/server/corpus", () => ({
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { channelReply } from "@/core/channel";
 import { sourceDisagreement } from "@/core/source-disagreement";
+import controlled from "../data/benchmark/controlled-cases.json";
+import { reasonedSelectionSchema } from "@/core/quotations";
 import { verify } from "@/server/verify";
 import { generate, search } from "@/server/providers";
 import { AppError, invalidOutput } from "@/core/errors";
@@ -852,6 +854,97 @@ describe("verification pipeline", () => {
     const auditCall = model.mock.calls.at(-1)!;
     expect(auditCall[1]).toContain("assessment.evidenceConflict=true");
     expect(auditCall[1]).toContain("Nie żądaj wyboru jednej strony");
+  });
+  it("keeps a missing exhibit, an organizer's allegation and a legal opinion as context for the claim against the warehouse operator", async () => {
+    const fixture = controlled.cases.find((item) => item.id === "S05")!;
+    web.mockResolvedValue(
+      fixture.documents.map((doc) => ({
+        url: doc.url,
+        title: doc.title,
+        raw_content: doc.text,
+      })),
+    );
+    const scopes = [
+      "event_only",
+      "reported_position",
+      "limited_legal_assessment",
+    ];
+    const findings = fixture.documents.map((doc, i) => ({
+      id: "f" + (i + 1),
+      text: doc.text,
+      quoteIds: ["q" + (i + 1)],
+    }));
+    // Even a confirmed basis and three nominally supporting publishers cannot
+    // establish who removed the exhibit or whether its removal was unlawful.
+    model
+      .mockResolvedValueOnce(plan)
+      .mockResolvedValueOnce(
+        reasonedSelectionSchema.parse({
+          ...assessment,
+          proofGaps: ["attribution", "legal_status"],
+          findings,
+          evidence: scopes.map((scope, i) => ({
+            quoteId: "q" + (i + 1),
+            relation: "supports",
+            scope,
+            relevance: "Dowód.",
+          })),
+          basis: {
+            kind: "confirmed",
+            establishedPremise: "",
+            inferenceOrCorrection: "",
+            premiseQuoteIds: [],
+            decisiveQuoteIds: ["q1", "q2", "q3"],
+          },
+        }),
+      )
+      .mockResolvedValueOnce({
+        approved: true,
+        reason: "Węższe ustalenia mają pokrycie w cytatach.",
+        findingChecks: findings.map((f) => ({
+          findingId: f.id,
+          supported: true,
+          atomic: true,
+        })),
+      });
+    const result = await verify(
+      { claim: fixture.claim },
+      fixture.id,
+      new AbortController().signal,
+    );
+    expect(result).toMatchObject({
+      status: "completed",
+      verdict: "insufficient",
+      evidenceConflict: false,
+    });
+    expect(result.findings).toEqual(
+      findings.map(({ id, text, quoteIds }) => ({
+        id,
+        text,
+        evidenceIds: quoteIds,
+      })),
+    );
+    expect(result.evidence.map((e) => e.quote)).toEqual(
+      fixture.documents.map((d) => d.text),
+    );
+    expect(result.evidence.map((e) => e.relation)).toEqual([
+      "context",
+      "context",
+      "context",
+    ]);
+    expect(result.evidence.map((e) => e.relevance)).toEqual([
+      expect.stringContaining("zdarzenie"),
+      expect.stringContaining("zarzut"),
+      expect.stringContaining("ocenę prawną"),
+    ]);
+    expect(result.limitations).toEqual([
+      expect.stringContaining("odpowiada"),
+      expect.stringContaining("zgodne z prawem"),
+    ]);
+    expect(model.mock.calls[2][2]).toMatchObject({
+      assessment: { verdict: "insufficient", limitations: result.limitations },
+    });
+    expect(model).toHaveBeenCalledTimes(3);
   });
   it("returns a separate out-of-scope status before searching", async () => {
     model.mockResolvedValueOnce({

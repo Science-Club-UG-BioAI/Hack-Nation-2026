@@ -148,11 +148,11 @@ export function Workbench() {
         Przejdź do weryfikacji
       </a>
       <header className="header dashboard-header">
-        <a className="brand" href="/" aria-label="Prawdowid — strona główna">
+        <a className="brand" href="/" aria-label="KitCheck — strona główna">
           <span className="brand-icon">
             <Icon name="eye" />
           </span>
-          Prawdowid<span className="brand-dot">.</span>
+          KitCheck<span className="brand-dot">.</span>
         </a>
         <nav className="dashboard-nav" aria-label="Kanały weryfikacji">
           <a href="/" aria-current="page">
@@ -449,7 +449,7 @@ export function Workbench() {
           </div>
         </div>
         <footer className="page-footer">
-          <span>Prawdowid · HackNation 2026</span>
+          <span>KitCheck · HackNation 2026</span>
           <p>Sprawdzaj źródła. Zachowaj własny osąd.</p>
           <span>Wersja eksperymentalna</span>
         </footer>

@@ -61,7 +61,7 @@ export function ChannelWorkbench() {
       </a>
       <header className="header">
         <a className="brand" href="/">
-          Prawdowid<span className="brand-dot">.</span>
+          KitCheck<span className="brand-dot">.</span>
         </a>
         <a href="/" className="text-button">
           Weryfikacja WWW
@@ -71,7 +71,7 @@ export function ChannelWorkbench() {
         <p className="eyebrow">DRUGI KANAŁ · ADAPTER DEMONSTRACYJNY</p>
         <h1>Sprawdzenie przez wiadomość.</h1>
         <p className="lead">
-          Symulator rozmowy Discord. Wpisz wiadomość — Prawdowid automatycznie
+          Symulator rozmowy Discord. Wpisz wiadomość — KitCheck automatycznie
           wyszuka dowody i przygotuje odpowiedź.
         </p>
         <p className="demo-notice">
@@ -81,7 +81,7 @@ export function ChannelWorkbench() {
         </p>
         <div className="channel-grid">
           <section className="input-card">
-            <h2>Napisz do Prawdowida</h2>
+            <h2>Napisz wiadomość do KitCheck</h2>
             <form onSubmit={submit}>
               <label htmlFor="message">Treść wiadomości</label>
               <textarea
@@ -115,7 +115,7 @@ export function ChannelWorkbench() {
                 className="primary-button"
                 disabled={!mounted || busy || content.trim().length < 20}
               >
-                {busy ? "Prawdowid sprawdza…" : "Wyślij w symulatorze"}
+                {busy ? "KitCheck sprawdza…" : "Wyślij w symulatorze"}
               </button>
             </form>
             <SessionControls
@@ -161,12 +161,12 @@ export function ChannelWorkbench() {
               )}
               {busy && (
                 <p role="status">
-                  Prawdowid wyszukuje źródła i sprawdza dowody…
+                  KitCheck wyszukuje źródła i sprawdza dowody…
                 </p>
               )}
               {error && (
                 <div className="message message-bot" role="alert">
-                  <strong>Prawdowid · błąd techniczny</strong>
+                  <strong>KitCheck · błąd techniczny</strong>
                   <p>{error.message}</p>
                   <p>Nie wydano werdyktu o prawdziwości.</p>
                 </div>
@@ -176,7 +176,7 @@ export function ChannelWorkbench() {
                   className="message message-bot"
                   key={`${reply.result.requestId}-${index}`}
                 >
-                  <strong>Prawdowid · odpowiedź {index + 1}</strong>
+                  <strong>KitCheck · odpowiedź {index + 1}</strong>
                   <p>{message}</p>
                 </div>
               ))}

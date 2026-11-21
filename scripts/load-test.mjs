@@ -44,6 +44,7 @@ const plan = {
 };
 const assessment = {
   verdict: "supported",
+  proofGaps: [],
   findings: [{ id: "f1", text: quote, quoteIds: ["q1", "q2"] }],
   basis: {
     kind: "confirmed",
@@ -57,6 +58,7 @@ const assessment = {
   evidence: ["q1", "q2"].map((quoteId) => ({
     quoteId,
     relation: "supports",
+    scope: "direct",
     relevance: "Wynik pomiaru.",
   })),
 };

@@ -8,8 +8,41 @@ import {
 import { invalidOutput } from "./errors";
 import { validateAssessment } from "./evidence";
 
+const proofGapMessages = {
+  attribution:
+    "Przytoczone dowody nie rozstrzygają, czy podmiot wskazany w tezie odpowiada za opisane działanie.",
+  legal_status:
+    "Przytoczone dowody nie rozstrzygają, czy konkretne działanie było zgodne z prawem.",
+} as const;
+
 // The model selects immutable passages; it never writes the published quotation.
+const scopeDescriptions = {
+  event_only:
+    "Cytat dokumentuje zdarzenie. Sam nie wskazuje, kto za nie odpowiada.",
+  reported_position:
+    "Cytat dokumentuje wypowiedź lub zarzut przypisany jego autorowi.",
+  limited_legal_assessment:
+    "Cytat przedstawia ocenę prawną lub decyzję o ograniczonym zakresie.",
+} as const;
+const selectedQuotation = evidenceSchema
+  .pick({ relation: true, relevance: true })
+  .extend({
+    quoteId: z.string().min(1),
+    scope: z
+      .enum([
+        "direct",
+        "event_only",
+        "reported_position",
+        "limited_legal_assessment",
+      ])
+      .optional(),
+  });
+
 export const selectionSchema = assessmentSchema.extend({
+  proofGaps: z
+    .array(z.enum(["attribution", "legal_status"]))
+    .max(2)
+    .optional(),
   findings: z
     .array(
       findingSchema.omit({ evidenceIds: true }).extend({
@@ -33,20 +66,19 @@ export const selectionSchema = assessmentSchema.extend({
       decisiveQuoteIds: z.array(z.string().min(1)).max(10),
     })
     .optional(),
-  evidence: z
-    .array(
-      evidenceSchema.pick({ relation: true, relevance: true }).extend({
-        quoteId: z.string().min(1),
-      }),
-    )
-    .max(10),
+  evidence: z.array(selectedQuotation).max(10),
 });
 // Live generation must supply the evidence-linked decision basis. The legacy
 // resolver still reads old saved selections; production uses this stricter schema.
-export const reasonedSelectionSchema = selectionSchema.required({
-  basis: true,
-  findings: true,
-});
+export const reasonedSelectionSchema = selectionSchema
+  .required({
+    proofGaps: true,
+    basis: true,
+    findings: true,
+  })
+  .extend({
+    evidence: z.array(selectedQuotation.required({ scope: true })).max(10),
+  });
 
 type Quotation = { sourceId: string; chunkId: string; quote: string };
 
@@ -147,6 +179,15 @@ export function resolveSelection(
     throw invalidOutput([
       "Select at most 10 distinct quotations across evidence and findings; keep only the facts necessary to explain the verdict.",
     ]);
+  // A gap here is essential to deciding the whole claim. Event reports and
+  // attributed allegations can still substantiate narrower, audited findings.
+  const gaps = [...new Set(parsed.data.proofGaps)];
+  if (gaps.length && !basis)
+    throw invalidOutput(["Proof gaps require a decision basis."]);
+  if (gaps.length && basis) {
+    basis.kind = "unresolved";
+    basis.decisiveQuoteIds = [];
+  }
   // An unresolved assessment with explicitly no findings publishes no facts.
   // Do not force the model to invent findings for irrelevant search matches.
   // Conflict and factual decisions still require their normal evidence checks.
@@ -178,13 +219,28 @@ export function resolveSelection(
     basis.decisiveQuoteIds = basis.decisiveQuoteIds.filter((id) =>
       selected.has(id),
     );
+    if (parsed.data.proofGaps !== undefined) {
+      const decisive = parsed.data.evidence.filter((item) => {
+        if (item.scope !== "direct") return false;
+        if (basis.kind === "confirmed") return item.relation === "supports";
+        if (basis.kind === "contradicted")
+          return item.relation === "contradicts";
+        return true;
+      });
+      const directIds = new Set(decisive.map((item) => item.quoteId));
+      basis.decisiveQuoteIds = basis.decisiveQuoteIds.filter((id) =>
+        directIds.has(id),
+      );
+    }
     if (
       ["confirmed", "contradicted", "mixed_context", "conflict"].includes(
         basis.kind,
       ) &&
       !basis.decisiveQuoteIds.length
     )
-      throw invalidOutput(["A factual decision requires decisive evidence."]);
+      throw invalidOutput([
+        "A factual decision requires a selected decisive quotation directly addressing the claim or the demonstrated correction. If attribution or legal status remains unresolved, report the relevant proofGaps.",
+      ]);
     // A conflict must show both sides: decisive passages from at least two
     // different documents, never one source contradicting itself.
     if (
@@ -227,6 +283,8 @@ export function resolveSelection(
         `evidence[${index}]: duplicate quoteId. Each passage can be selected only once.`,
       ]);
     seen.add(item.quoteId);
+    const scope = item.scope;
+    const contextOnly = scope !== undefined && scope !== "direct";
     return {
       ...quote,
       id: item.quoteId,
@@ -234,12 +292,18 @@ export function resolveSelection(
       // its context. It cannot simultaneously support the entire mixed claim.
       // Preserve an explicit contradiction; otherwise label this role context.
       relation:
-        basis?.kind === "mixed_context" &&
-        basis.decisiveQuoteIds.includes(item.quoteId) &&
-        item.relation === "supports"
+        contextOnly ||
+        gaps.length > 0 ||
+        (basis?.kind === "mixed_context" &&
+          basis.decisiveQuoteIds.includes(item.quoteId) &&
+          item.relation === "supports")
           ? ("context" as const)
           : item.relation,
-      relevance: item.relevance,
+      relevance: publish
+        ? contextOnly
+          ? scopeDescriptions[scope]
+          : "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu."
+        : item.relevance,
     };
   });
   // Preserve the original strict substring and verdict validation after materialization.
@@ -325,10 +389,7 @@ export function resolveSelection(
   return {
     ...assessment,
     explanation,
-    limitations: [],
-    evidence: evidence.map((e) => ({
-      ...e,
-      relevance: "Powiązanie cytatu z ustaleniem wskazano w uzasadnieniu.",
-    })),
+    limitations: gaps.map((gap) => proofGapMessages[gap]),
+    evidence,
   };
 }
