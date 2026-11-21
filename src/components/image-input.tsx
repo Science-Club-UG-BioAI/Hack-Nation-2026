@@ -16,11 +16,13 @@ export function ImageInput({
   attachment,
   hasClaim,
   onChange,
+  onPreview,
 }: {
   disabled: boolean;
   attachment: ImageAttachment;
   hasClaim: boolean;
   onChange: (value: ImageAttachment) => void;
+  onPreview?: (url: string) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,8 +35,12 @@ export function ImageInput({
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    onPreview?.(url);
+    return () => {
+      onPreview?.("");
+      URL.revokeObjectURL(url);
+    };
+  }, [file, onPreview]);
 
   function select(next: File | undefined) {
     cancel();

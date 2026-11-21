@@ -10,7 +10,11 @@ import { VerificationView } from "./verification-view";
 import { demoExamples } from "@/core/demo";
 import { useVerificationRequest } from "./use-verification-request";
 import { SessionControls, ensureSession } from "./session-controls";
-import { AnalysisProgress, type TimedProgress } from "./analysis-progress";
+import {
+  AnalysisProgress,
+  ProgressStrip,
+  type TimedProgress,
+} from "./analysis-progress";
 import { readVerificationStream } from "@/core/progress";
 import { Icon } from "./icon";
 import { ImageInput, type ImageAttachment } from "./image-input";
@@ -32,6 +36,9 @@ export function Workbench() {
   const [events, setEvents] = useState<TimedProgress[]>([]);
   const [cancelled, setCancelled] = useState(false);
   const [demo, setDemo] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
+  const focused = busy || Boolean(result) || Boolean(error);
   const claimRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
@@ -53,12 +60,29 @@ export function Workbench() {
     return () => clearInterval(interval);
   }, [busy]);
 
+  useEffect(() => {
+    if (cancelled && !busy) claimRef.current?.focus();
+  }, [cancelled, busy]);
+
   const clearResult = () => {
     setResult(null);
     setError(null);
     setEvents([]);
     setCancelled(false);
+    setDetailsOpen(false);
   };
+  const isMobile = () => window.matchMedia("(max-width: 760px)").matches;
+  function stop() {
+    cancel();
+    setCancelled(true);
+  }
+  function editClaim() {
+    clearResult();
+    requestAnimationFrame(() => {
+      claimRef.current?.scrollIntoView({ block: "center" });
+      claimRef.current?.focus({ preventScroll: true });
+    });
+  }
   async function run(demoId?: string) {
     if (!demoId && imageUnread) return;
     if (demoId) resetImage();
@@ -66,8 +90,7 @@ export function Workbench() {
     setElapsed(0);
     setDemo(Boolean(demoId));
     requestAnimationFrame(() => {
-      if (window.matchMedia("(max-width: 760px)").matches)
-        progressRef.current?.scrollIntoView({ block: "start" });
+      if (isMobile()) progressRef.current?.scrollIntoView({ block: "start" });
     });
     const started = Date.now();
     await runRequest(
@@ -96,11 +119,11 @@ export function Workbench() {
         );
         const showResult = (value: VerificationResult) => {
           setResult(value);
-          requestAnimationFrame(() =>
-            resultRef.current?.focus({
-              preventScroll: !window.matchMedia("(max-width: 760px)").matches,
-            }),
-          );
+          requestAnimationFrame(() => {
+            resultRef.current?.focus({ preventScroll: true });
+            if (isMobile())
+              progressRef.current?.scrollIntoView({ block: "start" });
+          });
         };
         if (
           response.ok &&
@@ -158,7 +181,9 @@ export function Workbench() {
   }
 
   return (
-    <div className="shell dashboard-shell">
+    <div
+      className={`shell dashboard-shell ${focused ? "is-focused" : ""} ${busy ? "is-busy" : ""} ${detailsOpen ? "details-open" : ""}`}
+    >
       <a className="skip-link" href="#workspace">
         Przejdź do weryfikacji
       </a>
@@ -246,6 +271,7 @@ export function Workbench() {
                   disabled={!mounted || busy}
                   attachment={attachment}
                   hasClaim={Boolean(claim.trim())}
+                  onPreview={setImagePreview}
                   onChange={(value) => {
                     setAttachment(value);
                     if (value && value !== "unread")
@@ -302,11 +328,7 @@ export function Workbench() {
                   <button
                     type="button"
                     className="cancel-button"
-                    onClick={() => {
-                      cancel();
-                      setCancelled(true);
-                      requestAnimationFrame(() => claimRef.current?.focus());
-                    }}
+                    onClick={stop}
                   >
                     Anuluj analizę
                   </button>
@@ -347,6 +369,40 @@ export function Workbench() {
             />
           </div>
           <div className="analysis-column" ref={progressRef}>
+            {focused && (
+              <div className="focus-sticky">
+                <section className="claim-bar" aria-label="Sprawdzana teza">
+                  {imagePreview && (
+                    <img
+                      className="claim-bar-thumb"
+                      src={imagePreview}
+                      alt="Dołączony obraz"
+                    />
+                  )}
+                  <div>
+                    <span>{busy ? "Sprawdzasz" : "Sprawdzono"}</span>
+                    <p>{claim}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={busy ? stop : editClaim}
+                  >
+                    {busy ? "Anuluj" : "Zmień"}
+                  </button>
+                </section>
+                <ProgressStrip
+                  events={events}
+                  busy={busy}
+                  elapsed={elapsed}
+                  result={result}
+                  interrupted={cancelled || Boolean(error)}
+                  demo={demo}
+                  detailsOpen={detailsOpen}
+                  onToggleDetails={() => setDetailsOpen((open) => !open)}
+                />
+              </div>
+            )}
             <AnalysisProgress
               events={events}
               busy={busy}
