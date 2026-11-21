@@ -111,10 +111,13 @@ test("real-time stages, source failures, activity log and final evidence stay co
     page.getByRole("heading", { name: "Potwierdzone", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".pipeline-steps .step-done")).toHaveCount(4);
+  await expect(page.locator(".strip-segments .segment-done")).toHaveCount(4);
+  await expect(page.locator("article.evidence")).toHaveCount(2);
+  await expect(page.getByLabel("Twierdzenie do sprawdzenia")).not.toBeVisible();
+  await page.getByRole("button", { name: "Zmień" }).click();
   await expect(
     page.getByRole("button", { name: "Sprawdź dowody" }),
   ).toBeEnabled();
-  await expect(page.locator("article.evidence")).toHaveCount(2);
   await page
     .getByLabel("Twierdzenie do sprawdzenia")
     .fill("Nowa teza wymagająca osobnej weryfikacji.");

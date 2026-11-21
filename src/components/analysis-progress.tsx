@@ -257,8 +257,10 @@ export function ProgressStrip({
   return (
     <div className="progress-strip">
       {busy && (
-        <div className="strip-head" aria-live="polite" aria-atomic="true">
-          <strong>{title}</strong>
+        <div className="strip-head">
+          <h2 aria-live="polite" aria-atomic="true">
+            {title}
+          </h2>
           <span>
             {currentIndex >= 0 ? `krok ${currentIndex + 1} z 4 · ` : ""}
             {elapsed} s
