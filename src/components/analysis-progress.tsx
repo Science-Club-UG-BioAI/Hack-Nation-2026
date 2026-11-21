@@ -97,7 +97,11 @@ export function AnalysisProgress({
               ? "Szczegóły oceny i ograniczenia znajdziesz poniżej."
               : null;
   return (
-    <section className="pipeline-card" aria-labelledby="pipeline-title">
+    <section
+      className="pipeline-card"
+      id="pipeline-details"
+      aria-labelledby="pipeline-title"
+    >
       <div className="pipeline-heading">
         <div>
           <span className="eyebrow">PRZEBIEG WERYFIKACJI</span>
@@ -209,5 +213,108 @@ export function AnalysisProgress({
         </details>
       )}
     </section>
+  );
+}
+
+export function ProgressStrip({
+  events,
+  busy,
+  elapsed,
+  result,
+  interrupted,
+  demo,
+  detailsOpen,
+  onToggleDetails,
+}: {
+  events: TimedProgress[];
+  busy: boolean;
+  elapsed: number;
+  result: VerificationResult | null;
+  interrupted: boolean;
+  demo: boolean;
+  detailsOpen: boolean;
+  onToggleDetails: () => void;
+}) {
+  const stages = events.flatMap((event) =>
+    event.type === "stage" ? [event.stage] : [],
+  );
+  const current = stages.at(-1);
+  const currentStep =
+    current === "repairing_citations" || current === "corroborating"
+      ? "assessing"
+      : current;
+  const currentIndex = steps.findIndex((step) => step.id === currentStep);
+  const title = demo
+    ? "Przykład demonstracyjny"
+    : current
+      ? stageLabels[current]
+      : "Łączenie z analizą";
+  const summary = interrupted
+    ? "Analiza zatrzymana"
+    : result
+      ? `Materiały: ${result.sources.length} · cytowane: ${result.coverage?.citedSources ?? 0} · grupy: ${result.coverage?.publisherGroups ?? 0}`
+      : "";
+  return (
+    <div className="progress-strip">
+      {busy && (
+        <div className="strip-head">
+          <h2 aria-live="polite" aria-atomic="true">
+            {title}
+          </h2>
+          <span>
+            {currentIndex >= 0 ? `krok ${currentIndex + 1} z 4 · ` : ""}
+            {elapsed} s
+          </span>
+        </div>
+      )}
+      <ol className="strip-segments">
+        {steps.map((step) => {
+          const visited = stages.includes(step.id);
+          const running = busy && currentStep === step.id;
+          const stopped = interrupted && currentStep === step.id;
+          const done = visited && !running && !stopped;
+          const state = running
+            ? "active"
+            : stopped
+              ? "stopped"
+              : done
+                ? "done"
+                : "todo";
+          return (
+            <li
+              key={step.id}
+              className={`segment-${state}`}
+              aria-current={running ? "step" : undefined}
+            >
+              <span className="sr-only">
+                {step.label}:{" "}
+                {
+                  {
+                    active: "w trakcie",
+                    stopped: "przerwano",
+                    done: "zakończono",
+                    todo: result ? "nie wykonywano" : "oczekuje",
+                  }[state]
+                }
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      {!busy && (
+        <div className="strip-foot">
+          <span>{summary}</span>
+          <button
+            type="button"
+            className="text-button"
+            aria-expanded={detailsOpen}
+            aria-controls="pipeline-details"
+            onClick={onToggleDetails}
+          >
+            {detailsOpen ? "Ukryj szczegóły" : "Szczegóły"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
