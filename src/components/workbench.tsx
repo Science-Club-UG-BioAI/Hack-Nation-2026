@@ -249,7 +249,7 @@ export function Workbench() {
                 <div className="date-row">
                   <label htmlFor="statedAt">
                     Data wypowiedzi{" "}
-                    <span className="optional">opcjonalnie</span>
+                    <span className="optional">domyślnie dzisiaj</span>
                   </label>
                   <input
                     id="statedAt"

@@ -122,7 +122,7 @@ export function ChannelWorkbench() {
                 <span>{content.length}/500</span>
               </div>
               <label htmlFor="message-date">
-                Data wypowiedzi (opcjonalnie)
+                Data wypowiedzi (domyślnie dzisiaj)
               </label>
               <input
                 id="message-date"

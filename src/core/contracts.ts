@@ -40,6 +40,7 @@ export const verifyInputSchema = z
           date.toISOString().slice(0, 10) === value
         );
       }, "Nieprawidłowa data.")
+      .or(z.literal("").transform(() => undefined))
       .optional(),
   })
   .strict();
