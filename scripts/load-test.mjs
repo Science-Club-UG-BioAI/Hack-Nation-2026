@@ -1,7 +1,15 @@
 // Run from the repo root. --benchmark also drives the unchanged benchmark runner.
 import { createServer as httpServer } from "node:http";
-import { readFile, writeFile, mkdir, mkdtemp, rm } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  mkdtemp,
+  rm,
+  readdir,
+} from "node:fs/promises";
+import { resolve, join, dirname, basename } from "node:path";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
@@ -10,8 +18,40 @@ import { NextRequest } from "next/server.js";
 import { createServer } from "vite";
 
 const benchmark = process.argv.includes("--benchmark");
-const folder = resolve(benchmark ? "reports/cost" : "reports/load");
+const folder = resolve(
+  process.env.MEASUREMENT_OUTPUT ||
+    `reports/${benchmark ? "cost" : "load"}/offline-${new Date().toISOString().replace(/[:.]/g, "-")}`,
+);
 await mkdir(folder, { recursive: true });
+// A new run must never replace an earlier measurement.
+const sourceFiles = (await readdir("src", { recursive: true }))
+  .filter((name) => /\.(?:ts|tsx|css)$/.test(name))
+  .map((name) => join("src", name));
+const hashes = {};
+for (const file of [
+  ...sourceFiles,
+  "scripts/load-test.mjs",
+  "data/corpus/catalog.json",
+  "package-lock.json",
+].sort())
+  hashes[file.replaceAll("\\", "/")] = createHash("sha256")
+    .update(await readFile(file))
+    .digest("hex");
+await writeFile(
+  join(folder, "provenance.json"),
+  JSON.stringify(
+    {
+      capturedAt: new Date().toISOString(),
+      mode: "controlled-http-synthetic-usage",
+      externalApiCalls: 0,
+      hashes,
+    },
+    null,
+    2,
+  ) + "\n",
+  { flag: "wx" },
+);
+console.log(JSON.stringify({ measurementOutput: folder, externalApiCalls: 0 }));
 const scratch = await mkdtemp(join(tmpdir(), "kitcheck-measure-"));
 Object.assign(process.env, {
   GEMINI_API_KEY: "offline-fixture",
@@ -19,6 +59,8 @@ Object.assign(process.env, {
   GEMINI_MODEL: "gemini-3.1-flash-lite",
   GEMINI_FALLBACK_MODEL: "",
   EUVSDISINFO_API_KEY: "",
+  GOOGLE_FACTCHECK_API_KEY: "",
+  SERPER_API_KEY: "",
   BENCHMARK_VARIANT: "api-json",
   BENCHMARK_DATASET: "data/benchmark/cases.json",
   ALERT_WEBHOOK_URL: "",
@@ -73,16 +115,20 @@ globalThis.fetch = async (url, init) => {
   if (address === "https://api.tavily.com/search") {
     calls.tavily++;
     return Response.json({
-      usage: { credits: 2 },
+      usage: {
+        credits: JSON.parse(init.body).search_depth === "basic" ? 1 : 2,
+      },
       results: [
         {
           title: "Laboratorium Alfa",
-          url: "https://alfa.example/raport",
+          url: "https://www.gov.pl/web/fixture/raport-alfa",
+          published_date: "2026-11-20",
           raw_content: quote + " Laboratorium Alfa udostępniło wyniki.",
         },
         {
           title: "Laboratorium Beta",
-          url: "https://beta.example/raport",
+          url: "https://demagog.org.pl/wypowiedzi/fixture-raport-beta/",
+          published_date: "2026-11-20",
           raw_content: quote + " Badanie powtórzył zespół Beta.",
         },
       ],
@@ -294,5 +340,10 @@ try {
   );
   closeAuditStore();
   await vite.close();
+  if (
+    dirname(resolve(scratch)) !== resolve(tmpdir()) ||
+    !basename(scratch).startsWith("kitcheck-measure-")
+  )
+    throw Error("Unsafe measurement cleanup path");
   await rm(scratch, { recursive: true, force: true });
 }

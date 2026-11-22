@@ -1,11 +1,35 @@
 # Prawdowid
 
-**Aktualizacja: ustalenia z przypisanymi dowodami (P0.1).** Aktualny zakres opisuje ostatnia sekcja tego pliku. Wcześniejsze tabele benchmarków i braków są historyczne; nie stanowią wyników po najnowszych zmianach.
+**Aktualizacja: pomiary z 22.11.2026.** Bieżący stan i ograniczenia opisuje tabela poniżej. Sekcje etapów 2, 3, P0.1 i P0.2 zachowują historię prac; ich wyniki nie stanowią walidacji aktualnego kodu.
 
 Prototyp HackNation 2026: **teza → wyszukiwanie → ocena → kontrola cytatów → wynik z dowodami**.
 Ta wersja przyjmuje jedną niepustą tezę (do 500 znaków), nie cały artykuł. Obsługuje WWW i działający adapter demonstracyjny wiadomości Discord, zgodnie z pierwszym etapem dostosowania do opisu wyzwania.
 
 W panelu WWW można dołączyć JPG, PNG lub WebP do 4 MiB. Po wyborze pliku Gemini automatycznie przygotowuje opis, który staje się kontekstem tezy. Jeśli pole tezy jest puste, pojawi się w nim propozycja z obrazu, o ile grafika zawiera sprawdzalne twierdzenie. Tezę można edytować przed wybraniem **Sprawdź dowody**. Odczyt obrazu wymaga klucza Gemini i zużywa jedną próbę ze wspólnego limitu analiz.
+
+## Aktualny stan pomiarów — 22.11.2026
+
+Dane do ponownego przeliczenia: [migawka pomiarów](data/measurements/status-2026-11-22.json). Zawiera liczniki wywołań ostatniej analizy, wyniki kontrolowanych testów, hashe plików źródłowych oraz liczebności prób. Migawka zachowuje stan sprzed dodania trzech artykułów Demagoga; jej 129 rekordów i hash katalogu dotyczą tamtej wersji. Bieżący korpus opisują [aktualny katalog](data/corpus/catalog.json) i wynik `npm run corpus:check`. Pełne odpowiedzi analiz online i pełne historyczne benchmarki pozostają lokalnie w ignorowanym katalogu `reports/`; wybrane starsze raporty kosztu/obciążenia są już śledzone w Git. Migawka nie zawiera kluczy, cookies ani pełnych artykułów. Nie jest pełnym archiwum pozwalającym niezależnie powtórzyć ocenę wszystkich historycznych cytatów.
+
+| Obszar                                              | Aktualny dowód                                                                                                                  | Co można stwierdzić                                                                                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Analiza online po optymalizacji                     | 1 nowa sesja, API JSON, bez grafu; Polska w NATO od 12.03.1999; `completed/supported`, 16,914 s                                 | Jedna udana próba, nie pełny benchmark ani miarodajna mediana                                                                      |
+| Koszt tej analizy                                   | Tavily: 3 wywołania / 5 kredytów / 0,040 USD; Gemini: 3 wywołania, 22 456 tokenów wejścia i 2653 wyjścia / 0,0095935 USD        | Znane składniki: **0,0495935 USD**; 2 wywołania Google Fact Check mają nieustaloną cenę, więc pełny koszt to `null`                |
+| Scenariusz 100 / 1000 takich analiz                 | 4,95935 / 49,5935 USD za Gemini + Tavily                                                                                        | Ekstrapolacja jednej obserwacji, nie zmierzony koszt 100/1000 testów; bez hostingu, obrazów i nieznanych opłat                     |
+| Korpus                                              | 132 rekordy, 14 grup domen, **2 typy: official (129) i fact_check (3)**; 6 dat publikacji, 4 aktualizacji, 2 okresy zdarzeń      | Progi ≥100 rekordów, ≥10 grup domen i ≥2 typów spełnione; 3 artykuły Demagoga sprawdzono przez rzeczywiste pobranie HTML         |
+| Poprawność cytatów                                  | Historyczny `p02-run4`: **66/121 = 54,5%**, pełna ocena przez GPT-6, inny model niż generator Gemini                            | Próg ≥85% niespełniony w tej ocenie; nie jest to ocena człowieka ani pomiar po optymalizacji                                       |
+| Bieżąca jakość online                               | Brak pełnego nowego zestawu po zmianie wyszukiwania                                                                             | Macro-F1, pokrycie, wstrzymanie, odporność, mediana i spójność kanałów aktualnej wersji pozostają niepotwierdzone                  |
+| Kontrola implementacji                              | **340 testów jednostkowych/integracyjnych**, 9 pominiętych; osobno **3 testy pobierania Demagoga**; **29 testów przeglądarkowych**, 4 live pominięte | Testy, kontrola typów i build po uzupełnieniu katalogu; testy pobierania nie wywołują płatnych usług i nie mierzą jakości werdyktów |
+| Kontrolowany pomiar 100 analiz + 100 odczytów cache | 300 symulowanych wywołań Gemini i 300 Tavily; zadane 7100/750 tokenów i 5 kredytów na analizę                                   | Wycena symulowanego zużycia **4,29 USD**, faktyczne opłaty API **0 USD**; nie zalicza wymogu pomiaru 100 analiz online             |
+| Powiadomienia                                       | Kod i testy istnieją; lokalnie `ALERT_WEBHOOK_URL` nie jest ustawiony                                                           | Brak potwierdzonego dostarczenia do rzeczywistego odbiorcy                                                                         |
+
+**Historycznych wyników nie przenosimy na bieżący kod.** W `p02-run4` uzyskano 30/30, macro-F1 1,000 i pokrycie przypisań 44/44. Nie oznacza to poprawności znaczeniowej cytatów ani zaliczenia aktualnej wersji. Trzy późniejsze próby sprzed optymalizacji dały 1/3 oczekiwanych wyników: potwierdzenie, odrzucenie audytu i `INVALID_MODEL_OUTPUT`; ich średni znany koszt 0,104616 USD nie jest średnią po optymalizacji. Tych prób i ostatniej pojedynczej analizy nie łączymy w jeden wskaźnik jakości lub kosztu.
+
+Hashe kodu zapisano przed nowymi testami offline. Pojedyncza próba online zachowała żądanie, odpowiedź i liczniki audytu, ale nie zapisała hasha kodu w chwili wykonania; nie uzupełniamy tej informacji wstecz.
+
+Nowy test obciążenia jest całkowicie lokalny, z symulowanym opóźnieniem dostawców 20 ms. Pięć fal po 12 żądań dało 15 odpowiedzi HTTP 200 i 45 odmów HTTP 429; mediana/p95 przyjętych żądań: **187,7/197,7 ms**. Cała próba obejmowała 80 żądań w wariantach 1, 3 i 12 równoległych klientów. Równolegle działał kontrolowany test kosztu. To obserwacja limitera na tym komputerze, nie czas analizy online ani gwarancja przepustowości usług.
+
+Do zamknięcia pozostają: poprawność cytatów, pełna walidacja jakości aktualnego kodu i koszt 100 testów online, konfiguracja odbiorcy alertów oraz odłożony przegląd dostawców/licencji. Materiały zgłoszeniowe są gotowe według informacji zespołu; ich plików i limitów formalnych nie weryfikowano ponownie.
 
 ## Uruchomienie
 
@@ -72,14 +96,14 @@ node --env-file=.env.local scripts/check-providers.mjs --generate
 
 1. Walidacja danych, origin i limitów. Opcjonalna data wypowiedzi jest przekazywana do modelu.
 2. Gemini rozpoznaje opinię, potrzebę doprecyzowania i wyjście poza zakres. Dla sprawdzalnej tezy przygotowuje dwa zapytania: neutralne oraz szukające kontrdowodu. Doprecyzowanie i nieobsługiwane wejście mają osobne statusy, bez werdyktu.
-3. Werdykt dotyczy tezy wejściowej. Wstępne wyszukiwanie kontekstu w Tavily obejmuje całe WWW i ma limit 6 sekund. Wskazówki trafiają wyłącznie do planowania. Dwie frazy dotyczące dowodów są wyszukiwane osobno dla każdej domeny z src/core/source-policy.ts (Demagog, EUvsDisinfo, gov.pl), z operatorem site: i filtrem include_domains. Pierwsza zachowuje oryginalną tezę, druga uwzględnia kontekst z planu. Serwer odrzuca wyniki spoza listy także w korpusie i bezpośrednich API. Każde zapytanie zwraca do 6 wyników. Dodatkowo model dobiera bezpośrednie API do tematu: Wikipedia, Sejm/ELI, arXiv oraz EUvsDisinfo przy tezach związanych z dezinformacją, jeśli ustawiono klucz (do 3 wyników z każdego). Używamy pobranego materiału, nie odpowiedzi wygenerowanej przez wyszukiwarkę. Przy odpowiednich kluczach Google Fact Check dodaje metadane wcześniejszych weryfikacji, a wyszukiwanie Google przez Serper uzupełnia wyniki z Demagoga. Linki bez pobranej treści są wyświetlane jako niedostępne do analizy.
+3. Werdykt dotyczy tezy wejściowej. Wstępne wyszukiwanie kontekstu w Tavily używa trybu Basic, obejmuje całe WWW i ma limit 6 sekund. Wskazówki trafiają wyłącznie do planowania. Dwie frazy dotyczące dowodów są wyszukiwane w trybie Advanced, każda jednocześnie na wszystkich domenach z `src/core/source-policy.ts` (Demagog, EUvsDisinfo, gov.pl), z operatorami `site:` i filtrem `include_domains`. Pierwsza zachowuje oryginalną tezę, druga szuka kontrdowodu lub kontekstu z planu i jest zawsze wykonywana. Gdy po deduplikacji i kontroli niezaufanych treści brakuje dwóch dokumentów z dwóch grup wydawców, wykonujemy najwyżej dwa dodatkowe wyszukiwania skierowane do brakujących grup. Metadane nie spełniają tego warunku. Jest to reguła budżetu pobierania, a nie ocena trafności lub wystarczalności dowodów. Serwer odrzuca wyniki spoza listy także w korpusie i bezpośrednich API. Każde zapytanie zwraca do 6 wyników. Dodatkowo model dobiera bezpośrednie API do tematu: Wikipedia, Sejm/ELI, arXiv oraz EUvsDisinfo przy tezach związanych z dezinformacją, jeśli ustawiono klucz (do 3 wyników z każdego). Używamy pobranego materiału, nie odpowiedzi wygenerowanej przez wyszukiwarkę. Przy odpowiednich kluczach Google Fact Check dodaje metadane wcześniejszych weryfikacji, a wyszukiwanie Google przez Serper uzupełnia wyniki z Demagoga. Linki bez pobranej treści są wyświetlane jako niedostępne do analizy.
 4. Usuwamy powtarzające się URL-e, identyczne i niemal identyczne teksty. Dobieramy dokumenty naprzemiennie z grup wydawców: maksymalnie 10 dokumentów, 3 na grupę, 4000 znaków na dokument i 40000 łącznie. Fragmenty otrzymują identyfikatory.
 5. Serwer dzieli fragmenty na oznaczone cytaty (do 650 znaków). Gemini ocenia tezę, dążąc do 3–5 trafnych dowodów, i wybiera identyfikatory `quoteId`. Tekst cytatu i przypisanie do źródła wstawia serwer z pobranego materiału — model ich nie przepisuje.
 6. Kod sprawdza istnienie źródła, fragmentu i dosłownego cytatu. Dopuszczalna jest tylko normalizacja Unicode NFC i białych znaków. Potwierdzenie lub obalenie wymaga odpowiednich dowodów z co najmniej 2 grup wydawców, z wyjątkiem bezpośrednich dowodów z pobranego tekstu artykułu Demagoga lub raportu EUvsDisinfo. Taka publikacja może wystarczyć samodzielnie po kontroli cytatów i audycie znaczenia; sama obecność domeny, metadane i materiał kontekstowy nie wystarczają. Brak takiego potwierdzenia daje `insufficient`, zachowując prawidłowe cytaty. Kilka poddomen gov.pl lub wersji językowych Wikipedii to jedna grupa. To konserwatywna reguła MVP, nie naukowa miara pewności ani niezależności źródeł.
 7. Dodatkowe wywołanie modelu sprawdza sens wniosku, okres, podmiot i kontrdowody. Wyjątek: po udanym wyszukiwaniu ocena `insufficient` bez wybranych dowodów kończy się stałym komunikatem serwera o ograniczeniach, bez publikowania nieaudytowanego uzasadnienia modelu. Negatywny audyt daje status `unable_to_verify` i `verdict: null`, z przyczyną i bez zatwierdzonych cytatów. Nieudana kontrola odpowiedzi nie jest oceną prawdziwości tezy.
 8. UI pokazuje wynik, cytaty, liczbę cytowanych źródeł i grup, statusy API, zakres materiału, linki, daty i ograniczenia. Pozostałe przejrzane dokumenty są dostępne osobno, bez sugerowania, że popierają ocenę. Zmiana tezy usuwa poprzedni wynik.
 
-Analiza wykonuje do 7 wyszukiwań Tavily materiałów (jedno dla kontekstu i po dwa dla każdej z trzech dozwolonych domen). Przy brakujących datach wybranych dokumentów dodatkowo wykonuje do 3 wyszukiwań metadanych Demagoga i do 3 odczytów stron www.gov.pl, ze wspólnym limitem 6 sekund. Data z wyszukiwarki wymaga zgodności adresu artykułu; brak danych pozostaje jawny. Wyszukiwanie materiałów obejmuje też maksymalnie 10 żądań do publicznych API (Wikipedia: 1 wyszukiwanie + do 3 artykułów; Sejm: 1 wyszukiwanie + do 3 tekstów; arXiv: 1 wyszukiwanie; EUvsDisinfo: 1 wyszukiwanie). Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
+Pełna analiza bez trafienia w pamięć podręczną wykonuje 1 wyszukiwanie Basic kontekstu i 2–4 wyszukiwania Advanced dowodów. Daty wybranych dokumentów uzupełniamy bezpośrednio z HTML stron Demagoga i www.gov.pl, bez płatnych zapytań o metadane, ze wspólnym limitem 6 sekund. Pobranie nie podąża za przekierowaniami i ma limit 3 MB. Brak daty pozostaje jawny. Przy obecnym limicie trzech dokumentów na grupę oznacza to najwyżej sześć odczytów HTML. Wyszukiwanie materiałów obejmuje też maksymalnie 10 żądań do publicznych API (Wikipedia: 1 wyszukiwanie + do 3 artykułów; Sejm: 1 wyszukiwanie + do 3 tekstów; arXiv: 1 wyszukiwanie; EUvsDisinfo: 1 wyszukiwanie). Maksymalnie 4 operacje modelu: plan, ocena, jedna naprawa cytatów lub uzupełnienie dowodów, audyt. Wszystkie etapy dzielą jeden budżet czasu; wyszukiwanie ma dodatkowo limit 15 sekund. Każda operacja modelu wykonuje najwyżej 3 żądania HTTP: próbę główną, jedno ponowienie i ewentualnie jedną próbę modelu zapasowego (maksymalnie 12 żądań do Gemini w całej analizie). Każde żądanie ma limit do 15 sekund. Dodatkowo obowiązują budżety etapów i rezerwa na audyt opisane na końcu README; wszystkie próby podlegają wspólnemu limitowi 60 sekund. Brak wyników oznacza brak danych. Awaria pojedynczego API źródeł nie przerywa analizy, jeśli inne odpowiedziały; interfejs ujawnia niepełne wyszukiwanie. Całkowita awaria wyszukiwania lub awaria modelu daje błąd techniczny bez werdyktu.
 
 ## Odporność Gemini i rozliczenia
 
@@ -193,7 +217,7 @@ Remove-Item Env:RUN_SOURCE_LIVE_TESTS
 
 Pokryte scenariusze: wybór nieistniejących lub powtórzonych identyfikatorów cytatów, brak przepisywania tekstu przez model, zmyślone cytaty, obce identyfikatory, cytat przetłumaczony zamiast dosłownego, brak danych, opinia, brak kontekstu, kopie i niemal identyczne przedruki, różnorodność wydawców, pojedynczy dowód, częściowa awaria wyszukiwania, metadane zamiast pełnego tekstu, przypięta rewizja Wikipedii, abstrakty arXiv, negatywny audyt znaczenia, jedna naprawa, timeout, awaria API, ograniczone przełączanie modelu, brak ponowień przy błędzie płatności lub limicie dziennym, przerwanie ponowień, walidacja wejścia, ochrona sekretów, zmiana tezy, mobile i jawne demo.
 
-## Ostatnia kontrola pełnej ścieżki online — 21.11.2026
+## Historyczna kontrola pełnej ścieżki online — 21.11.2026
 
 Chrome/Playwright, prawdziwe API, bez podmiany odpowiedzi i bez użycia przygotowanego demo. Model: `gemini-3.1-flash-lite`. Obie analizy przeszły wybór fragmentów, ścisłą walidację cytatów, audyt znaczenia i wyświetlenie w UI.
 
@@ -208,7 +232,7 @@ Test zapisuje `live-result.json` i `live.png` w katalogu wyników Playwright (ig
 
 ## Dane i ograniczenia
 
-- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do godziny w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
+- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do godziny w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dodatkowo wyniki wyszukiwania są przechowywane w pamięci tej samej sesji do 5 minut, a odczytane daty publikacji do godziny; usunięcie sesji czyści również te dane. Dostawcy mają własne zasady retencji.
 - Logi zawierają identyfikator żądania, czas, liczbę źródeł, kody błędów i status HTTP dostawcy. Nie zawierają kluczy ani treści wejścia.
 - Walidator potwierdza obecność cytatu w pobranym materiale, nie prawdziwość źródła. Audyt tym samym modelem może powielać jego błędy.
 - Deduplikacja nie rozpoznaje wszystkich przedruków ani wspólnego pierwotnego źródła. Nie deklarujemy niezależności domen.
@@ -219,7 +243,7 @@ Test zapisuje `live-result.json` i `live.png` w katalogu wyników Playwright (ig
 
 Consensus można później wykorzystać do źródeł naukowych. Obecna wersja potrzebuje także dokumentów urzędowych i bieżących informacji z szerokiego internetu. [API Consensus](https://help.consensus.app/en/articles/16516328-the-consensus-api).
 
-## Dostosowanie do opisu wyzwania — stan bieżący
+## Historia dostosowania do opisu wyzwania
 
 Zrealizowany etap: pięć kategorii, statusy obsługi oddzielone od werdyktów, WWW i automatyczny adapter demonstracyjny, wspólna logika oraz testy spójności w obu kierunkach.
 
@@ -234,11 +258,11 @@ Próby online 21.11.2026 (rzeczywiste API, bez podstawiania odpowiedzi):
 
 Po dodaniu endpointów test inicjowania przez adapter został wykonany również po ponownym uruchomieniu serwera. Pełne odpowiedzi i zrzuty zapisują testy Playwright; katalog `test-results` jest ignorowany przez Git.
 
-**To nadal nie jest komplet wymagań konkursowych.** Korpus i benchmark dodano w etapie opisanym poniżej. Zapis sprawdzeń, maskowanie i usuwanie sesji dodano w etapie opisanym na końcu README. Nadal pozostają pomiar kosztów, pełna ocena aktualności i siły dowodów oraz materiały zgłoszeniowe.
+**To nadal nie jest komplet wymagań konkursowych.** Korpus i benchmark dodano w etapie opisanym poniżej. Zapis sprawdzeń, maskowanie i usuwanie sesji dodano w etapie opisanym na końcu README. Bieżące braki opisuje tabela na początku README; materiały zgłoszeniowe są gotowe według informacji zespołu.
 
 ## Następne kroki
 
-1. Niezależna ocena przez ludzi zestawu referencyjnego i cytowań; usunięcie problemów ujawnionych benchmarkiem, pomiar kosztu.
+1. Poprawa przypisywania cytatów po historycznym wyniku 54,5% i pełna walidacja jakości aktualnej wersji. Koszt 100 analiz online pozostaje niezmierzony; dostępna jest jedna próba oraz osobny test syntetyczny.
 2. Wyodrębnianie do 3 twierdzeń z dłuższego tekstu (`/api/claims`).
 3. Rozpoznawanie pochodzenia przedruków i lepszy wybór fragmentów.
 4. Utwardzenie dostępu i limitów przed publicznym wdrożeniem.
@@ -247,11 +271,12 @@ Projekt jest prototypem zespołu. Wyniki nie są stanowiskiem MSZ.
 
 ## Korpus źródeł — etap 2
 
-`data/corpus/catalog.json` zawiera **129 rekordów z 13 grup domen**. Katalog przechowuje metadane źródeł urzędowych i instytucjonalnych. Usunięte wcześniej wpisy PAP i Wikipedii pozostają poza korpusem.
+`data/corpus/catalog.json` zawiera **132 rekordy z 14 grup domen i 2 typów źródeł**: 129 źródeł urzędowych i instytucjonalnych (`official`) oraz 3 artykuły weryfikujące fakty (`fact_check`). Usunięte wcześniej wpisy PAP i Wikipedii pozostają poza korpusem.
 
 | Grupa domen       | Rekordy |
 | ----------------- | ------: |
 | cert.pl           |       1 |
+| demagog.org.pl     |       3 |
 | esa.int           |       4 |
 | europa.eu         |      11 |
 | gov.pl            |      50 |
@@ -265,6 +290,14 @@ Projekt jest prototypem zespołu. Wyniki nie są stanowiskiem MSZ.
 | un.org            |      18 |
 | worldbank.org     |       8 |
 
+22.11.2026 dodano trzy artykuły Stowarzyszenia Demagog:
+
+- [Czy prezydent Putin zgodził się w 1996 roku na wejście Polski do NATO?](https://demagog.org.pl/wypowiedzi/czy-prezydent-putin-zgodzil-sie-w-1996-roku-na-wejscie-polski-do-nato/) — publikacja 23.05.2022.
+- [Czy Polska spełnia warunki przyjęcia do strefy euro? Sprawdzamy](https://demagog.org.pl/wypowiedzi/czy-polska-spelnia-warunki-przyjecia-do-strefy-euro-sprawdzamy/) — publikacja 04.01.2024.
+- [Globalne ocieplenie nie istnieje? Fałszywe treści o klimacie](https://demagog.org.pl/fake_news/globalne-ocieplenie-nie-istnieje-falszywe-tresci-o-klimacie/) — publikacja 16.10.2024.
+
+Każdy URL zwrócił bez przekierowania HTTP 200 i HTML z czytelną treścią. Daty publikacji pochodzą z widocznego pola `.dg-post__info`, daty aktualizacji z `article:modified_time`; czas pobrania zapisano osobno. Testy rzeczywistego adaptera korpusu potwierdziły pobranie wszystkich trzech artykułów. `fact_check` to typ rekordu w katalogu; adapter przekazuje tekst jako `sourceType: "web"`, tak jak adapter Demagoga. Klasyfikacja artykułu w dalszej analizie korzysta z jego URL. Nie uruchamiano Gemini, Tavily ani Serpera.
+
 Lista do przeglądu to `/zrodla`. Eksport udostępnia `GET /api/corpus`. Jeżeli data publikacji jest nieznana, rekord zachowuje `null`. Przynależność do danej domeny nie potwierdza tezy. Aktualna dostępność dokumentu jest sprawdzana podczas pobierania.
 
 **Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają godzinnej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
@@ -272,8 +305,16 @@ Lista do przeglądu to `/zrodla`. Eksport udostępnia `GET /api/corpus`. Jeżeli
 Aktualizacja: przed demo i następnie co tydzień operator może przebudować katalog. Zmiany tytułu, domeny, wydawcy lub warunków użycia wymagają przeglądu; niedostępne rekordy nie są przenoszone do nowego zbioru. Nowy katalog zastępuje poprzedni dopiero po osiągnięciu minimum 100 rekordów i 10 domen. Nie ma automatycznego harmonogramu ani obietnicy pełnej świeżości.
 
 ```powershell
-npm run corpus:check  # lokalna kontrola liczebności, domen, typów i metadanych
+npm run corpus:check  # kod 0: 132 rekordy, 14 grup domen, 2 typy
 npm run corpus:build # pobiera aktualny katalog; używa limitu/płatnego Tavily
+```
+
+Po przebudowie uruchom `npm run corpus:check` i sprawdź zachowanie obu typów źródeł przed zatwierdzeniem nowego katalogu. Test bezpośredniego pobierania artykułów Demagoga jest domyślnie wyłączony; można go powtórzyć bez płatnych usług:
+
+```powershell
+$env:RUN_CORPUS_LIVE_TESTS = "1"
+npx vitest run tests/corpus-live.test.ts
+Remove-Item Env:RUN_CORPUS_LIVE_TESTS
 ```
 
 `src/server/corpus.ts` przeszukuje tytuły i ścieżki URL na podstawie zapytań planera. Wymaga dwóch dopasowanych słów, wybiera do 3 rekordów, pobiera ich HTML ponownie i przekazuje do tej samej deduplikacji, katalogu cytatów i audytu co pozostałe źródła. Nie traktuje tytułu, opisu wyszukiwarki ani etykiety wydawcy jako dowodu. URL-e pochodzą wyłącznie z zatwierdzonego pliku; brak przekierowań, limit 3 MB i wspólny termin 15 sekund. UI pokazuje dostawcę „Korpus audytowalny” i niepełne pobranie. Korpus jest dodatkiem do wyszukiwania otwartego, nie zamkniętym indeksem wszystkich treści. Dopasowanie słów ma ograniczoną czułość, zwłaszcza między językami.
@@ -309,7 +350,7 @@ Definicje metryk:
 - Odporność: właściwa ocena faktu mimo ataku i obecność dowodów. Ataki w pytaniu i materiałach raportujemy osobno. Samo niewykonanie ataku bez ukończenia sprawdzenia nie zalicza scenariusza.
 - Czas: od wysłania HTTP do otrzymania JSON, razem z wyszukiwaniem, ponowieniami, oceną i audytem; bez pisania użytkownika, renderowania przeglądarki i przerw między przypadkami. Mediana/p95 wszystkich odpowiedzi oraz ukończonych analiz są osobne; szybkie błędy nie dowodzą spełnienia celu ≤30 s.
 - Poprawność znaczeniowa cytowań wymaga oddzielnej oceny. Ścisłe dopasowanie tekstu i audyt tym samym modelem nie zastępują niezależnych ocen referencyjnych. Nie deklarujemy spełnienia progu 85% na tej podstawie.
-- Koszt 100 testów i szacunek 1000 zapytań pozostają niezmierzone; brak wartości nie oznacza kosztu zerowego.
+- Koszt 100 testów online pozostaje niezmierzony. Bieżący szacunek 1000 zapytań jest ekstrapolacją pojedynczej próby i obejmuje wyłącznie znane składniki; patrz tabela na początku README.
 
 Wszystkie wyniki należy czytać wraz z dostępnością usług, liczebnością klas i ograniczeniami. Przejście testów z kontrolowanymi odpowiedziami HTTP nie jest pomiarem jakości modelu.
 
@@ -339,11 +380,13 @@ Najważniejsze konkretne błędy: wszystkie **M01–M06** dostały `refuted` zam
 
 Raport zbiorczy: `reports/benchmark/summary.json`. Testy implementacji: **130 jednostkowych/integracyjnych oraz 9 przeglądarkowych**, osobno 4 kontrolowane scenariusze live; build produkcyjny przechodzi. Odtwarzalne testy implementacji nie znoszą powyższych niezaliczonych progów jakości.
 
-### Lista zgodności i braków
+### Historyczna lista zgodności i braków po etapie 2
+
+Ta tabela dokumentuje dawny stan. Aktualne braki i pomiary znajdują się na początku README.
 
 | Wymaganie                                                                  | Stan po etapie 2 / brakująca praca                                                                                                                                                       |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | Aktualnie 129 rekordów, 13 grup domen i 1 typ (źródła urzędowe i instytucjonalne). Lista w repo, WWW i JSON.                                                                             |
+| Korpus ≥100 rekordów, ≥10 domen, ≥2 typy; audyt listy                      | Spełnione: 132 rekordy, 14 grup domen, official (129) i fact_check (3). Lista w repo, WWW i JSON; bezpośrednie pobieranie trzech artykułów Demagoga potwierdzone.                               |
 | Pięć ocen i osobne statusy obsługi                                         | Zaimplementowane i testowane.                                                                                                                                                            |
 | WWW i drugi kanał/adapter, wspólna logika                                  | Zaimplementowane; adapter jawnie symuluje transport. Próba spójności oraz dostępność raportowane w benchmarku.                                                                           |
 | Tekst **lub** URL, jedno lub kilka twierdzeń                               | Obsługiwany tekst jednej tezy. Sam URL zwraca wyjście poza zakres; URL i wiele tez to rozszerzenia, nie deklarowana funkcja.                                                             |
@@ -458,7 +501,7 @@ API sesji:
 - `GET /api/session`: eksport wyłącznie bieżącej sesji, `Cache-Control: no-store`; bez cookie zwraca pustą listę.
 - `DELETE /api/session`, nagłówek `x-prawdowid-action: delete-session`: usunięcie własnej sesji. Nie przyjmuje identyfikatora innej sesji w treści/URL. Żądania z innego origin są odrzucane.
 
-To nadal lokalne MVP z dostępem przez cookie, bez kont i panelu administracyjnego. Baza nie jest serwowana publicznie ani szyfrowana przez aplikację. Operator musi chronić katalog uprawnieniami systemowymi i ustalić zasady kopii zapasowych; wdrożenie wieloinstancyjne wymaga wspólnego zarządzania zadaniami i limiterem. Zapis nie obejmuje jeszcze kosztu/tokenów ani pełnej historii wszystkich etapów w bazie — czasy etapów znajdują się w logach technicznych.
+To nadal lokalne MVP z dostępem przez cookie, bez kont i panelu administracyjnego. Baza nie jest serwowana publicznie ani szyfrowana przez aplikację. Operator musi chronić katalog uprawnieniami systemowymi i ustalić zasady kopii zapasowych; wdrożenie wieloinstancyjne wymaga wspólnego zarządzania zadaniami i limiterem. Zapis obejmuje obecnie agregat zużycia oraz szczegóły wywołań dostawców. Nieznane koszty pozostają null. Pełna historia etapów nie jest przechowywana w bazie; czasy etapów znajdują się w logach technicznych.
 
 ### Walidacja etapu 3
 
@@ -489,7 +532,7 @@ Widok WWW ma wspólną niebieską paletę z pozostałymi ekranami, osobną kolum
 Po ustanowieniu sesji przez `POST /api/session` klient WWW wysyła `POST /api/verify` z `Accept: text/event-stream`. Strumień SSE zawiera obiekty JSON w ramkach `data: …\n\n`:
 
 - `stage`: rzeczywisty etap silnika (planowanie, wyszukiwanie, ocena, ewentualne poprawianie cytatów lub uzupełnianie dowodów, audyt). Odczyt z pamięci i oczekiwanie na identyczne trwające zgłoszenie mają osobne statusy.
-- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Wyszukiwanie WWW pozostaje w trakcie do zakończenia zapytań dla wszystkich dozwolonych domen.
+- `source`: rozpoczęcie pobierania oraz wynik poszczególnych dostawców; liczba materiałów jest podawana przed deduplikacją. Wyszukiwanie WWW pozostaje w trakcie do zakończenia dwóch zapytań podstawowych oraz ewentualnego uzupełnienia dla brakujących grup wydawców.
 - `result` lub `error`: zdarzenie końcowe. W strumieniu błędy są przekazywane jako zdarzenie, ponieważ nagłówki HTTP zostały już wysłane. Brak zdarzenia końcowego oznacza przerwane połączenie, nie sukces.
 
 Bez nagłówka `Accept` lub bez poprawnego identyfikatora sesji pozostaje dotychczasowa odpowiedź JSON i kody HTTP. Adapter Discord zachowuje swój kontrakt. Rozłączenie strumienia przerywa analizę przez istniejący mechanizm anulowania; walidacja, limity, maskowanie danych, audyt i reguły werdyktu pozostają wspólne. Demo nie symuluje wykonania etapów, a ponowne użycie wyniku nie udaje nowego wyszukiwania.
@@ -514,11 +557,11 @@ Pokrycie oznacza kompletność powiązań, nie niezależnie potwierdzoną prawdz
 
 Walidacja P0.1: 191 testów jednostkowych/integracyjnych zaliczonych (5 opt-in pominiętych), 19 testów przeglądarkowych zaliczonych (4 live pominięte), kontrola typów i kompilacja produkcyjna zaliczone. Nowe przypadki obejmują kilka ustaleń, brakujące/powtórzone/obce odwołania, tekst bez dowodu w dodatkowych polach, niepełny i negatywny audyt, próby obejścia przy naprawie/uzupełnianiu, wersjonowanie miernika, obydwa transporty i zapis powiązań w rejestrze. Testy korzystają z kontrolowanych odpowiedzi dostawców; nie wykonano nowego płatnego benchmarku.
 
-## Benchmark P0.2 — aktualny stan
+## Benchmark P0.2 — wynik historyczny
 
-[Pełny raport](reports/benchmark/p02-report.md), [porównanie](reports/benchmark/p02-comparison.json), [bieżące progi](reports/benchmark/p02-run4/summary.json) i [plan MVP](kitcheck-plan.md). Cztery pełne przebiegi pozostały zachowane: 21/30 → 28/30 → 28/30 → **30/30**. W bieżącym pomiarze: macro-F1 **1,000**, pokrycie **44/44 ustaleń**, wstrzymanie **3/3**, ataki wejścia **3/3**, kanały **30/30**, mediana **11,588 s**, p95 **16,447 s**. Model i dataset pozostały te same; pobierane źródła mogą się zmieniać.
+[Pełny raport](reports/benchmark/p02-report.md), [porównanie](reports/benchmark/p02-comparison.json), [progi tamtego przebiegu](reports/benchmark/p02-run4/summary.json) i [plan MVP](kitcheck-plan.md). Cztery pełne przebiegi pozostały zachowane: 21/30 → 28/30 → 28/30 → **30/30**. W tamtym pomiarze: macro-F1 **1,000**, pokrycie **44/44 ustaleń**, wstrzymanie **3/3**, ataki wejścia **3/3**, kanały **30/30**, mediana **11,588 s**, p95 **16,447 s**. Model i dataset pozostały te same; pobierane źródła mogą się zmieniać.
 
-Kontrolowane źródła: **3/4**, w tym ataki **2/2** z odnotowaniem zdarzeń. S02 (sprzeczne pomiary) został odrzucony przez audyt i pozostaje otwartym problemem. Nie utożsamiamy 30/30 z zaliczeniem wszystkich scenariuszy briefu. Niezależna poprawność cytatów ≥85%, koszt i próba jury pozostają otwarte.
+Kontrolowane źródła: **3/4**, w tym ataki **2/2** z odnotowaniem zdarzeń. S02 (sprzeczne pomiary) został odrzucony przez audyt i pozostaje otwartym problemem. Nie utożsamiamy 30/30 z zaliczeniem wszystkich scenariuszy briefu. Późniejsza kompletna ocena modelowa tych 121 cytatów dała 66 poprawnych (54,5%), poniżej progu 85%. Koszt 100 testów online i próba jury pozostają otwarte.
 
 Resolver traktuje quoteId w ustaleniu jako jawny wybór istniejącego cytatu: materializuje tekst z katalogu i zachowuje wszystkie powiązania. Brak jawnej relacji oznacza context; nie dodaje automatycznego potwierdzenia lub zaprzeczenia. Wyjątek ujednolicający role: dla mixed_context cytat wskazany jako korekta w decisiveQuoteIds nie może potwierdzać całej tezy, więc sprzeczne supports staje się context. Wciąż obowiązują kontrola znaczenia każdego ustalenia, limit 10 cytatów, odrzucanie nieznanych referencji i dosłowność cytatów.
 
@@ -546,17 +589,12 @@ archiwum audytu zachowuje dotychczasową politykę przechowywania metadanych.
 `npm run test:e2e -- e2e/evidence-graph.spec.ts` sprawdza widok demonstracyjny
 oraz pobieranie JSON i PNG.
 
-Integracja równoległych zmian grafu: 219 testów jednostkowych/integracyjnych, 23 przeglądarkowe, typecheck i build zaliczone. Pomiar P0.2 (30/30) wykonano przed tą integracją i bez evidenceGraph=true; nie jest pomiarem dodatkowej analizy grafowej, o którą teraz prosi WWW. Pełny benchmark połączonej ścieżki z grafem pozostaje do wykonania.
+Historyczna walidacja integracji grafu obejmowała 219 testów jednostkowych/integracyjnych i 23 przeglądarkowe. Obecny graf jest projekcją wspólnego wyniku i nie uruchamia dodatkowych modeli. Ostatni pomiar kosztu był wykonany przez API JSON bez żądania grafu; nie zastępuje pełnego testu ścieżki WWW/SSE.
 
 ## Próba jury
 
 **Prawdowid** sprawdza pojedynczą tezę i pokazuje, skąd pochodzą cytaty.
-Materiały: [opis zgłoszenia](docs/submission/opis.md),
-[slajdy PDF](docs/submission/slajdy.pdf),
-[film z napisami](docs/submission/demo.webm) i [transkrypcja](docs/submission/transkrypcja.md),
-[ryzyka](docs/submission/ryzyka.md),
-[polityka źródeł](docs/sources-policy.md) i
-[prywatność dostawców](docs/privacy-providers.md).
+Materiały zgłoszeniowe (opis, PDF i film) są gotowe według zespołu. W tej kopii nie ma plików wcześniej wskazywanych pod `docs/submission/`; nie publikujemy niedziałających odnośników ani nie deklarujemy ich ponownej kontroli. Przegląd licencji i zasad dostawców pozostaje odłożony.
 
 ### Uruchomienie z czystej kopii
 
@@ -580,9 +618,26 @@ Materiały: [opis zgłoszenia](docs/submission/opis.md),
    **Symulator Discord** w tym samym profilu przeglądarki i wyślij tę
    samą treść. Adapter symuluje wymianę wiadomości bez wysyłki na Discorda.
 4. W uruchomieniu bez kluczy wyślij tę samą tezę. Panel zgłosi brak
-   konfiguracji jako błąd techniczny. W filmie osobno pokazano kontrolowaną
-   odpowiedź „Brak wystarczających dowodów”. Ten wynik oznacza, że
+   konfiguracji jako błąd techniczny. Kontrolowany przykład
+   „Brak wystarczających dowodów” oznacza, że
    w dostępnych materiałach nie znaleziono odpowiedniej podstawy oceny.
 
-Szczegóły powtórzenia, w tym kontrolowany scenariusz braku dowodów,
-są w [protokole próby](docs/submission/proba-jury.md).
+Powyższa instrukcja opisuje plan próby; nie jest protokołem jej wykonania przez jury z czystej kopii.
+
+## Ograniczenie kosztu wyszukiwania — 22.11.2026
+
+Usunięto stałe mnożenie dwóch zapytań przez trzy domeny i płatne wyszukiwanie dat publikacji. Kontekst używa Basic; pobieranie dowodów nadal używa Advanced z pełnym tekstem, a zapytanie o kontrdowód pozostaje obowiązkowe. Dodatkowe zapytania uruchamiają się tylko przy niewystarczającej liczbie dokumentów lub grup wydawców. Audyt modelu, kontrola cytatów i reguły wydawania werdyktu pozostają aktywne.
+
+Przy stawce zapisanej w aplikacji, 0,008 USD za kredyt Tavily:
+
+| Ścieżka                                                  | Kredyty Tavily | Koszt samego Tavily |
+| -------------------------------------------------------- | -------------: | ------------------: |
+| Poprzednio: kontekst + sześć wyszukiwań dowodów, bez dat |             14 |           0,112 USD |
+| Obecnie: kontekst Basic + dwa wyszukiwania Advanced      |              5 |           0,040 USD |
+| Obecnie: powyższe + dwa dodatkowe wyszukiwania Advanced  |              9 |           0,072 USD |
+
+Podstawowa ścieżka ma o 64,3% mniejszy koszt wyszukiwania niż poprzednia podstawowa ścieżka; usunięcie dawnych dodatkowych zapytań o daty daje dalszą oszczędność. Tabela opisuje budżet żądań przy założeniu udanych wywołań. Jedna późniejsza próba online potwierdziła podstawową ścieżkę 5 kredytów; wariantu z dodatkowymi zapytaniami nie zmierzono ponownie online. Koszt Gemini i ewentualnych innych API dochodzi osobno. Rozliczenie nadal korzysta z raportowanego zużycia dostawcy; nieznana cena lub brak danych nie stają się zerowym kosztem.
+
+Udane, niepuste wyniki identycznego wyszukiwania można wykorzystać ponownie przez maksymalnie 5 minut w tej samej sesji. Zachowują pierwotny czas pobrania i dostają informację o ponownym użyciu. Daty publikacji są buforowane przez godzinę. Trafienie nie wydłuża ważności i nie nalicza kolejnego wywołania Tavily. Pamięć jest ograniczona do 128 wpisów i 16 MiB, z limitem 2 MiB na wpis oraz 100 sesji; może być czyszczona wcześniej. Błędy i puste wyniki nie są buforowane. Usunięcie sesji czyści bufor, a spóźniona odpowiedź trwającego żądania nie może go odtworzyć. Bufor gotowego werdyktu nadal działa osobno przez godzinę.
+
+Testy kontrolowanych odpowiedzi sprawdzają koszt 0,040 USD Tavily dla pełnej ścieżki WWW/JSON i SSE, wywołanie kontrzapytania, warunki i limit uzupełniania źródeł, błędy dostawców, izolację i usunięcie sesji, wygasanie danych oraz zachowanie daty pobrania. Walidacja przy wdrożeniu optymalizacji: 338 testów jednostkowych/integracyjnych i 29 przeglądarkowych zaliczonych, kontrola typów i kompilacja produkcyjna poprawne. Po dodaniu kontroli wymogu dwóch typów korpusu: 339 testów jednostkowych/integracyjnych. Pominięto 6 testów integracyjnych oraz 4 przeglądarkowe wymagające jawnego włączenia usług online. Po tej walidacji wykonano jedną analizę online opisaną na początku README. Podczas aktualizacji raportów nie uruchamiano kolejnych płatnych analiz. Mniej zapytań może ograniczać kompletność wyszukiwania; wpływ na jakość wymaga osobnego pomiaru na rzeczywistych tezach.

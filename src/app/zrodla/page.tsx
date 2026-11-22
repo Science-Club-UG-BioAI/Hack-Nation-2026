@@ -19,7 +19,7 @@ export default function SourcesPage() {
           <h1>Źródła pod kontrolą.</h1>
           <p>
             {catalog.records.length} rekordów · {domains.length} domen · źródła
-            urzędowe, encyklopedyczne i agencyjne.
+            urzędowe i instytucjonalne oraz weryfikacje faktów.
           </p>
           <p>
             To katalog publikacji, nie lista gwarantująca prawdziwość

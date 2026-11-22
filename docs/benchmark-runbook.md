@@ -1,5 +1,9 @@
 # Ścieżka 1: jak uruchomić pomiary
 
+Stan 22.11.2026: [bieżące wyniki i granice deklaracji](../README.md#aktualny-stan-pomiarów--22112026), [dane pomiarowe](../data/measurements/status-2026-11-22.json). Jedna próba online po optymalizacji nie stanowi pełnego benchmarku. Koszt 100 testów online pozostaje niezmierzony.
+
+Bez opłat: `node scripts/load-test.mjs` (limiter) i `node scripts/load-test.mjs --benchmark` (100 analiz z podstawionym HTTP i sztucznymi licznikami). Powstaje nowy katalog wyników z hashami kodu; można użyć `MEASUREMENT_OUTPUT`. Te testy nie zaliczają jakości online ani kosztu rzeczywistych 100 analiz. Poniższe polecenia wymagają oddzielnego uruchomienia i używają płatnych API.
+
 Polecenia wymagają `.env.local` z kluczami (`GEMINI_API_KEY`, `TAVILY_API_KEY`, opcjonalnie `EUVSDISINFO_API_KEY`) i uruchomionego serwera (`npm run dev` albo `npm run build && npm start`). Przebiegi są płatne. Każdy przebieg zapisuj do nowego katalogu: runner odmówi nadpisania istniejącego `results.json`.
 
 ## Warianty runnera

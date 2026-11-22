@@ -57,7 +57,7 @@ describe("EUvsDisinfo retrieval", () => {
     const result = await retrieve(plan, signal());
     expect(euvsdisinfo).toHaveBeenCalledTimes(1);
     expect(vi.mocked(euvsdisinfo).mock.calls[0][0]).toBe("Ukraine biolabs");
-    expect(result.hits).toEqual([caseHit, ...Array(6).fill(webHit)]);
+    expect(result.hits).toEqual([caseHit, ...Array(4).fill(webHit)]);
     expect(result.statuses).toContainEqual({
       provider: "euvsdisinfo",
       status: "ok",
@@ -89,7 +89,7 @@ describe("EUvsDisinfo retrieval", () => {
   it("degrades an adapter failure to an error status", async () => {
     vi.mocked(euvsdisinfo).mockRejectedValue(new Error("down"));
     const result = await retrieve(plan, signal());
-    expect(result.hits).toEqual(Array(6).fill(webHit));
+    expect(result.hits).toEqual(Array(4).fill(webHit));
     expect(result.statuses).toContainEqual({
       provider: "euvsdisinfo",
       status: "error",

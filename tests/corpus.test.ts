@@ -2,8 +2,32 @@ import { afterEach, expect, it, vi } from "vitest";
 import catalog from "../data/corpus/catalog.json";
 import { getDomain } from "tldts";
 import { corpus, searchCorpus } from "@/server/corpus";
+import {
+  isAllowedCorpusUrl,
+  isFactCheckingArticle,
+} from "@/core/source-policy";
+// @ts-expect-error The standalone .mjs CLI has no TypeScript declaration.
+import { corpusStats } from "../scripts/check-corpus.mjs";
 afterEach(() => vi.unstubAllGlobals());
-it("provides 100 unique audit records, 10 conservative domains with the agreed exclusions", () => {
+it("does not report brief compliance for a corpus with only one source type", () => {
+  const oneType = {
+    records: catalog.records.map((record) => ({ ...record, type: "official" })),
+  };
+  expect(corpusStats(oneType).failures).toContain(
+    "Fewer than 2 source types (brief requirement)",
+  );
+  const twoTypes = {
+    records: oneType.records.map((record, index) => ({
+      ...record,
+      type: index === 0 ? "fact_check" : "official",
+    })),
+  };
+  expect(corpusStats(twoTypes).failures).not.toContain(
+    "Fewer than 2 source types (brief requirement)",
+  );
+});
+it("provides 100 unique audit records, 10 conservative domains and two source types with the agreed exclusions", () => {
+  expect(corpusStats(catalog).failures).toEqual([]);
   expect(catalog.records.length).toBeGreaterThanOrEqual(100);
   expect(new Set(catalog.records.map((r) => r.url)).size).toBe(
     catalog.records.length,
@@ -18,6 +42,12 @@ it("provides 100 unique audit records, 10 conservative domains with the agreed e
     ).size,
   ).toBeGreaterThanOrEqual(10);
   expect(catalog.records.some((r) => r.type === "official")).toBe(true);
+  const factChecks = catalog.records.filter((r) => r.type === "fact_check");
+  expect(factChecks.length).toBeGreaterThanOrEqual(3);
+  for (const record of factChecks) {
+    expect(isAllowedCorpusUrl(record.url)).toBe(true);
+    expect(isFactCheckingArticle(record.url)).toBe(true);
+  }
   expect(
     catalog.records.some((r) =>
       ["wikipedia.org", "pap.pl"].includes(getDomain(r.url) ?? ""),
@@ -28,6 +58,35 @@ it("provides 100 unique audit records, 10 conservative domains with the agreed e
     expect(r.publisher).not.toBe("");
     expect(Date.parse(r.retrievedAt)).not.toBeNaN();
   }
+});
+it("retrieves catalogued fact checks as fetched text with their publication metadata", async () => {
+  const record = catalog.records.find((r) => r.type === "fact_check")!;
+  expect(searchCorpus(record.title).map((r) => r.id)).toContain(record.id);
+  const text =
+    "Kontrolowana treść pobranego artykułu do testu adaptera korpusu. Jest wystarczająco długa, aby stanowić materiał do analizy, i różni się od tytułu katalogowego.";
+  const fetcher = vi.fn(
+    async () =>
+      new Response(`<html><main><p>${text}</p></main></html>`, {
+        headers: { "Content-Type": "text/html" },
+      }),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  const result = await corpus(record.title, new AbortController().signal);
+  expect(result.partial).toBe(false);
+  expect(result.hits.find((hit) => hit.url === record.url)).toMatchObject({
+    raw_content: text,
+    published_date: record.publishedAt,
+    updatedAt: record.updatedAt,
+    publisher: "Stowarzyszenie Demagog",
+    publisherIsDomain: false,
+    provider: "corpus",
+    sourceType: "web",
+    contentScope: "text",
+  });
+  expect(fetcher).toHaveBeenCalledWith(
+    record.url,
+    expect.objectContaining({ redirect: "error", cache: "no-store" }),
+  );
 });
 it("retrieves only matched catalog URLs and never substitutes titles for unavailable evidence", async () => {
   const selected = searchCorpus("Poland NATO membership history");

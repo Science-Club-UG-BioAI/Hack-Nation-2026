@@ -18,11 +18,88 @@ import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
 import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
 import type { ProgressListener } from "@/core/progress";
+import {
+  prepareDocuments,
+  publisherGroup,
+  type SearchHit,
+} from "@/core/evidence";
+import { guardDocuments } from "@/core/untrusted";
 
 type SourceSearch = {
   provider: SourceProvider;
   requests: (() => Promise<SourceBatch>)[];
 };
+
+// Always keep both the original claim and the counter/context query. Only the
+// domain fan-out is conditional; this is a retrieval budget, never a verdict.
+async function budgetedWebSearch(
+  queries: string[],
+  signal: AbortSignal,
+  onProgress?: ProgressListener,
+): Promise<SourceBatch> {
+  const batches: SearchHit[][] = [];
+  let failures = 0;
+  let attempted = 0;
+  const run = async (
+    query: string,
+    domain?: (typeof allowedSourceDomains)[number],
+  ) => {
+    attempted++;
+    try {
+      return (await search(query, signal, domain)).filter(
+        (hit) =>
+          isAllowedSourceUrl(hit.url) &&
+          (!hit.canonicalUrl || isAllowedSourceUrl(hit.canonicalUrl)),
+      );
+    } catch {
+      failures++;
+      return [];
+    }
+  };
+  batches.push(
+    ...(await Promise.all(queries.slice(0, 2).map((query) => run(query)))),
+  );
+  const usable = guardDocuments(
+    prepareDocuments(
+      [...interleave(batches)].filter((hit) => hit.contentScope !== "metadata"),
+      queries[0] ?? "",
+      new Date().toISOString(),
+    ),
+  ).documents;
+  const groups = new Set(usable.map((doc) => publisherGroup(doc.url)));
+  const needsMore = usable.length < 2 || groups.size < 2;
+  if (needsMore && !signal.aborted) {
+    onProgress?.({
+      type: "source",
+      source: {
+        provider: "web",
+        status: "running",
+        documents: batches.flat().length,
+      },
+    });
+    const missing = (["gov.pl", "demagog.org.pl", "euvsdisinfo.eu"] as const)
+      .filter((domain) => !groups.has(domain))
+      .slice(0, 2);
+    batches.push(
+      ...(await Promise.all(
+        missing.map((domain, index) =>
+          run(queries[index % queries.length], domain),
+        ),
+      )),
+    );
+  }
+  if (failures === attempted)
+    throw new AppError(
+      "PROVIDER_ERROR",
+      "Nie udało się pobrać wyników wyszukiwania.",
+      502,
+      true,
+    );
+  return {
+    hits: [...interleave(batches)],
+    partial: failures > 0 || (needsMore && signal.aborted),
+  };
+}
 
 async function retrieveSource(
   { provider, requests }: SourceSearch,
@@ -119,12 +196,7 @@ export async function retrieve(
   if (plan.queries.length)
     sources.push({
       provider: "web",
-      requests: plan.queries.flatMap((query) =>
-        allowedSourceDomains.map((domain) => async () => ({
-          hits: await search(query, limited, domain),
-          partial: false,
-        })),
-      ),
+      requests: [() => budgetedWebSearch(plan.queries, limited, onProgress)],
     });
   const topics = [
     ...new Set(

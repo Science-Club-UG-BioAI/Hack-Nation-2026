@@ -17,6 +17,7 @@ export type SearchHit = {
   url: string;
   raw_content?: string | null;
   published_date?: string | null;
+  retrievedAt?: string;
 } & SourceMetadata;
 export const normalize = (text: string) =>
   text.normalize("NFC").replace(/\s+/gu, " ").trim();
@@ -235,7 +236,7 @@ export function prepareDocuments(
       publisher: hit.publisher || new URL(identity).hostname,
       publisherIsDomain: !hit.publisher || hit.publisherIsDomain === true,
       freshnessWarning: hit.freshnessWarning ?? null,
-      retrievedAt,
+      retrievedAt: knownDate(hit.retrievedAt) ?? retrievedAt,
       provider: hit.provider ?? "web",
       sourceType: hit.sourceType ?? (group === "gov.pl" ? "official" : "web"),
       contentScope: hit.contentScope ?? "text",

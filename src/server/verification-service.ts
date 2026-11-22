@@ -7,6 +7,7 @@ import { projectVerificationGraph } from "./verification-graph";
 import { assertSessionActive } from "./audit-store";
 import type { ProgressListener } from "@/core/progress";
 import { describeStrength, freshnessWarning } from "@/core/evidence";
+import { clearSessionSearchCache, withSearchCache } from "./search-cache";
 
 const RESULT_TTL_MS = 60 * 60_000;
 type Entry = {
@@ -37,6 +38,7 @@ const state: State = (globals.prawdowidVerificationsV5 ??= {
 });
 
 export function clearSessionVerifications(session: string) {
+  clearSessionSearchCache(session);
   forgetSessionLimits(session);
   for (const [key, entry] of state.cache)
     if (entry.session === session) {
@@ -79,7 +81,7 @@ function keyFor(input: VerifyInput, session: string) {
     .update(
       JSON.stringify([
         "reasoned-guard-v3",
-        "findings-v1-domain-queries-trusted-fact-check-v3",
+        "findings-v1-budgeted-search-v1",
         allowedSourceDomains,
         session,
         input.claim.normalize("NFC").trim(),
@@ -158,12 +160,8 @@ export async function runVerification(
   const channels = new Set<string>([channel]);
   // Store the projection with the shared result so either channel can request it
   // later without repeating the audited analysis or retaining raw documents.
-  const task = verify(
-    input,
-    requestId,
-    combined,
-    onProgress,
-    (result, documents) => {
+  const task = withSearchCache(session, () =>
+    verify(input, requestId, combined, onProgress, (result, documents) => {
       try {
         if (wantsGraph)
           onProgress?.({ type: "stage", stage: "graph_validating" });
@@ -179,7 +177,7 @@ export async function runVerification(
         );
         return { graphStatus: "failed" };
       }
-    },
+    }),
   )
     .then((result) => {
       combined.throwIfAborted();

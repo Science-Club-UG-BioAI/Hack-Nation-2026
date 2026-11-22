@@ -1,8 +1,7 @@
 import { load } from "cheerio";
 import type { Document } from "@/core/contracts";
-import { safeUrl } from "@/core/evidence";
 import { readBoundedText } from "./read-body";
-import { searchPublicationMetadata } from "./providers";
+import { cachedSearch } from "./search-cache";
 
 function validDate(value: string | undefined): string | null {
   if (!value) return null;
@@ -17,7 +16,13 @@ export function publicationDateFromHtml(html: string): string | null {
     validDate($('meta[property="article:published_time"]').attr("content")) ??
     validDate($('meta[name="date"]').attr("content")) ??
     validDate($('time[itemprop="datePublished"]').attr("datetime")) ??
-    validDate($("main .event-date").first().text())
+    validDate($("main .event-date").first().text()) ??
+    validDate(
+      $(".dg-post__info")
+        .first()
+        .text()
+        .match(/\b\d{2}\.\d{2}\.\d{4}\b/)?.[0],
+    )
   );
 }
 
@@ -28,47 +33,50 @@ export async function enrichPublicationDates(
 ) {
   const limited = AbortSignal.any([signal, AbortSignal.timeout(6_000)]);
   await Promise.all(
-    documents.map(async (doc) => {
+    documents.slice(0, 10).map(async (doc) => {
       if (doc.publishedAt) return;
       const url = new URL(doc.url);
       try {
         if (
           url.protocol === "https:" &&
-          url.hostname === "www.gov.pl" &&
-          !url.port
+          !url.port &&
+          !url.username &&
+          !url.password &&
+          (url.hostname === "www.gov.pl" ||
+            (/^(?:www\.)?demagog\.org\.pl$/.test(url.hostname) &&
+              /^\/(?:na-biezaco|wypowiedzi|fake_news)\/[^/]+\/?$/.test(
+                url.pathname,
+              )))
         ) {
-          const response = await fetch(url, {
-            signal: limited,
-            redirect: "error",
-            cache: "no-store",
-          });
-          if (!response.ok || !response.body) return;
-          const html = await readBoundedText(
-            response.body,
-            3_000_000,
-            new Error("Source too large"),
+          const { value } = await cachedSearch(
+            `publication-html-v1:${url.href}`,
             limited,
+            async () => {
+              const response = await fetch(url, {
+                signal: limited,
+                redirect: "error",
+                cache: "no-store",
+              });
+              if (
+                !response.ok ||
+                !response.body ||
+                !response.headers.get("content-type")?.includes("text/html")
+              ) {
+                await response.body?.cancel();
+                return null;
+              }
+              const html = await readBoundedText(
+                response.body,
+                3_000_000,
+                new Error("Source too large"),
+                limited,
+              );
+              return publicationDateFromHtml(html);
+            },
+            60 * 60_000,
+            (date) => date !== null,
           );
-          doc.publishedAt = publicationDateFromHtml(html);
-        } else if (
-          /^(?:www\.)?demagog\.org\.pl$/.test(url.hostname) &&
-          /^\/(?:na-biezaco|wypowiedzi|fake_news)\/[^/]+\/?$/.test(url.pathname)
-        ) {
-          const hits = await searchPublicationMetadata(
-            doc.title,
-            doc.url,
-            limited,
-          );
-          const identity = safeUrl(doc.url)?.replace(/\/$/, "");
-          const same = hits.find(
-            (hit) => safeUrl(hit.url)?.replace(/\/$/, "") === identity,
-          );
-          doc.publishedAt = validDate(same?.published_date ?? undefined);
-          if (doc.publishedAt)
-            doc.notes = [
-              ...(doc.notes ?? []),
-              "Data publikacji według metadanych wyszukiwarki.",
-            ];
+          doc.publishedAt = value;
         }
       } catch {
         // Leave the date explicitly unknown when the source cannot supply it.

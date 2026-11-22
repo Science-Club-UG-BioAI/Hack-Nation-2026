@@ -1,28 +1,44 @@
-# Koszt 100 analiz i 100 odpowiedzi z cache
+# Koszty — stan 22.11.2026
 
-Pomiar lokalny z 21 listopada 2026 r. Faktyczna opłata za dostawców wyniosła **0 USD**. Przy licznikach zadanych w teście i publicznych cenach wartość tych 100 analiz wynosi **3,49 USD**. Każda z kolejnych 100 odpowiedzi kanału demo wykorzystała gotowy wynik.
+Bieżąca migawka do odtworzenia obliczeń: [status-2026-11-22.json](../../data/measurements/status-2026-11-22.json). Oddzielamy rzeczywiste wywołania, wycenę zużycia, symulację oraz ekstrapolację. Kwoty nie są odczytem rachunku konta. Podatki, hosting, darmowe pule i rabaty pozostają poza wyceną.
 
-| Pozycja | Zużycie w 100 nowych analizach | Stawka | Wartość |
-| --- | ---: | ---: | ---: |
-| Gemini 3.1 Flash-Lite, wejście tekstowe | 710 000 tokenów | 0,25 USD/mln | 0,1775 USD |
-| Gemini 3.1 Flash-Lite, wyjście wraz z rozumowaniem | 75 000 tokenów | 1,50 USD/mln | 0,1125 USD |
-| Tavily Search Advanced | 200 zapytań, 400 kredytów | 0,008 USD/kredyt | 3,20 USD |
-| 100 dodatkowych dostarczeń z cache | 0 wywołań dostawców | — | 0 USD |
+## Jedna rzeczywista analiza po optymalizacji
 
-### Tekst do zgłoszenia
+[Wynik i podsumowanie](optimized-live-2026-11-22T01-28-23-614Z/summary.json), [odpowiedź](optimized-live-2026-11-22T01-28-23-614Z/response.json), [liczniki z audytu](optimized-live-2026-11-22T01-28-23-614Z/audit.json).
 
-W lokalnym teście 100 nowych analiz i 100 ponownych dostarczeń do kanału demo koszt dodatkowy trafienia w cache wyniósł 0 USD. Modelowa wycena nowej analizy to 0,0349 USD przy 7100 tokenach wejścia, 750 tokenach wyjścia i dwóch wyszukiwaniach Advanced. Przy tym samym profilu **1000 nowych analiz kosztowałoby 34,90 USD**, a **1000 zapytań z 20% trafień w cache kosztowałoby 27,92 USD**. Symulowany adapter Discord nie pobiera opłaty komunikatora. Wycena obejmuje usługi analizy i wyszukiwania. Hosting, podatki, darmowe pule konta i rabaty umowne są poza kalkulacją.
+Teza: „Polska przystąpiła do NATO 12 marca 1999 roku.” Świeża sesja, API JSON, bez żądania grafu, brak cache. HTTP 200, completed/supported, czas 16,914 s. To jedna obserwacja, nie nowy benchmark jakości.
 
-### Jak powstały liczby
+| Składnik | Zużycie | Wycena |
+| --- | --- | ---: |
+| Tavily | Basic 1 kredyt + dwa Advanced po 2 kredyty | 0,0400000 USD |
+| Gemini 3.1 Flash-Lite | 3 wywołania; 22 456 tokenów wejścia, 2653 wyjścia z rozumowaniem, 0 cache dostawcy | 0,0095935 USD |
+| Znana suma | Gemini + Tavily | **0,0495935 USD** |
+| Google Fact Check | 2 wywołania, brak ustalonej ceny | **nieznana** |
+| Pełny koszt | Wszystkie wywołania | **null** |
 
-Z katalogu repozytorium uruchom `node scripts/load-test.mjs --benchmark`. Skrypt otwiera serwer na lokalnym porcie, wykonuje rzeczywiste procedury obu tras, zapisuje audyt w tymczasowym SQLite i wywołuje `scripts/benchmark.mjs` w wariancie domyślnym, bez grafu. Publiczny zestaw 30 przypadków przechodzi kolejno trzy razy, po czym runner wykonuje pierwszych dziesięć. Każda nowa analiza ma osobną sesję. Drugie dostarczenie korzysta z jej ciasteczka. Odstęp między przypadkami wynosi 0 ms.
+Stawki sprawdzono 22.11.2026: [Gemini Standard](https://aistudio.google.com/docs/pricing#gemini-3.1-flash-lite): wejście 0,25 USD/mln, wyjście 1,50 USD/mln; [Tavily PAYGO](https://docs.tavily.com/documentation/api-credits): 0,008 USD/kredyt. Wyliczenie: 22 456 × 0,25 / 1 000 000 + 2653 × 1,50 / 1 000 000 + 5 × 0,008 = 0,0495935 USD.
 
-Odpowiedzi HTTP dostawców są kontrolowane. Każda z trzech odpowiedzi modelu zwraca ustalone liczniki, a każda z dwóch odpowiedzi wyszukiwarki zwraca dwa kredyty. Zmierzono liczbę wywołań i dostarczeń, odczyt liczników w aplikacji i naliczenie kosztu według taryfy. Rzeczywisty rozkład długości odpowiedzi, ponowień i kosztu ruchu produkcyjnego pozostaje niezmierzony. Zestaw służy tu wyłącznie do pomiaru rozliczeń. Zapis przebiegu zawiera również koszt każdego dostarczenia. [Wyniki 100 przypadków](offline.json)
+Przy dokładnie tym samym profilu 100 analiz daje **4,95935 USD**, a 1000 daje **49,5935 USD** znanych składników. To ekstrapolacja jednej udanej analizy, nie zmierzona średnia i nie pomiar 100/1000 testów. Nie obejmuje nieznanego kosztu Fact Check, obrazów, zmian długości odpowiedzi, ponowień ani dodatkowego wyszukiwania. Adapter demonstracyjny nie pobiera opłaty komunikatora; model i wyszukiwanie nadal mają koszt.
 
-### Interpretacja danych z silnika
+## Aktualny kontrolowany test rozliczeń — bez zewnętrznych API
 
-- `result.usage` opisuje dodatkowe zużycie tej odpowiedzi. Powtórzenie wyniku w tej samej sesji oraz dołączenie do trwającej analizy mają `cached: true`. Inna sesja uruchamia własną analizę. Pamięć wyników ma TTL pięciu minut.
-- Audyt SQLite zachowuje agregat w kolumnie `checks.usage` i szczegóły prób w `payload.usageCalls`. Nieudana próba bez danych rozliczeniowych lub brak stawki daje `null` dla kosztu całej analizy. Znane liczniki poszczególnych prób pozostają dostępne. Historyczne wpisy zachowują brak danych.
-- Liczba wyszukiwań obejmuje operacje wyszukiwawcze Tavily i bezpośrednich API. Odczyt tekstu odnalezionej strony i przeszukanie lokalnego katalogu nie generują kolejnej pozycji wyszukiwania. Dla kluczowanego EUvsDisinfo nie ustalono stawki. Włączenie tego adaptera dla danej analizy pozostawia koszt łączny nieustalony.
-- Cennik tekstowy Standard obejmuje rozumowanie oraz zniżkę za wejście z cache dostawcy. Dla Gemini 3.1 Flash-Lite stawka za milion tokenów wejścia z cache wynosi 0,025 USD. Dla zapasowego Gemini 3.5 Flash-Lite wartości wynoszą odpowiednio 0,30 USD za wejście, 0,03 USD za wejście z cache oraz 2,50 USD za wyjście. [Cennik Gemini](https://ai.google.dev/gemini-api/docs/pricing)
-- Dla Tavily przyjęto PAYGO, 0,008 USD za kredyt. Aplikacja prosi o `include_usage` i nalicza kredyty zgłoszone przez usługę. [Cennik Tavily](https://docs.tavily.com/documentation/api-credits) · [Opis odpowiedzi Search](https://docs.tavily.com/documentation/api-reference/endpoint/search)
+Wykonano 100 nowych analiz i 100 ponownych dostarczeń przez adapter demo na aktualnej ścieżce. [Dane](offline-optimized-2026-11-22/offline.json), [hashe kodu przed pomiarem](offline-optimized-2026-11-22/provenance.json).
+
+| Składnik | Kontrolowane zużycie | Wartość według taryfy |
+| --- | ---: | ---: |
+| Gemini | 300 symulowanych wywołań, 710 000 tokenów wejścia i 75 000 wyjścia | 0,29 USD |
+| Tavily | 300 symulowanych wywołań, 500 kredytów | 4,00 USD |
+| Łącznie | 100 nowych analiz | **4,29 USD** |
+| Ponowne dostarczenie | 100 trafień w cache, bez wywołań dostawców | 0 USD |
+| Faktyczne opłaty w tym teście | Wszystkie odpowiedzi dostawców podstawione lokalnie | **0 USD** |
+
+Dane o tokenach są zadane w teście; odpowiedzi modeli również są sztuczne. Wpisy URL w fixture tylko sprawdzają politykę domen, nie są publikacjami użytymi jako dowody online. Test sprawdza trasę, liczniki, cache i rachunek, a nie trafność odpowiedzi, koszty rzeczywistych 100 analiz czy dostępność API. Nie zalicza wymogu 100 testów online z briefu.
+
+Odtworzenie: `node scripts/load-test.mjs --benchmark`. Wynik trafia do nowego katalogu z datą. `MEASUREMENT_OUTPUT` pozwala wskazać nowy katalog; istniejące provenance blokuje nadpisanie. Nie trzeba wczytywać .env.local ani podawać kluczy. Skrypt blokuje sieć do dostawców i zapisuje tylko lokalne pomiary.
+
+## Historia — nie stosować jako bieżącej wyceny
+
+- [offline.json](offline.json), 21.11.2026: poprzednia symulacja 100 analiz, 200 wywołań Tavily i wycena 3,49 USD (0,0349/analizę). Te wartości nie opisują obecnej ścieżki z wyszukiwaniem kontekstu.
+- [Trzy rzeczywiste próby przed optymalizacją](../benchmark/audit-2026-11-22-three/cost-summary.json): znana suma 0,31384825 USD, średnia 0,1046160833 USD, 1/3 oczekiwanych wyników. Błędy pozostają w mianowniku; tej średniej nie łączymy z jedną próbą po optymalizacji.
+
+Gotowy wynik ma ważność do godziny w tej samej sesji; wyniki wyszukiwania do 5 minut, daty do godziny. `usage.cached` oznacza ponowne dostarczenie gotowej odpowiedzi, nie każde częściowe użycie bufora źródeł. Trafienia w bufor wyszukiwania nie dodają wywołania Tavily. Pełny koszt pozostaje null, jeśli choć jeden składnik ma nieznaną cenę lub zużycie. Liczba searchCalls obejmuje również bezpośrednie API: w próbie online 5 = 3 Tavily + 2 Fact Check.

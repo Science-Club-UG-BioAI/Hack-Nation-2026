@@ -163,7 +163,7 @@ describe("verification pipeline", () => {
       status: "ok",
       documents: 2,
     });
-    expect(web).toHaveBeenCalledTimes(6);
+    expect(web).toHaveBeenCalledTimes(2);
     expect(model).toHaveBeenCalledTimes(4);
     expect(model.mock.calls[2][4]?.maxOutputTokens).toBe(1600);
     expect(model.mock.calls[3][4]?.maxOutputTokens).toBe(3200);
@@ -583,7 +583,7 @@ describe("verification pipeline", () => {
         new AbortController().signal,
       ),
     ).toMatchObject({ status: "completed", verdict: "insufficient" });
-    expect(web).toHaveBeenCalledTimes(6);
+    expect(web).toHaveBeenCalledTimes(4);
   });
   it("keeps the original input out of model calls after separating a control instruction", async () => {
     model
@@ -688,7 +688,7 @@ describe("verification pipeline", () => {
     expect(result.verdict).toBe("supported");
     expect(result.mode).toBe("live");
     expect(result.sources).toHaveLength(2);
-    expect(web).toHaveBeenCalledTimes(6);
+    expect(web).toHaveBeenCalledTimes(2);
     expect(model).toHaveBeenCalledTimes(3);
     expect(result.sources[0]).not.toHaveProperty("chunks");
   });
@@ -739,8 +739,10 @@ describe("verification pipeline", () => {
       new AbortController().signal,
     );
     expect(web.mock.calls.map(([query]) => query)).toEqual([
-      ...Array(3).fill(claim),
-      ...Array(3).fill(expect.stringContaining(claim)),
+      claim,
+      expect.stringContaining(claim),
+      claim,
+      expect.stringContaining(claim),
     ]);
     expect(result).toMatchObject({
       claim,

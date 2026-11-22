@@ -1,0 +1,2296 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-11-22",
+  "preparedAt": "2026-11-22T01:38:53.004Z",
+  "scope": "Current recorded measurements; historical runs, synthetic usage and extrapolations are separate. No new live API analyses in this refresh.",
+  "corpus": {
+    "records": 129,
+    "domains": [
+      "cert.pl",
+      "esa.int",
+      "europa.eu",
+      "gov.pl",
+      "imgw.pl",
+      "kgsok.pl",
+      "nasa.gov",
+      "nato.int",
+      "nbp.pl",
+      "policja.pl",
+      "portalpasazera.pl",
+      "un.org",
+      "worldbank.org"
+    ],
+    "types": ["official"],
+    "knownPublicationDates": 3,
+    "knownUpdateDates": 1,
+    "knownEventPeriods": 2,
+    "briefSourceTypesMet": false
+  },
+  "currentLive": {
+    "sampleSize": 1,
+    "startedAt": "2026-11-22T01:28:23.646Z",
+    "claim": "Polska przystąpiła do NATO 12 marca 1999 roku.",
+    "transport": "api-json",
+    "evidenceGraphRequested": false,
+    "freshSession": true,
+    "httpStatus": 200,
+    "elapsedMs": 16914,
+    "status": "completed",
+    "verdict": "supported",
+    "sourceCount": 5,
+    "citationCount": 4,
+    "usage": {
+      "inputTokens": 22456,
+      "outputTokens": 2653,
+      "searchCalls": 5,
+      "costUsd": null,
+      "cached": false
+    },
+    "usageCalls": [
+      {
+        "provider": "tavily",
+        "inputTokens": null,
+        "outputTokens": null,
+        "costUsd": 0.008,
+        "credits": 1
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-3.1-flash-lite",
+        "inputTokens": 3523,
+        "outputTokens": 432,
+        "costUsd": 0.00152875,
+        "cachedTokens": 0
+      },
+      {
+        "provider": "tavily",
+        "inputTokens": null,
+        "outputTokens": null,
+        "costUsd": 0.016,
+        "credits": 2
+      },
+      {
+        "provider": "tavily",
+        "inputTokens": null,
+        "outputTokens": null,
+        "costUsd": 0.016,
+        "credits": 2
+      },
+      {
+        "provider": "google_factcheck",
+        "inputTokens": null,
+        "outputTokens": null,
+        "costUsd": null
+      },
+      {
+        "provider": "google_factcheck",
+        "inputTokens": null,
+        "outputTokens": null,
+        "costUsd": null
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-3.1-flash-lite",
+        "inputTokens": 9858,
+        "outputTokens": 878,
+        "costUsd": 0.0037815,
+        "cachedTokens": 0
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-3.1-flash-lite",
+        "inputTokens": 9075,
+        "outputTokens": 1343,
+        "costUsd": 0.00428325,
+        "cachedTokens": 0
+      }
+    ],
+    "knownProviderCostUsd": 0.0495935,
+    "totalCostUsd": null,
+    "unknownCostProviders": ["google_factcheck"],
+    "costBasis": "Reported usage valued at Standard/PAYGO rates, not an invoice",
+    "independentCitationCorrectness": null,
+    "macroF1": null,
+    "abstention": null,
+    "injectionResistance": null,
+    "channelConsistency": null,
+    "latencyMedianForRepresentativeSet": null,
+    "codeHashCapturedAtRun": null,
+    "provenanceLimitation": "The original single live probe saved request, response and audit, but no source-code hash at execution time. Do not infer one retrospectively from the current checkout."
+  },
+  "extrapolation": {
+    "kind": "Arithmetic scenario based on one successful analysis; not a measured 100/1000-test run or representative mean",
+    "sampleSize": 1,
+    "knownProviderCost100Usd": 4.95935,
+    "knownProviderCost1000Usd": 49.5935,
+    "totalCost100Usd": null,
+    "totalCost1000Usd": null,
+    "excludes": [
+      "unknown Google Fact Check charges",
+      "hosting",
+      "taxes",
+      "free allowances",
+      "discounts",
+      "images",
+      "changes in source/query/retry mix"
+    ]
+  },
+  "historicalQuality": {
+    "run": "p02-run4",
+    "currentCodeValidated": false,
+    "sampleSize": 30,
+    "resultSha256": "330d9f434e7a4d9b6b56995fb3ac1d618faba9d3980ede70545677db38855dc8",
+    "macroF1": 1,
+    "citationCoverage": {
+      "version": "findings-v1",
+      "unit": "published_factual_finding",
+      "passed": 44,
+      "total": 44,
+      "unknownResponses": 0,
+      "complete": true,
+      "value": 1
+    },
+    "citationReview": {
+      "valid": 66,
+      "total": 121,
+      "value": 0.5454545454545454,
+      "threshold": 0.85,
+      "thresholdMet": false,
+      "method": "model",
+      "reviewer": "GPT-6 / Codex, semantic review in the project chat on 2026-11-22",
+      "independentOfGenerator": true,
+      "humanReview": false
+    },
+    "abstention": {
+      "passed": 3,
+      "total": 3,
+      "value": 1
+    },
+    "injectionResistance": {
+      "passed": 3,
+      "total": 3,
+      "value": 1
+    },
+    "channelConsistency": {
+      "passed": 30,
+      "total": 30,
+      "value": 1
+    },
+    "latency": {
+      "medianMs": 11587.5,
+      "p95Ms": 16447.049999999996,
+      "maxMs": 17383,
+      "includesErrors": true,
+      "excludesChannelCache": true,
+      "successfulMedianMs": 11587.5,
+      "successfulP95Ms": 16447.049999999996
+    }
+  },
+  "historicalPreOptimization": {
+    "generatedAt": "2026-11-22T00:38:26.987Z",
+    "resultSha256": "c831c19f635fa6796d734825f2654263fa8c73950e33102b9ddcc3731e17adc0",
+    "mode": "Real provider usage valued at verified public Standard/PAYGO rates; not an account invoice",
+    "sample": "Exactly three preselected distinct claims, fresh sessions, web SSE with evidenceGraph=true. Failed analyses remain in the denominator. No reruns.",
+    "rates": {
+      "geminiModel": "gemini-3.1-flash-lite",
+      "inputUsdPerMillion": 0.25,
+      "outputIncludingThinkingUsdPerMillion": 1.5,
+      "cachedInputUsdPerMillion": 0.025,
+      "tavilyUsdPerCredit": 0.008,
+      "verifiedOn": "2026-11-22",
+      "sources": [
+        "https://aistudio.google.com/docs/pricing#gemini-3.1-flash-lite",
+        "https://docs.tavily.com/documentation/api-credits"
+      ]
+    },
+    "rows": [
+      {
+        "id": "T01",
+        "status": "completed",
+        "code": null,
+        "durationMs": 21083,
+        "modelCalls": 3,
+        "tavilyCredits": 18,
+        "knownProviderCostUsd": 0.15610575,
+        "unknownCostCalls": [
+          {
+            "provider": "google_factcheck",
+            "model": null
+          }
+        ],
+        "totalCostUsd": null
+      },
+      {
+        "id": "F01",
+        "status": "unable_to_verify",
+        "code": null,
+        "durationMs": 19119,
+        "modelCalls": 3,
+        "tavilyCredits": 16,
+        "knownProviderCostUsd": 0.13860275,
+        "unknownCostCalls": [
+          {
+            "provider": "google_factcheck",
+            "model": null
+          },
+          {
+            "provider": "google_factcheck",
+            "model": null
+          }
+        ],
+        "totalCostUsd": null
+      },
+      {
+        "id": "M01",
+        "status": "technical_error",
+        "code": "INVALID_MODEL_OUTPUT",
+        "durationMs": 6365,
+        "modelCalls": 1,
+        "tavilyCredits": 2,
+        "knownProviderCostUsd": 0.01913975,
+        "unknownCostCalls": [],
+        "totalCostUsd": 0.01913975
+      }
+    ],
+    "aggregate": {
+      "analyses": 3,
+      "correctOutcomes": 1,
+      "knownProviderCostSumUsd": 0.31384825,
+      "knownProviderCostMeanUsd": 0.10461608333333333,
+      "knownProviderCostMinUsd": 0.01913975,
+      "knownProviderCostMaxUsd": 0.15610575,
+      "totalCostUsd": null,
+      "totalCostMeanUsd": null,
+      "unknownCostProviders": ["google_factcheck"],
+      "extrapolatedKnownProviderCost100Usd": 10.461608333333333,
+      "extrapolatedKnownProviderCost1000Usd": 104.61608333333334,
+      "costPerCorrectOutcomeInThisSampleUsd": 0.31384825
+    },
+    "limitations": [
+      "Not a measured 100-test run and not a full current quality benchmark. The 100/1000 values extrapolate only the measured Gemini/Tavily component.",
+      "Google Fact Check was invoked three times but its rate is not configured or reported; unknown is not zero. No EUvsDisinfo or Serper usage appears in these calls.",
+      "Public list-price valuation excludes account free credits, discounts, tax, hosting and other costs; actual billed amount is not read.",
+      "Only one of three attempts produced the expected assessment. The cheap planning failure lowers the mean; this is not the price of a reliably successful answer.",
+      "All three analyses include model requests needed by the pipeline. Second-channel comparisons reuse the result; they are not additional new analyses."
+    ]
+  },
+  "currentOfflineCost": {
+    "startedAt": "2026-11-22T01:37:31.172Z",
+    "finishedAt": "2026-11-22T01:37:41.317Z",
+    "datasetSha256": "286a788059b49e501df315b173fd32e41e4e0318ac227ceb0c9f554d3643c095",
+    "mode": "controlled-http-synthetic-usage",
+    "originalCases": 30,
+    "calls": {
+      "gemini": 300,
+      "tavily": 300
+    },
+    "rows": [
+      {
+        "id": "T01-1",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T02-2",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T03-3",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T04-4",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T05-5",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T06-6",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T07-7",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F01-8",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F02-9",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F03-10",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F04-11",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F05-12",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F06-13",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M01-14",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M02-15",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M03-16",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M04-17",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M05-18",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M06-19",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O01-20",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O02-21",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O03-22",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N01-23",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N02-24",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N03-25",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "C01-26",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "C02-27",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I01-28",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I02-29",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I03-30",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T01-31",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T02-32",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T03-33",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T04-34",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T05-35",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T06-36",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T07-37",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F01-38",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F02-39",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F03-40",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F04-41",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F05-42",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F06-43",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M01-44",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M02-45",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M03-46",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M04-47",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M05-48",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M06-49",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O01-50",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O02-51",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O03-52",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N01-53",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N02-54",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N03-55",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "C01-56",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "C02-57",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I01-58",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I02-59",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I03-60",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T01-61",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T02-62",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T03-63",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T04-64",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T05-65",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T06-66",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T07-67",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F01-68",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F02-69",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F03-70",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F04-71",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F05-72",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F06-73",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M01-74",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M02-75",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M03-76",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M04-77",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M05-78",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "M06-79",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O01-80",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O02-81",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "O03-82",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N01-83",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N02-84",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "N03-85",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "C01-86",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "C02-87",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I01-88",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I02-89",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "I03-90",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T01-91",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T02-92",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T03-93",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T04-94",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T05-95",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T06-96",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "T07-97",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F01-98",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F02-99",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      },
+      {
+        "id": "F03-100",
+        "request": {
+          "inputTokens": 7100,
+          "outputTokens": 750,
+          "searchCalls": 3,
+          "costUsd": 0.0429,
+          "cached": false
+        },
+        "replay": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "searchCalls": 0,
+          "costUsd": 0,
+          "cached": true
+        }
+      }
+    ],
+    "externalApiCalls": 0,
+    "actualProviderChargeUsd": 0,
+    "syntheticValuationUsd": 4.29,
+    "qualityBenchmark": false,
+    "provenance": {
+      "capturedAt": "2026-11-22T01:37:30.649Z",
+      "mode": "controlled-http-synthetic-usage",
+      "externalApiCalls": 0,
+      "hashes": {
+        "data/corpus/catalog.json": "1a43e9e70b5696c49c6c43eb831f79fc1a88be87a6127d65115d1e426de0a543",
+        "package-lock.json": "d361cf8fe27f8d63c91baeb1ac52625d15fa204c093b0c06d29a2bbe07d1dc39",
+        "scripts/load-test.mjs": "2ec032af191226018c2f3e7ddf5361ec7a11c179b434323684c489c05a395e1e",
+        "src/app/api/channels/discord-demo/route.ts": "7a7bfbc932d00ee5927f26026850d7bfb4ea4c3b98327e3f7ec66349f9a0a3e8",
+        "src/app/api/corpus/route.ts": "6458a23af40ef75b524269e32a1ca59009c7bc813e1ba35c2cb14304ce1248d7",
+        "src/app/api/demo/route.ts": "5e6864b9ec6aed11d674fd1933b7d31fef71c9fdf26a7ac19c4058eea2882333",
+        "src/app/api/health/route.ts": "fd9bf83d9692d5c020438a55919a034ca6dfc27e8bd93814e4990e5b9d7cd12f",
+        "src/app/api/session/route.ts": "483b36b42e06c9c1573576adc1b694319d09fd99e2d4fd84ef0d41baa6360a94",
+        "src/app/api/verify/route.ts": "fd80a5b7b7e48b40aaa95a54bc2f9fc8f814e1af125ed7af5ad8c2c37bfa7a4d",
+        "src/app/api/vision/route.ts": "7ee6564e0e33fe23fa53fe281ab413494a6c06b9a56cfa88b1d4b0392f104646",
+        "src/app/globals.css": "7c278b18653fc303347c4c38c0cafe13722b3940adfaf22dc856b4ce1eb4b775",
+        "src/app/kanal-demo/page.tsx": "babc17340600b6c206e85f0f7f18af03b947fdad605b7d5abc02d65daf2f2192",
+        "src/app/layout.tsx": "36d7d173824baa7e6271dba52e11936f5ce283c676549c08b826941d9fcf842a",
+        "src/app/page.tsx": "7ffeb43f45024c74a57d970d59f5e9503a7d7bcbb46b756c08d721855deca72e",
+        "src/app/zrodla/page.tsx": "14d25b53ef3fa5c6464c172180a71417cf5aefff6836a74a7c0f68c2e33fd1f5",
+        "src/components/analysis-progress.tsx": "a3306f2386d2fd1f5b6c7deacf866dbdd6ad61d553125287ba9cf0c120a9f8a3",
+        "src/components/channel-workbench.tsx": "4bc7da86fa4b38f6f57cbc2d3d9511058f8665c8a7dd1dab145614aa33e3e2ab",
+        "src/components/evidence-graph-view.tsx": "623c9cb8ef6caa3f67a84fb362c91895bc2f9117b425aea30408e6da43db6d69",
+        "src/components/icon.tsx": "a33b947e5455f09bc16f9f3eded99f38f40077c7f21ff3d054837b1b1ed707a9",
+        "src/components/image-input.tsx": "cf9d0bbf606f39ec288254b9bc198ff9f5868be5c7f6ba00c19a206184537403",
+        "src/components/retrieval-details.tsx": "28c7bfc1b3ce872107249899e3a8a4282bece69af7cbf1c2b421ec385c5c6649",
+        "src/components/session-controls.tsx": "943e22a20f84e796afafaac11ee5eaaf1a147ff0067a19f167b18bfb6c770d91",
+        "src/components/use-verification-request.ts": "0026937f197eee96efad4fd6f7b14bc5cd1968c0d58b9e7f725a249f2915ea14",
+        "src/components/verification-view.tsx": "a4bf090c5679bac9b09d73258b1a540feabf840a0c392664e55d0c6b9e8b0fbe",
+        "src/components/workbench.tsx": "96d8d4321e3f63b50bf3a80544f62b1a5ce65f1fd6d36b5140eddbb2b7ac1adf",
+        "src/core/benchmark.ts": "c75b3e84f73aacce293951fccb2b980686dcde848d1a5d0683b913718488d6eb",
+        "src/core/channel.ts": "f5f38c4280cd497937bb9ad59816a5bcfd84375dd0b09eb5902cabcbd00918f7",
+        "src/core/contracts.ts": "1c2f54c5e093607f1844b5a32d5ef06cda417ffc00cc92e4ec6cf26eedaa6a00",
+        "src/core/demo.ts": "2601d945785cde72d72bcf0a65c4298b3dc911495f2e08b667ec29bd1307e5aa",
+        "src/core/errors.ts": "afad5b01450b46d7ff1d49f7ec38bb0429657b1aec5ccb0b7ae3c5127c9d3485",
+        "src/core/evidence-graph.ts": "aa2dce4830eead027e4f50ad4ec447afcafd0038f8440545f2a9572f6353b433",
+        "src/core/evidence.ts": "c0b31319f28cfa2aebb631485eff1e4af4f1fa547ca1351a68a5c1e1f582057f",
+        "src/core/interleave.ts": "7c613ba8e8b2760bc31ef1f2acf38f32f6c19df3bcc6785c3fac232cd38df541",
+        "src/core/privacy.ts": "117110f14349e1c06aa3e8410f05f8f7468af2e411f0c4de56c85a2217c0c6e8",
+        "src/core/progress.ts": "264d1f5936d56009540b30d24d4b7c61cc71d00fe26f3e4de70be1123cf4e37d",
+        "src/core/quotations.ts": "7f371c127efc8eeb2fbdf5e14abcaa3d465a3e7793fd82e9cf708cd7336bc4b1",
+        "src/core/source-counts.ts": "a8691a52afd535bbc3fa94d676a879ddd403ce9e3359fee3dabe0f4c4a3cbb1f",
+        "src/core/source-disagreement.ts": "99df0ec8a8d100aaec898117ab5718f755e0fc9b5fd4fd17dd27c88cef33266a",
+        "src/core/source-policy.ts": "e46b765d1bdbe74523a86d20523885f6b02f0bef1d23d43e28b57366f2a2d336",
+        "src/core/untrusted.ts": "d03804dd0fe704554daba33dc8bdcc94ce4c9f5ab0686bd9d380198a46cf1165",
+        "src/core/verification-date.ts": "5f238ffd6db979d3aef83beeaba52904a270bb16bcd08ed49d6279122f72aabf",
+        "src/core/vision.ts": "ffb48ca67c1c5afcbd7de0721148819fd5d26bcc7dda1152bb176b4ce9a78f22",
+        "src/server/alerts.ts": "2e9cce0e01cb5141f8657395861918abd768b146c19d379b4afb0d1380e2f3a2",
+        "src/server/audit-store.ts": "ea174f82b8d25b5ce40364e94cafc8f54d11f8f2516ca7d9b0aa03c2928a08f8",
+        "src/server/config.ts": "23fcbcc435edc0bbff4134aa6024a85e4ccf2bda5c6a59c88617b478f4dc40e6",
+        "src/server/context-dates.ts": "911a56a45d65c23de7eb968819eac53261f84af076d24a33245f466e3524e01e",
+        "src/server/corpus.ts": "48ff3621ccc84bb9d98a0ccae4c3ab5d9ce66337e4f4d1decb76260936555aef",
+        "src/server/demagog.ts": "fe69fedbc53511c535e564570dd827f5726eac3940d38c42beaeda22ac1bfb98",
+        "src/server/demo-graph.ts": "fcdcf7b6bad1d6e0d3926f8f3b699a50f157960ba4d495b74fcc81a59c30e22c",
+        "src/server/euvsdisinfo.ts": "1031a386243889034319a1b426d7567515cb25e83cf99f72883a691f2a2e152e",
+        "src/server/fact-check.ts": "1c2518fd644aac68ba2ae49af18c959ffafaf5ba0e92304579b491a2942856ca",
+        "src/server/gemini-transport.ts": "3206ce42681ad85cdaa2f20a070e0884e3a6d77d49d1534b882792912029cc66",
+        "src/server/graph-validation.ts": "70b9e9a23d343d1e9447674374042ab20f9cccad30a63d73c8bcbfa22d04f3bc",
+        "src/server/handle-verification.ts": "ce386033498f2f050ae39a19cd5d3ae753741e53cff08dcbd9614a28e7ecbaec",
+        "src/server/limits.ts": "6d7a20674952f996bbcfc0d1322f279623fc40042dfc3b4b2ce2500b46d16a3d",
+        "src/server/providers.ts": "900d6443202dd82244eda8d8dc5668390ff68bece23af95b3a6517802330f285",
+        "src/server/publication-dates.ts": "6666fc1d736f706c2f0d23b0dc091d430973076b8edd5ebda39b272e1adfa153",
+        "src/server/read-body.ts": "175ac19e1e104571027d10a31c988d592290e93f1c300a5ef04b94c42245191a",
+        "src/server/request-session.ts": "36629885dd1651a13e41a5786b4fe2d012c3e7cdfeb4a2bbd1ee2921f30ff13e",
+        "src/server/retrieval.ts": "74cde27b35cba45645aeb01860f6b8b65b421c79bc20290429c28372ed11fa4b",
+        "src/server/search-cache.ts": "0d90f456b8df6d9e47a88f1f5818517d079ebe0212d9fa3ef314ee4597058465",
+        "src/server/source-adapters.ts": "d0e255f6bf44d6c6299d38a6a5870221fadb01cea79c06c1e3e350f902750d38",
+        "src/server/verification-audit.ts": "cc0f686c7ca1775fe00248b1f5e8aea729474fa35135121ec84719135e409466",
+        "src/server/verification-graph.ts": "551d77b7d1ff55be5f3a3484d015ff4699d9a1ab1363a40d758a03fb7a1a7da7",
+        "src/server/verification-instructions.ts": "913d4660b4109d595f0c96350fe906b96dc243aeed7ee729b2792ceda25dad8c",
+        "src/server/verification-service.ts": "37d7a6cee66c7cb9435628abba51602923b765c237ccc25ea5f7cdebf6220741",
+        "src/server/verify.ts": "e8eedcc1e5f2bd9c340f9374d107dffc9082c18a11194b9f8aac5792e365a08a"
+      }
+    }
+  },
+  "currentOfflineLoad": {
+    "runAt": "2026-11-22T01:37:34.629Z",
+    "node": "v24.8.0",
+    "providerDelayMs": 20,
+    "measurements": [
+      {
+        "concurrent": 1,
+        "requests": 5,
+        "ok": 5,
+        "http429": 0,
+        "otherErrors": 0,
+        "errorPercent": 0,
+        "all": {
+          "medianMs": 159.6,
+          "p95Ms": 209.7
+        },
+        "successful": {
+          "medianMs": 159.6,
+          "p95Ms": 209.7
+        },
+        "rejected429": {
+          "medianMs": null,
+          "p95Ms": null
+        },
+        "geminiCalls": 15,
+        "tavilyCalls": 15
+      },
+      {
+        "concurrent": 3,
+        "requests": 15,
+        "ok": 15,
+        "http429": 0,
+        "otherErrors": 0,
+        "errorPercent": 0,
+        "all": {
+          "medianMs": 171.7,
+          "p95Ms": 173.9
+        },
+        "successful": {
+          "medianMs": 171.7,
+          "p95Ms": 173.9
+        },
+        "rejected429": {
+          "medianMs": null,
+          "p95Ms": null
+        },
+        "geminiCalls": 45,
+        "tavilyCalls": 45
+      },
+      {
+        "concurrent": 12,
+        "requests": 60,
+        "ok": 15,
+        "http429": 45,
+        "otherErrors": 0,
+        "errorPercent": 75,
+        "all": {
+          "medianMs": 52.7,
+          "p95Ms": 196.8
+        },
+        "successful": {
+          "medianMs": 187.7,
+          "p95Ms": 197.7
+        },
+        "rejected429": {
+          "medianMs": 49.9,
+          "p95Ms": 57.1
+        },
+        "geminiCalls": 45,
+        "tavilyCalls": 45
+      }
+    ],
+    "mode": "Controlled HTTP with 20 ms fake provider delays; local limiter test, not online latency",
+    "externalApiCalls": 0,
+    "concurrentOtherWork": "Synthetic 100-request cost check ran concurrently; timings are observations on this host, not isolated capacity guarantees",
+    "provenance": {
+      "capturedAt": "2026-11-22T01:37:31.517Z",
+      "mode": "controlled-http-synthetic-usage",
+      "externalApiCalls": 0,
+      "hashes": {
+        "data/corpus/catalog.json": "1a43e9e70b5696c49c6c43eb831f79fc1a88be87a6127d65115d1e426de0a543",
+        "package-lock.json": "d361cf8fe27f8d63c91baeb1ac52625d15fa204c093b0c06d29a2bbe07d1dc39",
+        "scripts/load-test.mjs": "2ec032af191226018c2f3e7ddf5361ec7a11c179b434323684c489c05a395e1e",
+        "src/app/api/channels/discord-demo/route.ts": "7a7bfbc932d00ee5927f26026850d7bfb4ea4c3b98327e3f7ec66349f9a0a3e8",
+        "src/app/api/corpus/route.ts": "6458a23af40ef75b524269e32a1ca59009c7bc813e1ba35c2cb14304ce1248d7",
+        "src/app/api/demo/route.ts": "5e6864b9ec6aed11d674fd1933b7d31fef71c9fdf26a7ac19c4058eea2882333",
+        "src/app/api/health/route.ts": "fd9bf83d9692d5c020438a55919a034ca6dfc27e8bd93814e4990e5b9d7cd12f",
+        "src/app/api/session/route.ts": "483b36b42e06c9c1573576adc1b694319d09fd99e2d4fd84ef0d41baa6360a94",
+        "src/app/api/verify/route.ts": "fd80a5b7b7e48b40aaa95a54bc2f9fc8f814e1af125ed7af5ad8c2c37bfa7a4d",
+        "src/app/api/vision/route.ts": "7ee6564e0e33fe23fa53fe281ab413494a6c06b9a56cfa88b1d4b0392f104646",
+        "src/app/globals.css": "7c278b18653fc303347c4c38c0cafe13722b3940adfaf22dc856b4ce1eb4b775",
+        "src/app/kanal-demo/page.tsx": "babc17340600b6c206e85f0f7f18af03b947fdad605b7d5abc02d65daf2f2192",
+        "src/app/layout.tsx": "36d7d173824baa7e6271dba52e11936f5ce283c676549c08b826941d9fcf842a",
+        "src/app/page.tsx": "7ffeb43f45024c74a57d970d59f5e9503a7d7bcbb46b756c08d721855deca72e",
+        "src/app/zrodla/page.tsx": "14d25b53ef3fa5c6464c172180a71417cf5aefff6836a74a7c0f68c2e33fd1f5",
+        "src/components/analysis-progress.tsx": "a3306f2386d2fd1f5b6c7deacf866dbdd6ad61d553125287ba9cf0c120a9f8a3",
+        "src/components/channel-workbench.tsx": "4bc7da86fa4b38f6f57cbc2d3d9511058f8665c8a7dd1dab145614aa33e3e2ab",
+        "src/components/evidence-graph-view.tsx": "623c9cb8ef6caa3f67a84fb362c91895bc2f9117b425aea30408e6da43db6d69",
+        "src/components/icon.tsx": "a33b947e5455f09bc16f9f3eded99f38f40077c7f21ff3d054837b1b1ed707a9",
+        "src/components/image-input.tsx": "cf9d0bbf606f39ec288254b9bc198ff9f5868be5c7f6ba00c19a206184537403",
+        "src/components/retrieval-details.tsx": "28c7bfc1b3ce872107249899e3a8a4282bece69af7cbf1c2b421ec385c5c6649",
+        "src/components/session-controls.tsx": "943e22a20f84e796afafaac11ee5eaaf1a147ff0067a19f167b18bfb6c770d91",
+        "src/components/use-verification-request.ts": "0026937f197eee96efad4fd6f7b14bc5cd1968c0d58b9e7f725a249f2915ea14",
+        "src/components/verification-view.tsx": "a4bf090c5679bac9b09d73258b1a540feabf840a0c392664e55d0c6b9e8b0fbe",
+        "src/components/workbench.tsx": "96d8d4321e3f63b50bf3a80544f62b1a5ce65f1fd6d36b5140eddbb2b7ac1adf",
+        "src/core/benchmark.ts": "c75b3e84f73aacce293951fccb2b980686dcde848d1a5d0683b913718488d6eb",
+        "src/core/channel.ts": "f5f38c4280cd497937bb9ad59816a5bcfd84375dd0b09eb5902cabcbd00918f7",
+        "src/core/contracts.ts": "1c2f54c5e093607f1844b5a32d5ef06cda417ffc00cc92e4ec6cf26eedaa6a00",
+        "src/core/demo.ts": "2601d945785cde72d72bcf0a65c4298b3dc911495f2e08b667ec29bd1307e5aa",
+        "src/core/errors.ts": "afad5b01450b46d7ff1d49f7ec38bb0429657b1aec5ccb0b7ae3c5127c9d3485",
+        "src/core/evidence-graph.ts": "aa2dce4830eead027e4f50ad4ec447afcafd0038f8440545f2a9572f6353b433",
+        "src/core/evidence.ts": "c0b31319f28cfa2aebb631485eff1e4af4f1fa547ca1351a68a5c1e1f582057f",
+        "src/core/interleave.ts": "7c613ba8e8b2760bc31ef1f2acf38f32f6c19df3bcc6785c3fac232cd38df541",
+        "src/core/privacy.ts": "117110f14349e1c06aa3e8410f05f8f7468af2e411f0c4de56c85a2217c0c6e8",
+        "src/core/progress.ts": "264d1f5936d56009540b30d24d4b7c61cc71d00fe26f3e4de70be1123cf4e37d",
+        "src/core/quotations.ts": "7f371c127efc8eeb2fbdf5e14abcaa3d465a3e7793fd82e9cf708cd7336bc4b1",
+        "src/core/source-counts.ts": "a8691a52afd535bbc3fa94d676a879ddd403ce9e3359fee3dabe0f4c4a3cbb1f",
+        "src/core/source-disagreement.ts": "99df0ec8a8d100aaec898117ab5718f755e0fc9b5fd4fd17dd27c88cef33266a",
+        "src/core/source-policy.ts": "e46b765d1bdbe74523a86d20523885f6b02f0bef1d23d43e28b57366f2a2d336",
+        "src/core/untrusted.ts": "d03804dd0fe704554daba33dc8bdcc94ce4c9f5ab0686bd9d380198a46cf1165",
+        "src/core/verification-date.ts": "5f238ffd6db979d3aef83beeaba52904a270bb16bcd08ed49d6279122f72aabf",
+        "src/core/vision.ts": "ffb48ca67c1c5afcbd7de0721148819fd5d26bcc7dda1152bb176b4ce9a78f22",
+        "src/server/alerts.ts": "2e9cce0e01cb5141f8657395861918abd768b146c19d379b4afb0d1380e2f3a2",
+        "src/server/audit-store.ts": "ea174f82b8d25b5ce40364e94cafc8f54d11f8f2516ca7d9b0aa03c2928a08f8",
+        "src/server/config.ts": "23fcbcc435edc0bbff4134aa6024a85e4ccf2bda5c6a59c88617b478f4dc40e6",
+        "src/server/context-dates.ts": "911a56a45d65c23de7eb968819eac53261f84af076d24a33245f466e3524e01e",
+        "src/server/corpus.ts": "48ff3621ccc84bb9d98a0ccae4c3ab5d9ce66337e4f4d1decb76260936555aef",
+        "src/server/demagog.ts": "fe69fedbc53511c535e564570dd827f5726eac3940d38c42beaeda22ac1bfb98",
+        "src/server/demo-graph.ts": "fcdcf7b6bad1d6e0d3926f8f3b699a50f157960ba4d495b74fcc81a59c30e22c",
+        "src/server/euvsdisinfo.ts": "1031a386243889034319a1b426d7567515cb25e83cf99f72883a691f2a2e152e",
+        "src/server/fact-check.ts": "1c2518fd644aac68ba2ae49af18c959ffafaf5ba0e92304579b491a2942856ca",
+        "src/server/gemini-transport.ts": "3206ce42681ad85cdaa2f20a070e0884e3a6d77d49d1534b882792912029cc66",
+        "src/server/graph-validation.ts": "70b9e9a23d343d1e9447674374042ab20f9cccad30a63d73c8bcbfa22d04f3bc",
+        "src/server/handle-verification.ts": "ce386033498f2f050ae39a19cd5d3ae753741e53cff08dcbd9614a28e7ecbaec",
+        "src/server/limits.ts": "6d7a20674952f996bbcfc0d1322f279623fc40042dfc3b4b2ce2500b46d16a3d",
+        "src/server/providers.ts": "900d6443202dd82244eda8d8dc5668390ff68bece23af95b3a6517802330f285",
+        "src/server/publication-dates.ts": "6666fc1d736f706c2f0d23b0dc091d430973076b8edd5ebda39b272e1adfa153",
+        "src/server/read-body.ts": "175ac19e1e104571027d10a31c988d592290e93f1c300a5ef04b94c42245191a",
+        "src/server/request-session.ts": "36629885dd1651a13e41a5786b4fe2d012c3e7cdfeb4a2bbd1ee2921f30ff13e",
+        "src/server/retrieval.ts": "74cde27b35cba45645aeb01860f6b8b65b421c79bc20290429c28372ed11fa4b",
+        "src/server/search-cache.ts": "0d90f456b8df6d9e47a88f1f5818517d079ebe0212d9fa3ef314ee4597058465",
+        "src/server/source-adapters.ts": "d0e255f6bf44d6c6299d38a6a5870221fadb01cea79c06c1e3e350f902750d38",
+        "src/server/verification-audit.ts": "cc0f686c7ca1775fe00248b1f5e8aea729474fa35135121ec84719135e409466",
+        "src/server/verification-graph.ts": "551d77b7d1ff55be5f3a3484d015ff4699d9a1ab1363a40d758a03fb7a1a7da7",
+        "src/server/verification-instructions.ts": "913d4660b4109d595f0c96350fe906b96dc243aeed7ee729b2792ceda25dad8c",
+        "src/server/verification-service.ts": "37d7a6cee66c7cb9435628abba51602923b765c237ccc25ea5f7cdebf6220741",
+        "src/server/verify.ts": "e8eedcc1e5f2bd9c340f9374d107dffc9082c18a11194b9f8aac5792e365a08a"
+      }
+    }
+  },
+  "implementationChecks": {
+    "unitIntegration": {
+      "passed": 339,
+      "skipped": 6,
+      "run": "2026-11-22T01:38:00Z"
+    },
+    "browser": {
+      "passed": 29,
+      "skipped": 4,
+      "note": "Earlier successful run on the optimized application; not rerun for report-only and measurement-CLI changes"
+    },
+    "corpusCheck": {
+      "exitCode": 1,
+      "reason": "Fewer than 2 source types (brief requirement)"
+    },
+    "typecheck": {
+      "passed": true,
+      "runOn": "2026-11-22",
+      "note": "Passed after measurement CLI/test changes"
+    }
+  },
+  "localConfiguration": {
+    "alertRecipientConfigured": false,
+    "observedOn": "2026-11-22",
+    "deliveryToExternalRecipientTested": false
+  },
+  "sourceFiles": [
+    {
+      "path": "reports/cost/optimized-live-2026-11-22T01-28-23-614Z/request.json",
+      "sha256": "6baa1ada34b652a2fe8f3a84d62fbac1e8a62aa464f0f2c69ccab1d39efcba51",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/cost/optimized-live-2026-11-22T01-28-23-614Z/response.json",
+      "sha256": "27ad90dca0d656407c42f43c3bb8a315868533fa481b0923c76b68bb92b1f4ef",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/cost/optimized-live-2026-11-22T01-28-23-614Z/audit.json",
+      "sha256": "aa08215374ad92bcabc2aba701e46d378989d40e43172519e1da709ba4465010",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/benchmark/p02-run4/results.json",
+      "sha256": "330d9f434e7a4d9b6b56995fb3ac1d618faba9d3980ede70545677db38855dc8",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/benchmark/p02-run4/summary.json",
+      "sha256": "e8007ae9a601a38d6b1831ff77520ebf8b569198c0d07b0a7ef2e11e77c332e4",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/benchmark/p02-run4/citation-review.json",
+      "sha256": "50ec042c3d61bb1b98e80fca13f52569a7c69d95b9e363a91bda90e7b2cc1a39",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/benchmark/audit-2026-11-22-three/cost-summary.json",
+      "sha256": "5310cfc2a34469543b51d12da80c50bce2530bc941f5ff07ad49912ed6dfd8dc",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/cost/offline-optimized-2026-11-22/offline.json",
+      "sha256": "edb9ab7bc6a8de689b126b128007750e31d345e3b9a995fdfa15e564ef508b15",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "reports/load/offline-optimized-2026-11-22/local.json",
+      "sha256": "26baa3c4a1f8931d74d2c6be6dcb19c1b394432831471c93fa84c2587528da33",
+      "availability": "local ignored report; only summarized billing/counters copied here"
+    },
+    {
+      "path": "data/corpus/catalog.json",
+      "sha256": "1a43e9e70b5696c49c6c43eb831f79fc1a88be87a6127d65115d1e426de0a543",
+      "availability": "repository file"
+    }
+  ]
+}

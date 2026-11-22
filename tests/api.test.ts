@@ -59,7 +59,12 @@ describe("real route and adapters with controlled HTTP provider responses", () =
           expect(init?.signal).toBeTruthy();
           if (String(url).includes("tavily"))
             return Response.json({
-              usage: { credits: 2 },
+              usage: {
+                credits:
+                  JSON.parse(String(init?.body)).search_depth === "basic"
+                    ? 1
+                    : 2,
+              },
               results: [
                 {
                   title: "CONTEXT_ONLY",
@@ -173,33 +178,35 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         .map(([, init]) => JSON.parse(String(init?.body)));
       expect(queries[0].include_domains).toBeUndefined();
       expect(queries[0].query).not.toContain("site:");
+      expect(queries[0].search_depth).toBe("basic");
+      expect(queries).toHaveLength(3);
       for (const request of queries.slice(1)) {
-        expect(request.include_domains).toHaveLength(1);
-        expect(["demagog.org.pl", "euvsdisinfo.eu", "gov.pl"]).toContain(
-          request.include_domains[0],
-        );
+        expect(request.include_domains).toEqual([
+          "demagog.org.pl",
+          "euvsdisinfo.eu",
+          "gov.pl",
+        ]);
+        expect(request.search_depth).toBe("advanced");
         for (const domain of request.include_domains)
           expect(request.query).toContain("site:" + domain);
-        expect(request.query).not.toContain("(site:");
       }
-      expect(queries.slice(1, 4).map((request) => request.query)).toEqual([
-        `${claim} site:demagog.org.pl`,
-        `${claim} site:euvsdisinfo.eu`,
-        `${claim} site:gov.pl`,
+      expect(queries.slice(1).map((request) => request.query)).toEqual([
+        `${claim} (site:demagog.org.pl OR site:euvsdisinfo.eu OR site:gov.pl)`,
+        "Poland NATO alternative date (site:demagog.org.pl OR site:euvsdisinfo.eu OR site:gov.pl)",
       ]);
       expect(JSON.stringify(body.sources)).not.toContain("bbc.com");
       expect(body.mode).toBe("live");
       expect(body.usage).toMatchObject({
         inputTokens: 300,
         outputTokens: 75,
-        searchCalls: 7,
+        searchCalls: 3,
         cached: false,
       });
-      expect(body.usage.costUsd).toBeCloseTo(0.11218075, 10);
+      expect(body.usage.costUsd).toBeCloseTo(0.04018075, 10);
       expect(body.strength.independentGroups).toBe(2);
       const row = sessionAudit(session)[0];
       expect(row.usage).toEqual(body.usage);
-      expect(row.usageCalls).toHaveLength(10);
+      expect(row.usageCalls).toHaveLength(6);
       const db = new DatabaseSync(process.env.AUDIT_DB_PATH!, {
         readOnly: true,
       });
@@ -221,7 +228,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
         { id: "f1", text: claim, evidenceIds: ["q1", "q2"] },
       ]);
       expect(body.explanation).toBe(`${claim} [1] [2]`);
-      expect(fetcher).toHaveBeenCalledTimes(10);
+      expect(fetcher).toHaveBeenCalledTimes(6);
       expect(JSON.stringify(body)).not.toContain("test-key-not-real");
       expect(response.headers.get("cache-control")).toContain("no-store");
     },

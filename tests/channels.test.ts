@@ -127,7 +127,7 @@ it.each(["web", "discord"])(
     for (const item of initial.evidence) expect(reply).toContain(item.quote);
     for (const source of initial.sources) expect(reply).toContain(source.url);
     expect(generate).toHaveBeenCalledTimes(3);
-    expect(search).toHaveBeenCalledTimes(6);
+    expect(search).toHaveBeenCalledTimes(2);
   },
 );
 
@@ -254,14 +254,14 @@ it("reuses a result until exactly one hour after completion, even after a cache 
     usage: { cached: true, costUsd: 0, searchCalls: 0 },
   });
   expect(generate).toHaveBeenCalledTimes(3);
-  expect(search).toHaveBeenCalledTimes(6);
+  expect(search).toHaveBeenCalledTimes(2);
 
   clock.mockReturnValue(now + 3_600_000);
   const fresh = await check();
   expect(fresh.delivery.reused).toBe(false);
   expect(fresh.requestId).not.toBe(first.requestId);
   expect(generate).toHaveBeenCalledTimes(6);
-  expect(search).toHaveBeenCalledTimes(12);
+  expect(search).toHaveBeenCalledTimes(4);
 });
 it("responds automatically to a clarification without a factual verdict", async () => {
   vi.mocked(generate).mockResolvedValueOnce({
@@ -380,7 +380,7 @@ it("projects the same supported result and citations into the graph without extr
   const plain = await discord(request({ content: claim }, session));
   expect((await plain.json()).result).not.toHaveProperty("evidenceGraph");
   expect(generate).toHaveBeenCalledTimes(3);
-  expect(search).toHaveBeenCalledTimes(6);
+  expect(search).toHaveBeenCalledTimes(2);
 });
 
 it("preserves the verdict when the graph cannot be rendered", async () => {

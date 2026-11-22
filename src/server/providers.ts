@@ -5,6 +5,7 @@ import type { SearchHit } from "@/core/evidence";
 import type { ImageMime } from "@/core/vision";
 import { geminiResponse } from "./gemini-transport";
 import { startCall, TAVILY_CREDIT_USD } from "./config";
+import { cachedSearch } from "./search-cache";
 
 async function searchResponse(response: Response): Promise<unknown> {
   if (!response.ok) {
@@ -186,62 +187,84 @@ export async function searchContext(query: string, signal: AbortSignal) {
   }));
 }
 
-export async function searchPublicationMetadata(
-  title: string,
-  url: string,
-  signal: AbortSignal,
-) {
-  if (!isAllowedSourceUrl(url)) return [];
-  return webSearch(title, signal, "metadata", new URL(url).hostname);
-}
-
 async function webSearch(
   query: string,
   signal: AbortSignal,
-  purpose: "context" | "evidence" | "metadata",
+  purpose: "context" | "evidence",
   domain?: string,
 ) {
   const terms = query.replace(/-?site:\s*\S+/gi, "").trim();
   const domains = domain ? [domain] : allowedSourceDomains;
-  const call = startCall("tavily");
-  const response = await fetch("https://api.tavily.com/search", {
-    method: "POST",
+  const depth = purpose === "context" ? "basic" : "advanced";
+  const { value, reused } = await cachedSearch(
+    JSON.stringify([
+      "tavily-v2",
+      terms,
+      purpose,
+      depth,
+      domains,
+      process.env.TAVILY_API_KEY,
+    ]),
     signal,
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.TAVILY_API_KEY}`,
+    async () => {
+      const call = startCall("tavily");
+      const response = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        signal,
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.TAVILY_API_KEY}`,
+        },
+        body: JSON.stringify({
+          query:
+            purpose === "evidence"
+              ? `${terms} ${domains.length === 1 ? `site:${domains[0]}` : `(${domains.map((domain) => `site:${domain}`).join(" OR ")})`}`
+              : terms,
+          ...(purpose === "evidence" && { include_domains: domains }),
+          max_results: 6,
+          search_depth: depth,
+          include_usage: true,
+          include_raw_content: purpose === "evidence",
+          include_published_date: true,
+          include_answer: false,
+          auto_parameters: false,
+        }),
+      });
+      const body = await searchResponse(response);
+      const credits = z
+        .object({
+          usage: z.object({ credits: z.number().int().nonnegative() }),
+        })
+        .safeParse(body);
+      call.credits = credits.success ? credits.data.usage.credits : null;
+      call.costUsd =
+        call.credits === null ? null : call.credits * TAVILY_CREDIT_USD;
+      const parsed = searchSchema.safeParse(body);
+      if (!parsed.success)
+        throw new AppError(
+          "PROVIDER_ERROR",
+          "Nie udało się odczytać wyników wyszukiwania.",
+          502,
+          true,
+        );
+      const retrievedAt = new Date().toISOString();
+      return parsed.data.results.map((hit) => ({
+        ...hit,
+        // The verifier already limits each source to 150k characters.
+        raw_content: hit.raw_content?.slice(0, 150_000),
+        retrievedAt,
+      }));
     },
-    body: JSON.stringify({
-      query:
-        purpose === "evidence"
-          ? `${terms} ${domains.length === 1 ? `site:${domains[0]}` : `(${domains.map((domain) => `site:${domain}`).join(" OR ")})`}`
-          : terms,
-      ...(purpose === "evidence" && { include_domains: domains }),
-      ...(purpose === "metadata" && { include_domains: domains }),
-      max_results: 6,
-      search_depth: "advanced",
-      include_usage: true,
-      include_raw_content: purpose === "evidence",
-      include_published_date: true,
-      include_answer: false,
-      auto_parameters: false,
+    5 * 60_000,
+    (hits) => hits.length > 0,
+  );
+  return value.map((hit) => ({
+    ...hit,
+    ...(reused && {
+      notes: [
+        "Wynik wyszukiwania ponownie użyty w tej sesji (maks. 5 minut); zachowano czas pierwotnego pobrania.",
+      ],
     }),
-  });
-  const body = await searchResponse(response);
-  const credits = z
-    .object({ usage: z.object({ credits: z.number().int().nonnegative() }) })
-    .safeParse(body);
-  call.credits = credits.success ? credits.data.usage.credits : null;
-  call.costUsd =
-    call.credits === null ? null : call.credits * TAVILY_CREDIT_USD;
-  const parsed = searchSchema.safeParse(body);
-  if (!parsed.success)
-    throw new AppError(
-      "PROVIDER_ERROR",
-      "Nie udało się odczytać wyników wyszukiwania.",
-      502,
-      true,
-    );
-  return parsed.data.results;
+  }));
 }

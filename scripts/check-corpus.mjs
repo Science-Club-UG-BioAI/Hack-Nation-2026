@@ -80,6 +80,8 @@ export function corpusStats(catalog) {
   if (domains.size < 10)
     failures.push("Fewer than 10 conservatively grouped domains");
   if (!types.has("official")) failures.push("Missing official corpus sources");
+  if (types.size < 2)
+    failures.push("Fewer than 2 source types (brief requirement)");
   if (
     [...domains].some(
       (domain) => domain === "pap.pl" || domain === "wikipedia.org",
