@@ -72,6 +72,76 @@ beforeEach(() => {
 });
 
 describe("verification pipeline", () => {
+  it("recovers an incomplete plan once without extending its deadline or bypassing the audit", async () => {
+    model
+      .mockRejectedValueOnce(invalidOutput(["interaction_incomplete"]))
+      .mockResolvedValueOnce(plan)
+      .mockResolvedValueOnce(assessment)
+      .mockResolvedValueOnce({
+        approved: true,
+        reason: "Zgodne ze źródłami.",
+        findingChecks: [{ findingId: "f1", supported: true, atomic: true }],
+      });
+    const result = await verify(
+      input,
+      "incomplete-plan",
+      new AbortController().signal,
+    );
+    expect(result.status).toBe("completed");
+    expect(result.verdict).toBe("supported");
+    expect(model).toHaveBeenCalledTimes(4);
+    expect(model.mock.calls[0][4]?.maxOutputTokens).toBe(1600);
+    expect(model.mock.calls[1][4]?.maxOutputTokens).toBe(3200);
+    expect(model.mock.calls[1][4]?.deadlineAt).toBe(
+      model.mock.calls[0][4]?.deadlineAt,
+    );
+    expect(model.mock.calls[1][2]).toEqual(model.mock.calls[0][2]);
+    expect(web).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ["interaction_incomplete", 2],
+    ["interaction_schema", 1],
+  ] as const)("bounds planning retries for %s", async (issue, calls) => {
+    model.mockRejectedValue(invalidOutput([issue]));
+    await expect(
+      verify(input, "invalid-plan", new AbortController().signal),
+    ).rejects.toMatchObject({ code: "INVALID_MODEL_OUTPUT" });
+    expect(model).toHaveBeenCalledTimes(calls);
+    expect(web).not.toHaveBeenCalled();
+  });
+
+  it("does not retry an incomplete plan when less than three seconds remain", async () => {
+    let now = Date.now();
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+    try {
+      model.mockImplementation(async () => {
+        now += 9501;
+        throw invalidOutput(["interaction_incomplete"]);
+      });
+      await expect(
+        verify(input, "late-plan", new AbortController().signal),
+      ).rejects.toMatchObject({ code: "INVALID_MODEL_OUTPUT" });
+      expect(model).toHaveBeenCalledTimes(1);
+      expect(web).not.toHaveBeenCalled();
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it("does not retry an incomplete plan after cancellation", async () => {
+    const controller = new AbortController();
+    model.mockImplementation(async () => {
+      controller.abort();
+      throw invalidOutput(["interaction_incomplete"]);
+    });
+    await expect(
+      verify(input, "cancelled-plan", controller.signal),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(model).toHaveBeenCalledTimes(1);
+    expect(web).not.toHaveBeenCalled();
+  });
+
   it("uses the date inferred from WWW in search while assessing the original claim", async () => {
     const contextualQuery = "Polska przystąpiła do NATO 22 listopada 2026";
     const contextualizedClaim =

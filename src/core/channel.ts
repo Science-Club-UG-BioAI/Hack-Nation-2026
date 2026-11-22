@@ -8,8 +8,23 @@ import { sourceDisagreement } from "./source-disagreement";
 
 // A deterministic transport formatter, with no extra model call or changed verdict.
 export function channelReply(result: VerificationResult): ChannelReply {
-  const blocks = [
-    "KitCheck · adapter demonstracyjny Discord (bez wysyłania do Discorda)",
+  return {
+    channel: "discord_demo",
+    delivery: "simulated",
+    messages: channelMessages(
+      result,
+      "KitCheck · adapter demonstracyjny Discord (bez wysyłania do Discorda)",
+    ),
+    result,
+  };
+}
+
+function channelBlocks(
+  result: VerificationResult,
+  heading = "Prawdowid · Discord",
+): string[] {
+  return [
+    heading,
     `Twierdzenie: ${result.claim}`,
     ...(result.checkedClaim
       ? [
@@ -51,6 +66,17 @@ export function channelReply(result: VerificationResult): ChannelReply {
         ]
       : []),
   ];
+}
+
+export function channelText(result: VerificationResult): string {
+  return channelBlocks(result).join("\n\n");
+}
+
+export function channelMessages(
+  result: VerificationResult,
+  heading = "Prawdowid · Discord",
+): string[] {
+  const blocks = channelBlocks(result, heading);
   const messages: string[] = [];
   for (const block of blocks) {
     // Keep the entire answer, including all citations, in bounded transport messages.
@@ -61,9 +87,14 @@ export function channelReply(result: VerificationResult): ChannelReply {
         messages[last] += `\n\n${remaining}`;
         break;
       }
-      messages.push(remaining.slice(0, 1800));
-      remaining = remaining.slice(1800);
+      // Do not split a UTF-16 surrogate pair between two Discord messages.
+      const end =
+        remaining.length > 1800 && /[\uD800-\uDBFF]/.test(remaining[1799])
+          ? 1799
+          : 1800;
+      messages.push(remaining.slice(0, end));
+      remaining = remaining.slice(end);
     }
   }
-  return { channel: "discord_demo", delivery: "simulated", messages, result };
+  return messages;
 }

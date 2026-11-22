@@ -131,7 +131,7 @@ function sourceUrl(value: string) {
 }
 export type AuditEntry = {
   requestId: string;
-  channel: "web" | "discord_demo";
+  channel: "web" | "discord_demo" | "discord";
   claim: string;
   statedAt?: string;
   durationMs: number;

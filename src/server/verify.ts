@@ -97,8 +97,8 @@ export async function verify(
       deadlineAt - reserveMs,
       start + budget.durationMs,
     );
-    try {
-      return await generate(
+    const runModel = (maxOutputTokens: number) =>
+      generate(
         schema,
         context
           ? instruction +
@@ -108,9 +108,29 @@ export async function verify(
         signal,
         {
           deadlineAt: operationDeadline,
-          maxOutputTokens: outputTokenLimit ?? budget.maxOutputTokens,
+          maxOutputTokens,
         },
       );
+    try {
+      try {
+        return await runModel(outputTokenLimit ?? budget.maxOutputTokens);
+      } catch (error) {
+        signal.throwIfAborted();
+        // A truncated plan cannot be used to search. Retry it once with more
+        // output space, keeping the same stage deadline and full validation.
+        // Assessment repair and audit retry have their own bounded handling.
+        if (
+          currentStage !== "planning" ||
+          !(error instanceof InvalidModelOutput) ||
+          !error.validationIssues.includes("interaction_incomplete") ||
+          operationDeadline - Date.now() < 3000
+        )
+          throw error;
+        console.warn(
+          JSON.stringify({ requestId, event: "planning_incomplete_retry" }),
+        );
+        return await runModel(3200);
+      }
     } finally {
       console.info(
         JSON.stringify({

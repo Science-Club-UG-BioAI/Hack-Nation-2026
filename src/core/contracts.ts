@@ -183,7 +183,7 @@ type ResultBase = {
   checkedAt: string;
   sources: Source[];
   mode: "live" | "demo";
-  delivery?: { channel: "web" | "discord_demo"; reused: boolean };
+  delivery?: { channel: "web" | "discord_demo" | "discord"; reused: boolean };
   retrieval?: RetrievalStatus[];
   coverage?: {
     citedSources: number;

@@ -12,6 +12,13 @@ import { POST as discord } from "@/app/api/channels/discord-demo/route";
 import { generate, search } from "@/server/providers";
 import { planSchema, auditSchema } from "@/core/contracts";
 import { AppError } from "@/core/errors";
+import { createDiscordHandler } from "@/bot/handle-command";
+import { discordSession } from "@/bot/config";
+import { sessionAudit } from "@/server/audit-store";
+import {
+  InteractionContextType,
+  type ChatInputCommandInteraction,
+} from "discord.js";
 
 vi.mock("@/server/providers", () => ({
   searchContext: vi.fn().mockResolvedValue([]),
@@ -78,6 +85,44 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
+});
+
+it("runs the full verification pipeline for a private Discord command without a guild", async () => {
+  const config = {
+    applicationId: "123456789012345678",
+    token: "test",
+    sessionKey: "cd".repeat(32),
+  };
+  const userId = randomUUID();
+  const replies: string[] = [];
+  const interaction = {
+    id: randomUUID(),
+    applicationId: config.applicationId,
+    commandName: "sprawdz",
+    user: { id: userId },
+    context: InteractionContextType.PrivateChannel,
+    authorizingIntegrationOwners: { userId },
+    options: {
+      getString: (name: string) => (name === "teza" ? claim : "2026-11-21"),
+    },
+    deferReply: vi.fn().mockResolvedValue(undefined),
+    editReply: async ({ content }: { content: string }) => {
+      replies.push(content);
+    },
+    followUp: async ({ content }: { content: string }) => {
+      replies.push(content);
+    },
+  } as unknown as ChatInputCommandInteraction;
+  await createDiscordHandler(config)(interaction);
+  expect(replies.join("\n")).toContain("Ocena: Potwierdzone");
+  expect(replies.join("\n")).toContain("https://euvsdisinfo.eu/source");
+  expect(replies.join("\n")).toContain("https://gov.pl/nato");
+  expect(generate).toHaveBeenCalledTimes(3);
+  expect(search).toHaveBeenCalledTimes(2);
+  expect(sessionAudit(discordSession(config, userId))[0]).toMatchObject({
+    channel: "discord",
+    verdict: "supported",
+  });
 });
 
 it.each(["web", "discord"])(

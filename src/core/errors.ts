@@ -13,7 +13,9 @@ export class InvalidModelOutput extends AppError {
   constructor(public validationIssues: string[] = []) {
     super(
       "INVALID_MODEL_OUTPUT",
-      "Nie udało się bezpiecznie zweryfikować odpowiedzi modelu. Spróbuj ponownie.",
+      validationIssues.includes("interaction_incomplete")
+        ? "Usługa analizy zwróciła niedokończoną odpowiedź. Nie wydano oceny. Spróbuj ponownie."
+        : "Nie udało się bezpiecznie zweryfikować odpowiedzi modelu. Spróbuj ponownie.",
       502,
       true,
     );

@@ -163,6 +163,17 @@ export function Workbench() {
             <Icon name="layers" />
             Korpus źródeł
           </a>
+          <a
+            className="discord-install"
+            href="https://discord.com/oauth2/authorize?client_id=1573896568199839774&integration_type=1&scope=applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Dodaj do Discorda (otwiera nową kartę)"
+            title="Dodaj KitCheck do konta i użyj /sprawdz w prywatnej rozmowie."
+          >
+            <Icon name="chat" />
+            Dodaj do Discorda
+          </a>
         </nav>
       </header>
       <main id="workspace" tabIndex={-1}>

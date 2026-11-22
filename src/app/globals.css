@@ -128,6 +128,14 @@ summary:focus-visible {
   background: #e6edfc;
   color: #2355b9;
 }
+.dashboard-nav .discord-install {
+  background: #5865f2;
+  color: #fff;
+}
+.dashboard-nav .discord-install:hover {
+  background: #4752c4;
+  color: #fff;
+}
 .dashboard-nav .icon {
   width: 18px;
   height: 18px;
@@ -1199,7 +1207,7 @@ blockquote {
   }
   .dashboard-nav {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
     justify-content: space-between;
     gap: 4px;

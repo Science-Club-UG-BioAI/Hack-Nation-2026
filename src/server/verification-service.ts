@@ -114,7 +114,7 @@ export async function runVerification(
   requestId: string,
   signal: AbortSignal,
   onProgress?: ProgressListener,
-  channel: "web" | "discord_demo" = "web",
+  channel: "web" | "discord_demo" | "discord" = "web",
 ): Promise<{ result: VerificationResult; reused: boolean }> {
   signal.throwIfAborted();
   assertSessionActive(session);
