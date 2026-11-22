@@ -29,6 +29,22 @@ npm start
 
 Serwer nasłuchuje tylko na `127.0.0.1`. To lokalne demo, nie publiczne wdrożenie.
 
+## Wdrożenie na serwerze z Dockerem
+
+Na serwerze z Docker Engine, Docker Compose v2 i Make utwórz `.env.local` na podstawie `.env.example`, jeśli plik jeszcze nie istnieje. Do analizy online ustaw `GEMINI_API_KEY` i `TAVILY_API_KEY`. Sekrety są przekazywane podczas uruchamiania kontenera. Obraz ich nie zawiera.
+
+```bash
+make build
+make up
+curl --fail http://127.0.0.1:3000/api/health
+```
+
+Jeśli dostęp do Dockera wymaga podwyższonych uprawnień, użyj `sudo make build` i `sudo make up`. Parametry wdrożenia możesz wtedy podać jako argumenty Make, np. `sudo make up KITCHECK_PORT=8080`.
+
+Domyślnie port jest dostępny tylko na serwerze. Przy publicznym wdrożeniu skieruj reverse proxy HTTPS na `127.0.0.1:3000`, zachowaj nagłówek `Host`, przekaż `X-Forwarded-Proto: https` i wyłącz buforowanie odpowiedzi strumieniowych. Adres nasłuchu i port hosta można zmienić zmiennymi `KITCHECK_BIND_ADDRESS` i `KITCHECK_PORT`, np. `KITCHECK_BIND_ADDRESS=0.0.0.0 KITCHECK_PORT=8080 make up`. Zmienna `KITCHECK_ENV_FILE` pozwala wskazać inny plik środowiska.
+
+`make stop` zatrzymuje kontener. `make remove` usuwa kontener i sieć Compose, zachowując obraz oraz nazwany wolumen audytu SQLite. Aby wdrożyć zmieniony kod, wykonaj ponownie `make build` i `make up`.
+
 ## Konfiguracja
 
 | Zmienna                        | Znaczenie                                                                   |

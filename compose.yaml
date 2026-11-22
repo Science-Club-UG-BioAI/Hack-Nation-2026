@@ -1,0 +1,29 @@
+services:
+  kitcheck:
+    image: kitcheck:local
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file:
+      - ${KITCHECK_ENV_FILE:-.env.local}
+    environment:
+      AUDIT_DB_PATH: /app/.runtime/audit.sqlite
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+    ports:
+      - "${KITCHECK_BIND_ADDRESS:-127.0.0.1}:${KITCHECK_PORT:-3000}:3000"
+    volumes:
+      - audit:/app/.runtime
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then(r => { if (!r.ok) process.exitCode = 1; }).catch(() => { process.exitCode = 1; });"
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  audit:

@@ -1,0 +1,15 @@
+# Send only files required to install dependencies and compile the application.
+**
+!package.json
+!package-lock.json
+!next.config.ts
+!tsconfig.json
+!src/
+!src/**
+!public/
+!public/**
+!data/
+!data/corpus/
+!data/corpus/catalog.json
+**/.env*
+**/env.local
