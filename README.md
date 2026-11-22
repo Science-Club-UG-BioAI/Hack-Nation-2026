@@ -17,6 +17,8 @@ Uzupełnij `GEMINI_API_KEY` i `TAVILY_API_KEY` w `.env.local`, a następnie otw�
 
 ## Wdrożenie z Dockerem
 
+Instrukcja publicznego wdrożenia na Ubuntu z Nginx i certyfikatem Let's Encrypt dla `kitcheck.anovei.pl` jest w [DEPLOY.md](DEPLOY.md).
+
 Na serwerze z Docker Engine, Docker Compose v2 i Make przygotuj `.env.local` jak wyżej.
 
 | Polecenie     | Działanie                                                                    |
