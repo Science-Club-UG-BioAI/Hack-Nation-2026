@@ -76,9 +76,16 @@ test("real-time stages, source failures, activity log and final evidence stay co
   });
   await emit(page, {
     type: "source",
+    source: { provider: "arxiv", documents: 1, status: "ok" },
+  });
+  await emit(page, {
+    type: "source",
     source: { provider: "sejm", documents: 0, status: "error" },
   });
   await expect(page.locator(".source-error")).toContainText("Niedostępne");
+  await expect(page.locator(".source-activity")).not.toContainText(
+    /Wikipedia|arXiv/i,
+  );
   await expect(page.locator(".verdict")).toHaveCount(0);
   await page.getByText("Dziennik aktywności", { exact: false }).click();
   await expect(page.locator(".activity-details ol")).toContainText(
@@ -187,6 +194,32 @@ test("dashboard has no horizontal overflow at phone, tablet and desktop widths",
   await expect(page.locator(".verdict-refuted")).toBeVisible();
   await expect(page.locator(".demo-notice")).toBeVisible();
   await expect(page.locator(".step-done")).toHaveCount(0);
+});
+
+test("keeps the query form in view while scrolling a desktop report", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 700 });
+  const result = demoResult("nato")!;
+  await page.route("**/api/verify", (route) =>
+    route.fulfill({
+      json: {
+        ...result,
+        evidence: Array.from({ length: 5 }, () => result.evidence).flat(),
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.getByLabel("Twierdzenie do sprawdzenia").fill("Polska w NATO.");
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
+  await expect(page.locator("article.evidence")).toHaveCount(10);
+  await page.evaluate(() => window.scrollTo(0, 500));
+  const formColumn = page.locator(".dashboard-workspace > .input-column");
+  await expect(formColumn).toHaveCSS("position", "sticky");
+  await expect.poll(async () => (await formColumn.boundingBox())?.y).toBe(16);
+  await expect(
+    page.getByRole("heading", { name: "Sprawdź tezę" }),
+  ).toBeInViewport();
 });
 
 test("shows optional evidence metadata and keeps a clear fallback for older results", async ({

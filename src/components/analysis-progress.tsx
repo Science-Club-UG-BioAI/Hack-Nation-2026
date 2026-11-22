@@ -71,6 +71,9 @@ export function AnalysisProgress({
     : undefined;
   for (const source of result?.retrieval ?? [])
     sources.set(source.provider, source);
+  const displayedSources = [...sources.values()].filter(
+    ({ provider }) => provider !== "wikipedia" && provider !== "arxiv",
+  );
   const title = current ? stageLabels[current] : "Łączenie z analizą";
   return (
     <section className="pipeline-card" aria-label="Przebieg weryfikacji">
@@ -130,9 +133,9 @@ export function AnalysisProgress({
             );
           })}
         </ol>
-        {sources.size > 0 && (
+        {displayedSources.length > 0 && (
           <div className="source-activity">
-            {[...sources.values()].map((source) => (
+            {displayedSources.map((source) => (
               <div
                 key={source.provider}
                 className={`source-state source-${interrupted && source.status === "running" ? "partial" : source.status}`}

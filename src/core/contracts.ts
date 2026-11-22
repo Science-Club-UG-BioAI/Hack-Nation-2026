@@ -67,9 +67,7 @@ export const planSchema = z.object({
     .array(z.string().trim().min(1).max(120))
     .max(2)
     .default([]),
-  wikipediaQuery: z.string().min(2).max(150).nullable().default(null),
   sejmQuery: z.string().min(3).max(150).nullable().default(null),
-  arxivQuery: z.string().min(3).max(150).nullable().default(null),
   euvsdisinfoQuery: z.string().min(3).max(150).nullable().default(null),
 });
 export const evidenceSchema = z.object({

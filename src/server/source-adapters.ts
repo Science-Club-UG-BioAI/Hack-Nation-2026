@@ -1,10 +1,8 @@
 import { load } from "cheerio";
 import { z } from "zod";
-import { setTimeout as delay } from "node:timers/promises";
-import { addAbortListener } from "node:events";
 import type { SearchHit } from "@/core/evidence";
 import { readBoundedText } from "./read-body";
-import { startCall, type UsageCall } from "./config";
+import { startCall } from "./config";
 
 const USER_AGENT =
   "Prawdowid/0.2 (https://github.com/Science-Club-UG-BioAI/Hack-Nation-2026)";
@@ -14,14 +12,11 @@ export type SourceBatch = {
   unavailableArticles?: { title: string; url: string }[];
 };
 
-// Fixed API hosts only. Bound the downloaded body before parsing HTML/XML/JSON.
+// Fixed API hosts only. Bound the downloaded body before parsing HTML or JSON.
 async function read(
   url: URL,
   signal: AbortSignal,
-  searchProvider?: Extract<
-    UsageCall["provider"],
-    "wikipedia" | "sejm" | "arxiv"
-  >,
+  searchProvider?: "sejm",
 ): Promise<string> {
   if (searchProvider) startCall(searchProvider).costUsd = 0;
   const response = await fetch(url, {
@@ -30,7 +25,7 @@ async function read(
     cache: "no-store",
     headers: {
       "User-Agent": USER_AGENT,
-      Accept: "application/json, application/atom+xml, text/html",
+      Accept: "application/json, text/html",
     },
   });
   if (!response.ok || !response.body) throw new Error("Source API unavailable");
@@ -60,96 +55,6 @@ export function htmlText(html: string): string {
     .replace(/[ \t]+/g, " ")
     .replace(/\n\s*\n/g, "\n\n")
     .trim();
-}
-
-async function collect(tasks: Promise<SearchHit>[]): Promise<SourceBatch> {
-  const results = await Promise.allSettled(tasks);
-  const hits = results.flatMap((r) =>
-    r.status === "fulfilled" ? [r.value] : [],
-  );
-  if (tasks.length && !hits.length)
-    throw new Error("All source documents failed");
-  return { hits, partial: hits.length < tasks.length };
-}
-
-export async function wikipedia(
-  query: string,
-  signal: AbortSignal,
-): Promise<SourceBatch> {
-  const base = "https://pl.wikipedia.org/w/api.php";
-  const result = z
-    .object({
-      query: z.object({
-        search: z
-          .array(
-            z.object({
-              pageid: z.number().int().positive(),
-              title: z.string(),
-            }),
-          )
-          .max(3),
-      }),
-    })
-    .parse(
-      JSON.parse(
-        await read(
-          endpoint(base, {
-            action: "query",
-            list: "search",
-            srsearch: query,
-            srlimit: "3",
-            format: "json",
-            formatversion: "2",
-          }),
-          signal,
-          "wikipedia",
-        ),
-      ),
-    );
-  return collect(
-    result.query.search.map(async (page) => {
-      const parsed = z
-        .object({
-          parse: z.object({
-            text: z.string(),
-            revid: z.number().int().positive(),
-          }),
-        })
-        .parse(
-          JSON.parse(
-            await read(
-              endpoint(base, {
-                action: "parse",
-                pageid: String(page.pageid),
-                prop: "text|revid",
-                format: "json",
-                formatversion: "2",
-                redirects: "1",
-                disableeditsection: "1",
-              }),
-              signal,
-            ),
-          ),
-        );
-      return {
-        title: page.title,
-        url: endpoint("https://pl.wikipedia.org/w/index.php", {
-          title: page.title,
-          oldid: String(parsed.parse.revid),
-        }).toString(),
-        canonicalUrl: `https://pl.wikipedia.org/wiki/${encodeURIComponent(page.title.replaceAll(" ", "_"))}`,
-        raw_content: htmlText(parsed.parse.text),
-        provider: "wikipedia",
-        sourceType: "encyclopedia",
-        contentScope: "text",
-        publisherGroup: "wikipedia.org",
-        publisher: "Wikipedia (Wikimedia Foundation)",
-        notes: [
-          `Artykuł encyklopedyczny, wersja ${parsed.parse.revid}. Weryfikuj również źródła pierwotne wskazane w artykule.`,
-        ],
-      } satisfies SearchHit;
-    }),
-  );
 }
 
 const actSchema = z.object({
@@ -217,92 +122,4 @@ export async function sejm(
   );
   signal.throwIfAborted();
   return { hits, partial };
-}
-
-// arXiv requires one connection at a time, with >=3s between requests.
-// Process-local: multiple deployments require a shared limiter before publishing.
-const globals = globalThis as typeof globalThis & {
-  prawdowidArxiv?: { tail: Promise<void>; lastStart: number };
-};
-const arxivQueue = (globals.prawdowidArxiv ??= {
-  tail: Promise.resolve(),
-  lastStart: 0,
-});
-
-async function waitForTurn(previous: Promise<void>, signal: AbortSignal) {
-  signal.throwIfAborted();
-  let listener: ReturnType<typeof addAbortListener> | undefined;
-  try {
-    await Promise.race([
-      previous,
-      new Promise<never>((_, reject) => {
-        listener = addAbortListener(signal, () => reject(signal.reason));
-      }),
-    ]);
-  } finally {
-    listener?.[Symbol.dispose]();
-  }
-}
-
-export async function arxiv(
-  query: string,
-  signal: AbortSignal,
-): Promise<SourceBatch> {
-  signal.throwIfAborted();
-  const previous = arxivQueue.tail;
-  let release!: () => void;
-  const turn = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  // A cancelled waiter must not let later requests overtake the active one.
-  arxivQueue.tail = previous.then(() => turn);
-  try {
-    await waitForTurn(previous, signal);
-    signal.throwIfAborted();
-    const wait = Math.max(0, arxivQueue.lastStart + 3000 - Date.now());
-    if (wait) await delay(wait, undefined, { signal });
-    const terms = query.match(/[\p{L}\p{N}-]+/gu)?.slice(0, 10) ?? [];
-    if (!terms.length) return { hits: [], partial: false };
-    arxivQueue.lastStart = Date.now();
-    const xml = await read(
-      endpoint("https://export.arxiv.org/api/query", {
-        search_query: terms.map((term) => `all:"${term}"`).join(" AND "),
-        max_results: "3",
-        sortBy: "relevance",
-      }),
-      signal,
-      "arxiv",
-    );
-    const $ = load(xml, { xml: true });
-    if (!$("feed").length) throw new Error("Invalid arXiv response");
-    const hits: SearchHit[] = [];
-    $("entry").each((_, node) => {
-      const entry = $(node);
-      const id = entry
-        .children("id")
-        .text()
-        .trim()
-        .match(/^https?:\/\/arxiv\.org\/abs\/([a-zA-Z0-9./-]+)$/)?.[1];
-      if (!id || id.includes("..")) throw new Error("Invalid arXiv entry");
-      hits.push({
-        title: entry.children("title").text().replace(/\s+/g, " ").trim(),
-        url: `https://arxiv.org/abs/${id}`,
-        canonicalUrl: `https://arxiv.org/abs/${id.replace(/v\d+$/, "")}`,
-        raw_content: entry.children("summary").text().trim(),
-        published_date: entry.children("published").text().trim(),
-        updatedAt: entry.children("updated").text().trim() || null,
-        publisher: "arXiv",
-        provider: "arxiv",
-        sourceType: "research",
-        contentScope: "abstract",
-        publisherGroup: "arxiv.org",
-        notes: [
-          "Wyłącznie abstrakt pracy z arXiv. Obecność w repozytorium nie potwierdza recenzji naukowej ani konsensusu.",
-        ],
-      });
-    });
-    return { hits, partial: false };
-  } finally {
-    release();
-  }
 }

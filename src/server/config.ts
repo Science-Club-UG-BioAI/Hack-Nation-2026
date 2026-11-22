@@ -16,8 +16,6 @@ export type UsageCall = {
   provider:
     | "gemini"
     | "tavily"
-    | "wikipedia"
-    | "arxiv"
     | "sejm"
     | "euvsdisinfo"
     | "google_factcheck"

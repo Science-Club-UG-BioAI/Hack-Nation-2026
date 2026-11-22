@@ -7,7 +7,7 @@ import { search } from "@/server/providers";
 import { corpus } from "@/server/corpus";
 import { factCheck } from "@/server/fact-check";
 import { demagog } from "@/server/demagog";
-import { wikipedia, sejm, arxiv } from "@/server/source-adapters";
+import { sejm } from "@/server/source-adapters";
 import { planSchema } from "@/core/contracts";
 import { prepareDocuments } from "@/core/evidence";
 
@@ -15,9 +15,7 @@ vi.mock("@/server/fact-check", () => ({ factCheck: vi.fn() }));
 vi.mock("@/server/demagog", () => ({ demagog: vi.fn() }));
 vi.mock("@/server/providers", () => ({ search: vi.fn() }));
 vi.mock("@/server/source-adapters", () => ({
-  wikipedia: vi.fn(),
   sejm: vi.fn(),
-  arxiv: vi.fn(),
 }));
 const plan = planSchema.parse({
   checkable: true,
@@ -242,13 +240,9 @@ describe("multi-source retrieval", () => {
       expect.any(AbortSignal),
       "demagog.org.pl",
     );
-    expect(wikipedia).not.toHaveBeenCalled();
-    expect(arxiv).not.toHaveBeenCalled();
-    expect(result.statuses).toContainEqual({
-      provider: "arxiv",
-      status: "not_applicable",
-      documents: 0,
-    });
+    const providers = result.statuses.map(({ provider }) => provider);
+    expect(providers).not.toContain("wikipedia");
+    expect(providers).not.toContain("arxiv");
   });
   it("keeps available direct evidence when web search fails, with visible status", async () => {
     vi.mocked(search).mockRejectedValue(new Error("down"));

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { EvidenceGraphView } from "./evidence-graph-view";
 import { RetrievalDetails } from "./retrieval-details";
+import { SourceQuote } from "./source-quote";
 import { sourceDisagreement } from "@/core/source-disagreement";
 import {
   resultLabel,
@@ -275,7 +276,7 @@ export function VerificationView({
                   </span>
                   <span>Dowód {index + 1}</span>
                 </div>
-                <blockquote>{e.quote}</blockquote>
+                <SourceQuote text={e.quote} sourceUrl={source?.url} />
                 <p>{e.relevance}</p>
                 {source && (
                   <>

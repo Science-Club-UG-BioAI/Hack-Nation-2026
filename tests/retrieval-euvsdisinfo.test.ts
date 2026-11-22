@@ -3,9 +3,7 @@ vi.mock("@/server/corpus", () => ({
 }));
 vi.mock("@/server/providers", () => ({ search: vi.fn() }));
 vi.mock("@/server/source-adapters", () => ({
-  wikipedia: vi.fn(),
   sejm: vi.fn(),
-  arxiv: vi.fn(),
 }));
 vi.mock("@/server/euvsdisinfo", () => ({
   euvsdisinfo: vi.fn(),

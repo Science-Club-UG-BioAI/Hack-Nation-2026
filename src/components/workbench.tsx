@@ -166,9 +166,9 @@ export function Workbench() {
         </nav>
       </header>
       <main id="workspace" tabIndex={-1}>
-        <h1 id="input-title">Sprawdź tezę</h1>
         <div className="workspace dashboard-workspace">
           <div className="input-column">
+            <h1 id="input-title">Sprawdź tezę</h1>
             <section className="input-card" aria-labelledby="input-title">
               <form onSubmit={submit}>
                 <label htmlFor="claim">Twierdzenie do sprawdzenia</label>

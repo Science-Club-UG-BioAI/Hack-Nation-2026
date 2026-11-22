@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { arxiv, sejm, wikipedia } from "@/server/source-adapters";
+import { sejm } from "@/server/source-adapters";
 
 describe.skipIf(process.env.RUN_SOURCE_LIVE_TESTS !== "1")(
   "opt-in public API integration",
   () => {
     it.each([
-      ["wikipedia", wikipedia, "Polska NATO", "text"],
       ["sejm", sejm, "Konstytucja Rzeczypospolitej Polskiej", "metadata"],
-      ["arxiv", arxiv, "attention transformer", "abstract"],
     ] as const)(
       "retrieves real %s material",
       async (provider, adapter, query, scope) => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { SourceQuote } from "./source-quote";
+
 import cytoscape, { type Core, type ElementDefinition } from "cytoscape";
 import { useEffect, useRef, useState } from "react";
 import { verdictLabels } from "@/core/contracts";
@@ -458,7 +460,10 @@ export function EvidenceGraphView({ graph }: { graph: EvidenceGraph }) {
             {node ? nodeLabels[node.type] : edge && relationLabels[edge.type]}
           </h4>
           {node?.type === "EVIDENCE" ? (
-            <blockquote>{node.text}</blockquote>
+            <SourceQuote
+              text={node.text}
+              sourceUrl={origin?.type === "DOCUMENT" ? origin.url : undefined}
+            />
           ) : (
             <p>{node?.text ?? edge?.reason}</p>
           )}
@@ -506,7 +511,7 @@ export function EvidenceGraphView({ graph }: { graph: EvidenceGraph }) {
               {node?.type === "EVIDENCE" && savedChunk && (
                 <details>
                   <summary>Pokaż zapisany fragment źródła</summary>
-                  <p>
+                  <p className="source-raw-text">
                     {savedChunk.text.slice(0, node.start)}
                     <mark>{node.text}</mark>
                     {savedChunk.text.slice(node.end)}

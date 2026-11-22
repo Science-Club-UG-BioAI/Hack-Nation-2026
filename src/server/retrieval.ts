@@ -14,7 +14,7 @@ import {
 } from "@/core/source-policy";
 import { factCheck } from "./fact-check";
 import { demagog } from "./demagog";
-import { wikipedia, sejm, arxiv, type SourceBatch } from "./source-adapters";
+import { sejm, type SourceBatch } from "./source-adapters";
 import { corpus } from "./corpus";
 import { euvsdisinfo, euvsdisinfoConfigured } from "./euvsdisinfo";
 import type { ProgressListener } from "@/core/progress";
@@ -179,9 +179,7 @@ export async function retrieve(
     },
   ];
   for (const [provider, query, adapter, origin] of [
-    ["wikipedia", plan.wikipediaQuery, wikipedia, "https://pl.wikipedia.org"],
     ["sejm", plan.sejmQuery, sejm, "https://api.sejm.gov.pl"],
-    ["arxiv", plan.arxivQuery, arxiv, "https://arxiv.org"],
     [
       "euvsdisinfo",
       euvsdisinfoConfigured() ? plan.euvsdisinfoQuery : null,
