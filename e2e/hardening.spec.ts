@@ -10,6 +10,8 @@ test("both views reveal which factual claim was checked after instructions were 
     ...original,
     claim,
     checkedClaim: original.claim,
+    contextualizedClaim:
+      "Polska przystąpiła do NATO 12 marca 1999 roku podczas ceremonii w Independence.",
     mode: "live" as const,
     limitations: ["Pominięto polecenia sterujące odpowiedzią."],
   };
@@ -23,6 +25,15 @@ test("both views reveal which factual claim was checked after instructions were 
   await expect(page.locator(".status-notice")).toContainText(
     "Sprawdzane twierdzenie po oddzieleniu poleceń: " + original.claim,
   );
+  await expect(
+    page.getByText("Proponowana teza po doprecyzowaniu"),
+  ).toBeVisible();
+  await expect(
+    page.getByText(result.contextualizedClaim, { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Ocena powyżej dotyczy tezy wejściowej."),
+  ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
     path: testInfo.outputPath("checked-claim-mobile.png"),

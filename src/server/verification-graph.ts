@@ -112,13 +112,13 @@ export function projectVerificationGraph(
   }
 
   for (const [index, finding] of (result.findings ?? []).entries()) {
-    const premises = finding.evidenceIds.map((id) => evidenceById.get(id));
-    if (!premises.length || premises.some((item) => !item))
+    if (!finding.evidenceIds.length)
       throw new Error("Published finding missing its citations");
     const id = `finding-${index + 1}`;
     const sourceIds = new Set<string>();
-    for (const premise of premises) {
-      if (!premise) continue;
+    for (const evidenceId of finding.evidenceIds) {
+      const premise = evidenceById.get(evidenceId);
+      if (!premise) throw new Error("Published finding missing its citations");
       linkedEvidence.add(premise.id);
       sourceIds.add(premise.documentId);
       edge(

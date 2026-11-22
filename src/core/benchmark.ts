@@ -253,19 +253,6 @@ export function findingCoverageForResult(
   return { version: "findings-v1", total: result.findings.length, covered };
 }
 
-export type BenchmarkCase = {
-  id: string;
-  claim: string;
-  statedAt?: string;
-  expected: Label | null;
-  expectedStatus: string;
-  factual: boolean;
-  abstention?: boolean;
-  injection?: boolean;
-  rationale: string;
-  reference?: string;
-};
-
 // Structural checks only; the labels themselves stay the dataset author's claim.
 export function datasetProblems(dataset: unknown): string[] {
   const problems: string[] = [];
@@ -309,11 +296,6 @@ export type GraphObservation = {
   nodes: number | null;
   edges: number | null;
   stages: string[];
-};
-
-export type RunConfiguration = {
-  variant: "api-json" | "web-graph";
-  euvsdisinfoConfigured: boolean;
 };
 
 export function graphObservation(

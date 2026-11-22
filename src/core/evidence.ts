@@ -1,3 +1,4 @@
+import { interleave } from "./interleave";
 import { createHash } from "node:crypto";
 import {
   assessmentSchema,
@@ -185,7 +186,6 @@ export function prepareDocuments(
       .match(/[\p{L}\p{N}]{3,}/gu) ?? [];
   const documents: Document[] = [];
   // Round-robin publisher groups so the first search cannot consume the entire budget.
-  const ordered: SearchHit[] = [];
   const buckets = new Map<string, SearchHit[]>();
   for (const hit of hits) {
     const url = safeUrl(hit.canonicalUrl || hit.url);
@@ -195,13 +195,7 @@ export function prepareDocuments(
     if (bucket) bucket.push(hit);
     else buckets.set(group, [hit]);
   }
-  while ([...buckets.values()].some((bucket) => bucket.length)) {
-    for (const bucket of buckets.values()) {
-      const hit = bucket.shift();
-      if (hit) ordered.push(hit);
-    }
-  }
-  for (const hit of ordered) {
+  for (const hit of interleave([...buckets.values()])) {
     const url = safeUrl(hit.url);
     const identity = safeUrl(hit.canonicalUrl || hit.url);
     const raw = hit.raw_content?.slice(0, 150_000);

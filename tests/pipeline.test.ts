@@ -74,11 +74,14 @@ beforeEach(() => {
 describe("verification pipeline", () => {
   it("uses the date inferred from WWW in search while assessing the original claim", async () => {
     const contextualQuery = "Polska przystąpiła do NATO 22 listopada 2026";
+    const contextualizedClaim =
+      "Polska przystąpiła do NATO 1999-03-12 podczas ceremonii w Independence.";
     vi.mocked(searchContext).mockResolvedValueOnce([
       {
         title: "Wynik WWW",
         url: "https://example.org",
-        excerpt: "Niezweryfikowana data 22 listopada 2026",
+        excerpt:
+          "Ceremonia odbyła się w Independence. Niezweryfikowana data 22 listopada 2026.",
         publishedAt: null,
       },
     ]);
@@ -86,6 +89,7 @@ describe("verification pipeline", () => {
       .mockResolvedValueOnce({
         ...plan,
         queries: [input.claim, contextualQuery],
+        contextualizedClaim,
       })
       .mockResolvedValueOnce(assessment)
       .mockResolvedValueOnce({
@@ -102,6 +106,7 @@ describe("verification pipeline", () => {
     expect(model.mock.calls[1][2]).toMatchObject({ claim: input.claim });
     expect(model.mock.calls[1][2]).not.toHaveProperty("searchHints");
     expect(result.contextQuery).toBe(contextualQuery);
+    expect(result.contextualizedClaim).toBe(contextualizedClaim);
     expect(result.checkedClaim).toBeUndefined();
     expect(result.verdict).toBe("supported");
   });

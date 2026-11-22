@@ -4,6 +4,7 @@ import type {
   RetrievalStatus,
   SourceProvider,
 } from "@/core/contracts";
+import { interleave } from "@/core/interleave";
 import { AppError } from "@/core/errors";
 import { search } from "./providers";
 import {
@@ -27,50 +28,48 @@ async function retrieveSource(
   { provider, requests }: SourceSearch,
   onProgress?: ProgressListener,
 ) {
+  const allowed =
+    provider === "corpus" ? isAllowedCorpusUrl : isAllowedSourceUrl;
   let documents = 0;
-  let failures = 0;
-  let partial = false;
-  const unavailableArticles = new Map<string, { title: string; url: string }>();
   let remaining = requests.length;
   const report = (status: RetrievalStatus["status"] | "running") =>
     onProgress?.({ type: "source", source: { provider, documents, status } });
 
-  const batches = await Promise.all(
+  const outcomes = await Promise.allSettled(
     requests.map(async (run) => {
       report("running");
       try {
         const batch = await run();
-        const allowed =
-          provider === "corpus" ? isAllowedCorpusUrl : isAllowedSourceUrl;
-        const eligible = batch.hits.filter(
+        const hits = batch.hits.filter(
           (hit) =>
             allowed(hit.url) &&
             (!hit.canonicalUrl || allowed(hit.canonicalUrl)),
         );
-        documents += eligible.length;
-        partial ||= batch.partial;
-        for (const article of batch.unavailableArticles ?? [])
-          unavailableArticles.set(article.url, article);
-        return eligible;
-      } catch {
-        failures++;
-        return [];
+        documents += hits.length;
+        return { ...batch, hits };
       } finally {
         if (--remaining > 0) report("running");
       }
     }),
   );
+  const batches = outcomes.flatMap((outcome) =>
+    outcome.status === "fulfilled" ? [outcome.value] : [],
+  );
+  const failures = requests.length - batches.length;
+  const partial = failures > 0 || batches.some((batch) => batch.partial);
+  const unavailableArticles = new Map(
+    batches.flatMap((batch) =>
+      (batch.unavailableArticles ?? []).map(
+        (article) => [article.url, article] as const,
+      ),
+    ),
+  );
   let status: RetrievalStatus["status"] = documents ? "ok" : "empty";
   if (failures === requests.length) status = "error";
-  else if (partial || failures) status = "partial";
+  else if (partial) status = "partial";
   report(status);
   return {
-    // Give both queries an opportunity before a publisher's document limit is reached.
-    hits: Array.from(
-      { length: Math.max(0, ...batches.map((batch) => batch.length)) },
-      (_, index) =>
-        batches.flatMap((batch) => (batch[index] ? [batch[index]] : [])),
-    ).flat(),
+    hits: [...interleave(batches.map(({ hits }) => hits))],
     status: {
       provider,
       documents,
@@ -81,6 +80,12 @@ async function retrieveSource(
     },
     failures,
   };
+}
+
+function sourcePriority(provider: SourceProvider) {
+  if (provider === "google_factcheck") return 2;
+  if (provider === "corpus") return 1;
+  return 0;
 }
 
 export async function retrieve(
@@ -163,12 +168,7 @@ export async function retrieve(
   const hits = results
     .toSorted(
       (a, b) =>
-        (a.status.provider === "google_factcheck"
-          ? 2
-          : Number(a.status.provider === "corpus")) -
-        (b.status.provider === "google_factcheck"
-          ? 2
-          : Number(b.status.provider === "corpus")),
+        sourcePriority(a.status.provider) - sourcePriority(b.status.provider),
     )
     .flatMap((result) => result.hits);
   if (!hits.length && results.some((result) => result.failures > 0))

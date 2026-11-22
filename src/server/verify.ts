@@ -27,6 +27,8 @@ import {
   verificationDate,
 } from "@/core/verification-date";
 import { retrieve } from "./retrieval";
+import { auditFindings } from "./verification-audit";
+import { preservesContextDates } from "./context-dates";
 import { enrichPublicationDates } from "./publication-dates";
 import type { ProgressListener, ProgressStage } from "@/core/progress";
 import {
@@ -47,70 +49,9 @@ import {
   calendarGuidanceFor,
 } from "./verification-instructions";
 
-export {
-  PLAN_PROMPT,
-  ASSESS_PROMPT,
-  AUDIT_PROMPT,
-} from "./verification-instructions";
-
 const PLAN_BUDGET = { durationMs: 12_000, maxOutputTokens: 1600 };
 const ASSESSMENT_BUDGET = { durationMs: 24_000, maxOutputTokens: 4500 };
 const AUDIT_BUDGET = { durationMs: 15_000, maxOutputTokens: 1600 };
-
-async function auditFindings(
-  findings: NonNullable<Assessment["findings"]>,
-  requestId: string,
-  deadlineAt: number,
-  runAudit: (maxOutputTokens?: number) => Promise<z.infer<typeof auditSchema>>,
-): Promise<string | null> {
-  let audit: z.infer<typeof auditSchema>;
-  try {
-    audit = await runAudit();
-  } catch (error) {
-    // Retry only an explicitly unfinished provider response, never an adverse
-    // semantic judgment. Both attempts share the original deadline; no partial
-    // JSON or first-attempt findings are accepted as an audit.
-    if (
-      !(error instanceof InvalidModelOutput) ||
-      !error.validationIssues.includes("interaction_incomplete") ||
-      deadlineAt - Date.now() < 10_000
-    )
-      throw error;
-    console.warn(
-      JSON.stringify({ requestId, event: "audit_incomplete_retry" }),
-    );
-    audit = await runAudit(3200);
-  }
-
-  const checks = audit.findingChecks ?? [];
-  const checkedIds = new Set(checks.map((check) => check.findingId));
-  const complete =
-    checks.length === findings.length &&
-    checkedIds.size === checks.length &&
-    findings.every((finding) => checkedIds.has(finding.id));
-  const unsupported = checks.filter((check) => !check.supported).length;
-  const nonatomic = checks.filter((check) => !check.atomic).length;
-  if (audit.approved && complete && !unsupported && !nonatomic) return null;
-  console.warn(
-    JSON.stringify({
-      requestId,
-      event: "semantic_audit_rejected",
-      approved: audit.approved,
-      findingsApproved: complete && !unsupported && !nonatomic,
-      findings: findings.length,
-      checks: checks.length,
-      unsupported,
-      nonatomic,
-    }),
-  );
-  if (!complete)
-    return "Końcowa kontrola nie objęła poprawnie wszystkich ustaleń potrzebnych do wydania oceny.";
-  if (unsupported)
-    return "Przytoczone fragmenty źródeł nie uzasadniały co najmniej jednego z ustaleń.";
-  if (nonatomic)
-    return "Jedno z ustaleń łączyło kilka twierdzeń, które wymagają osobnego sprawdzenia.";
-  return "Końcowa kontrola nie potwierdziła, że proponowana ocena wynika z przytoczonych źródeł.";
-}
 
 export async function verify(
   input: VerifyInput,
@@ -219,6 +160,7 @@ export async function verify(
   recordGuard("input", guarded.removed);
   let retrieval: RetrievalStatus[] = [];
   let contextQuery: string | undefined;
+  let contextualizedClaim: string | undefined;
   const stage = (name: ProgressStage) => {
     currentStage = name;
     onProgress?.({ type: "stage", stage: name });
@@ -246,6 +188,7 @@ export async function verify(
       limitations: [...assessment.limitations, ...securityWarnings],
       ...(guarded.removed ? { checkedClaim: analysisInput.claim } : {}),
       ...(contextQuery ? { contextQuery } : {}),
+      ...(contextualizedClaim ? { contextualizedClaim } : {}),
       status: "completed",
       evidenceConflict: assessment.evidenceConflict ?? false,
       requestId,
@@ -355,6 +298,21 @@ export async function verify(
   plan = { ...plan, queries: [analysisInput.claim, plan.queries[1]] };
   if (searchHints.length && plan.queries[1] !== analysisInput.claim)
     contextQuery = maskPersonalData(plan.queries[1]).text;
+  if (searchHints.length && plan.contextualizedClaim) {
+    const proposed = maskPersonalData(plan.contextualizedClaim).text.trim();
+    if (
+      proposed !== analysisInput.claim.trim() &&
+      !hasControlInstruction(proposed) &&
+      preservesContextDates(
+        analysisInput.claim,
+        proposed,
+        searchHints.flatMap(({ title, excerpt }) => [title, excerpt]),
+        dayReferences,
+      )
+    ) {
+      contextualizedClaim = proposed;
+    }
+  }
   stage("searching");
   const found = await retrieve(plan, signal, onProgress);
   retrieval = found.statuses;

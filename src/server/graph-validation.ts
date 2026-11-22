@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import type { Document, Verdict } from "@/core/contracts";
-import { normalize, safeUrl } from "@/core/evidence";
+import type { Document } from "@/core/contracts";
+import { safeUrl } from "@/core/evidence";
 import {
   edgeTypes,
   type EvidenceEdge,
@@ -42,9 +42,11 @@ export function validateGraph(
     if (allIds.has(item.id)) issue(item.id, "Powtórzony identyfikator.");
     allIds.add(item.id);
   }
-  const outgoing = (id: string, type: EvidenceEdge["type"]) =>
-    graph.edges.filter((edge) => edge.from === id && edge.type === type);
+  const edgesByOrigin = new Map<string, EvidenceEdge[]>();
   for (const edge of graph.edges) {
+    const edges = edgesByOrigin.get(edge.from);
+    if (edges) edges.push(edge);
+    else edgesByOrigin.set(edge.from, [edge]);
     const from = nodes.get(edge.from);
     const to = nodes.get(edge.to);
     if (!from || !to || from === to || !edgeTypes.includes(edge.type)) {
@@ -62,14 +64,15 @@ export function validateGraph(
     )
       issue(edge.id, "Nieprawidłowy kierunek relacji.");
   }
+  const outgoing = (id: string, type: EvidenceEdge["type"]) =>
+    (edgesByOrigin.get(id) ?? []).filter((edge) => edge.type === type);
   function reachesDocument(id: string, seen = new Set<string>()): boolean {
     if (seen.has(id)) return false;
     const node = nodes.get(id);
     if (node?.type === "DOCUMENT") return snapshots.has(id);
     const next = new Set(seen).add(id);
-    return graph.edges.some(
+    return (edgesByOrigin.get(id) ?? []).some(
       (edge) =>
-        edge.from === id &&
         ["DERIVED_FROM", "DEPENDS_ON", "EXTRACTED_FROM"].includes(edge.type) &&
         edge.validation.semantic === "ACCEPT" &&
         reachesDocument(edge.to, next),
@@ -84,11 +87,8 @@ export function validateGraph(
     }
     if (visited.has(id)) return;
     active.add(id);
-    for (const edge of graph.edges)
-      if (
-        edge.from === id &&
-        ["DEPENDS_ON", "DERIVED_FROM", "REPEATS"].includes(edge.type)
-      )
+    for (const edge of edgesByOrigin.get(id) ?? [])
+      if (["DEPENDS_ON", "DERIVED_FROM", "REPEATS"].includes(edge.type))
         visit(edge.to);
     active.delete(id);
     visited.add(id);
@@ -196,91 +196,4 @@ export function validateGraph(
     if (!allIds.has(review.targetId))
       issue(review.targetId, "Nieznany cel krytyki.");
   return { technical: issues.length ? "invalid" : "valid", issues };
-}
-
-// Group transitively by publisher, identical material and reviewed syndication.
-export function sourceGroups(graph: EvidenceGraph) {
-  const documents = graph.nodes.filter((node) => node.type === "DOCUMENT");
-  const groups = new Map(documents.map((node) => [node.id, node.id]));
-  const merge = (a: string, b: string) => {
-    const left = groups.get(a);
-    const right = groups.get(b);
-    if (!left || !right || left === right) return;
-    for (const [id, group] of groups) if (group === right) groups.set(id, left);
-  };
-  for (const [index, doc] of documents.entries())
-    for (const previous of documents.slice(0, index))
-      if (
-        doc.publisher === previous.publisher ||
-        doc.version === previous.version ||
-        doc.canonicalUrl === previous.canonicalUrl
-      )
-        merge(doc.id, previous.id);
-  const excerpts = new Map<string, string>();
-  for (const node of graph.nodes) {
-    if (node.type !== "EVIDENCE") continue;
-    const key = normalize(node.text).toLowerCase();
-    if (excerpts.has(key)) merge(node.documentId, excerpts.get(key)!);
-    else excerpts.set(key, node.documentId);
-  }
-  for (const edge of graph.edges)
-    if (edge.type === "REPEATS" && edge.validation.semantic !== "REJECT")
-      merge(edge.from, edge.to);
-  return groups;
-}
-
-export function claimDecision(
-  graph: EvidenceGraph,
-  claim: Extract<EvidenceNode, { type: "CLAIM" }>,
-): {
-  verdict: Verdict;
-  reasons: EvidenceEdge[];
-} {
-  if (!claim.checkable) return { verdict: "not_checkable", reasons: [] };
-  const groups = sourceGroups(graph);
-  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
-  const reasons = graph.edges.filter(
-    (edge) =>
-      edge.to === claim.id &&
-      ["SUPPORTS", "CONTRADICTS"].includes(edge.type) &&
-      edge.validation.technical === "valid" &&
-      edge.validation.semantic === "ACCEPT" &&
-      nodes.get(edge.from)?.validation.semantic === "ACCEPT" &&
-      nodes.get(edge.from)?.sourceIds.length,
-  );
-  const supports = reasons.filter((edge) => edge.type === "SUPPORTS");
-  const contradicts = reasons.filter((edge) => edge.type === "CONTRADICTS");
-  const independent = (edges: EvidenceEdge[]) => {
-    const argumentsByGroup = edges.map(
-      (edge) =>
-        new Set(
-          nodes
-            .get(edge.from)!
-            .sourceIds.map((id) => groups.get(id))
-            .filter(Boolean),
-        ),
-    );
-    // Two arguments that share a necessary source do not corroborate each other.
-    return argumentsByGroup.some(
-      (left, index) =>
-        left.size &&
-        argumentsByGroup
-          .slice(index + 1)
-          .some(
-            (right) =>
-              right.size && [...right].every((group) => !left.has(group)),
-          ),
-    );
-  };
-  return {
-    verdict:
-      supports.length && contradicts.length
-        ? "insufficient"
-        : independent(supports)
-          ? "supported"
-          : independent(contradicts)
-            ? "refuted"
-            : "insufficient",
-    reasons,
-  };
 }

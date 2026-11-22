@@ -56,6 +56,13 @@ export const planSchema = z.object({
   outOfScope: z.boolean().default(false),
   explanation: z.string().min(1).max(1200),
   queries: z.array(z.string().min(3).max(350)).min(0).max(2),
+  contextualizedClaim: z
+    .string()
+    .trim()
+    .min(3)
+    .max(1500)
+    .nullable()
+    .default(null),
   factCheckQueries: z
     .array(z.string().trim().min(1).max(120))
     .max(2)
@@ -173,6 +180,7 @@ type ResultBase = {
   claim: string;
   checkedClaim?: string;
   contextQuery?: string;
+  contextualizedClaim?: string;
   statedAt: string | null;
   checkedAt: string;
   sources: Source[];

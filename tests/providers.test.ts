@@ -2,7 +2,6 @@ import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { generate, search } from "@/server/providers";
 import { usageContext, summarizeUsage, type UsageCall } from "@/server/config";
-import { critiqueSchema } from "@/server/evidence-graph";
 
 const schema = z.object({ ok: z.boolean() });
 const completed = () =>
@@ -110,7 +109,18 @@ it("keeps the API key in headers and disables stored conversation state", async 
   expect(options.body).not.toContain("private-test-key");
   expect(JSON.parse(options.body).store).toBe(false);
 });
-it("compacts the Gemini graph critic schema and keeps local response limits", async () => {
+it("compacts the Gemini response schema and keeps local response limits", async () => {
+  const critiqueSchema = z.object({
+    reviews: z
+      .array(
+        z.object({
+          targetId: z.string(),
+          decision: z.enum(["ACCEPT", "REJECT"]),
+          reason: z.string().max(100),
+        }),
+      )
+      .max(100),
+  });
   const review = {
     targetId: "claim",
     decision: "ACCEPT",
@@ -127,8 +137,6 @@ it("compacts the Gemini graph critic schema and keeps local response limits", as
               type: "text",
               text: JSON.stringify({
                 reviews: Array(101).fill(review),
-                repeats: [],
-                limitations: [],
               }),
             },
           ],
@@ -138,11 +146,17 @@ it("compacts the Gemini graph critic schema and keeps local response limits", as
   );
   vi.stubGlobal("fetch", fetcher);
   await expect(
-    generate(critiqueSchema, "Review graph", {}, new AbortController().signal, {
-      deadlineAt: Date.now() + 5_000,
-      maxOutputTokens: 6500,
-      compactResponseSchema: true,
-    }),
+    generate(
+      critiqueSchema,
+      "Return reviews",
+      {},
+      new AbortController().signal,
+      {
+        deadlineAt: Date.now() + 5_000,
+        maxOutputTokens: 6500,
+        compactResponseSchema: true,
+      },
+    ),
   ).rejects.toMatchObject({ code: "INVALID_MODEL_OUTPUT" });
   const outgoing = JSON.parse(fetcher.mock.calls[0][1].body).response_format
     .schema;

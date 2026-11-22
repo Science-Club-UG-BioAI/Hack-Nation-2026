@@ -1,7 +1,6 @@
-import { countSourcesByProvider } from "@/core/source-counts";
-import { allowedSourceDomains } from "@/core/source-policy";
 import { useState } from "react";
 import { EvidenceGraphView } from "./evidence-graph-view";
+import { RetrievalDetails } from "./retrieval-details";
 import { sourceDisagreement } from "@/core/source-disagreement";
 import {
   resultLabel,
@@ -73,17 +72,6 @@ export function VerificationView({ result }: { result: ResultDetails }) {
   const displayedVerdict = result.verdict;
   const displayedLabel = resultLabel(result);
   const disagreement = sourceDisagreement(result);
-  const providerCounts = countSourcesByProvider(result.sources);
-  const providerStatuses = new Map(
-    result.retrieval?.map((item) => [item.provider, item.status]),
-  );
-  const unavailableArticles = result.retrieval?.find(
-    ({ provider }) => provider === "demagog",
-  )?.unavailableArticles;
-  const providers = new Set([
-    ...providerStatuses.keys(),
-    ...providerCounts.keys(),
-  ]);
   const sourcesById = new Map<string, SourceDetails>(
     result.sources.map((source) => [source.id, source]),
   );
@@ -99,6 +87,11 @@ export function VerificationView({ result }: { result: ResultDetails }) {
             ? "PRZYKŁAD DEMONSTRACYJNY"
             : "Automatyczna analiza znalezionych materiałów",
           result.claim,
+          ...(result.contextualizedClaim
+            ? [
+                `Proponowana teza po doprecyzowaniu: ${result.contextualizedClaim}`,
+              ]
+            : []),
           displayedLabel,
           result.explanation,
           ...result.limitations,
@@ -151,6 +144,13 @@ export function VerificationView({ result }: { result: ResultDetails }) {
         <p className="status-notice">
           Sprawdzane twierdzenie po oddzieleniu poleceń: {result.checkedClaim}
         </p>
+      )}
+      {result.contextualizedClaim && (
+        <div className="coverage-panel">
+          <strong>Proponowana teza po doprecyzowaniu</strong>
+          <p>{result.contextualizedClaim}</p>
+          <small>Ocena powyżej dotyczy tezy wejściowej.</small>
+        </div>
       )}
       {result.contextQuery && (
         <div className="coverage-panel">
@@ -271,63 +271,7 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           </small>
         </div>
       )}
-      {providers.size > 0 && result.mode === "live" && (
-        <details
-          className="retrieval-details"
-          open={!!unavailableArticles?.length || undefined}
-        >
-          <summary>Gdzie szukaliśmy dowodów</summary>
-          <p>Łącznie zakwalifikowano do analizy: {result.sources.length}.</p>
-          <p>Domeny wyszukiwania WWW · {allowedSourceDomains.join(", ")}</p>
-          <ul>
-            {[...providers].map((provider) => {
-              const status = provider && providerStatuses.get(provider);
-              const note =
-                status &&
-                {
-                  ok: "",
-                  empty: "brak wyników",
-                  partial: "część materiałów niedostępna",
-                  error: "API niedostępne",
-                  not_applicable: "nie wybrano dla tego tematu",
-                  not_configured: "brak klucza API",
-                }[status];
-              return (
-                <li key={provider ?? "unknown"}>
-                  <strong>
-                    {provider
-                      ? providerLabels[provider]
-                      : "Bez oznaczenia dostawcy"}
-                  </strong>
-                  : {note && `${note} · `}
-                  do analizy: {providerCounts.get(provider) ?? 0}
-                  {provider === "demagog" && !!unavailableArticles?.length && (
-                    <>
-                      <p>
-                        Google znalazł te publikacje, ale ich treści nie udało
-                        się pobrać do analizy.
-                      </p>
-                      <ul>
-                        {unavailableArticles.map(({ url, title }) => (
-                          <li key={url}>
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {title}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </details>
-      )}
+      <RetrievalDetails result={result} />
       {result.evidence.length > 0 && (
         <div className="evidence-list">
           <h3>Dowody, które możesz sprawdzić</h3>
