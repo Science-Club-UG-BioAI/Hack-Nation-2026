@@ -144,9 +144,9 @@ Oba endpointy korzystają z `handleVerification` → `runVerification` → `veri
 
 ### Spójność i przechowywanie wyników
 
-Wyniki rzeczywistych analiz są współdzielone **w tej samej sesji, dla identycznego tekstu i daty, przez maksymalnie 5 minut**. Zmiana konfiguracji modelu wymusza nową analizę. Ponowne użycie jest jawnie opisane; zachowujemy pierwotną datę i identyfikator sprawdzenia. Równoczesne identyczne zgłoszenia do obu kanałów korzystają z jednego wykonania. Błędy techniczne nie są zapamiętywane. Od P0.2 status `unable_to_verify` można raz przekazać do drugiego kanału jako tę samą nieudaną próbę. Ponowienie z kanału, który już otrzymał tę próbę, uruchamia świeżą analizę; brak zatwierdzonej oceny nie blokuje ponawiania przez 5 minut.
+Oba kanały korzystają z tego samego wyniku **w obrębie jednej sesji przez maksymalnie godzinę od zakończenia analizy**. Powtórzenie pytania z identycznym tekstem, datą i kontekstem obrazu zwraca pierwotny wynik, datę i identyfikator sprawdzenia. Odczyt z bufora nie przedłuża jego ważności. Zmiana konfiguracji modelu wymusza nową analizę. Równoczesne identyczne zgłoszenia korzystają z jednego wykonania. Błędy techniczne można ponowić od razu. Wynik `unable_to_verify` można raz przekazać do drugiego kanału. Ponowienie z kanału, który już otrzymał ten wynik, uruchamia świeżą analizę.
 
-Magazyn działa tylko w pamięci jednego procesu (maks. 100 wyników). Przechowuje tekst pytania, wynik i wykorzystane cytaty; usuwa wpisy automatycznie po 5 minutach oraz po restarcie. Nie współdzieli danych między sesjami. To bufor spójności kanałów; osobny rejestr SQLite zachowuje zminimalizowany przebieg do 24 godzin. Usunięcie sesji usuwa obie warstwy i przerywa jej aktywne analizy. Anulowanie zgłoszenia, które uruchomiło analizę, może przerwać również oczekującą na nią odpowiedź drugiego kanału. Wieloinstancyjne wdrożenie wymaga współdzielonego magazynu i limitera.
+Magazyn działa tylko w pamięci jednego procesu (maks. 100 wyników). Przechowuje tekst pytania, wynik i wykorzystane cytaty; usuwa wpisy automatycznie po godzinie oraz po restarcie. Nie współdzieli danych między sesjami. To bufor spójności kanałów; osobny rejestr SQLite zachowuje zminimalizowany przebieg do 24 godzin. Usunięcie sesji usuwa obie warstwy i przerywa jej aktywne analizy. Anulowanie zgłoszenia, które uruchomiło analizę, może przerwać również oczekującą na nią odpowiedź drugiego kanału. Wieloinstancyjne wdrożenie wymaga współdzielonego magazynu i limitera.
 
 ## Struktura i stos
 
@@ -208,7 +208,7 @@ Test zapisuje `live-result.json` i `live.png` w katalogu wyników Playwright (ig
 
 ## Dane i ograniczenia
 
-- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do 5 minut w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
+- Teza po maskowaniu rozpoznanych danych osobowych trafia do Gemini oraz jako zapytania do Tavily i wybranych publicznych API źródeł. Nie wpisuj danych poufnych. Logi techniczne nie zawierają tekstów; osobny audyt SQLite zapisuje zamaskowane pytanie i metadane wyniku. Wynik z pytaniem i cytatami pozostaje do godziny w pamięci sesji, zgodnie z zasadą spójności kanałów opisaną powyżej. Dostawcy mają własne zasady retencji.
 - Logi zawierają identyfikator żądania, czas, liczbę źródeł, kody błędów i status HTTP dostawcy. Nie zawierają kluczy ani treści wejścia.
 - Walidator potwierdza obecność cytatu w pobranym materiale, nie prawdziwość źródła. Audyt tym samym modelem może powielać jego błędy.
 - Deduplikacja nie rozpoznaje wszystkich przedruków ani wspólnego pierwotnego źródła. Nie deklarujemy niezależności domen.
@@ -267,7 +267,7 @@ Projekt jest prototypem zespołu. Wyniki nie są stanowiskiem MSZ.
 
 Lista do przeglądu to `/zrodla`. Eksport udostępnia `GET /api/corpus`. Jeżeli data publikacji jest nieznana, rekord zachowuje `null`. Przynależność do danej domeny nie potwierdza tezy. Aktualna dostępność dokumentu jest sprawdzana podczas pobierania.
 
-**Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają 5-minutowej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
+**Licencje i retencja:** zapisujemy katalog metadanych, nie pełne artykuły ani streszczenia z wyszukiwarki. Nie przyznajemy sobie praw do redystrybucji tekstów wydawców. `licenseUrl: null` oznacza brak zweryfikowanej licencji na pełny tekst, a nie otwartą licencję. Pełne archiwizowanie pozostaje wyłączone. Tekst pobrany do analizy jest przejściowy; wybrane cytaty podlegają godzinnej retencji wyniku. Raport benchmarku celowo zachowuje wybrane cytaty dla audytu publicznych tez testowych; przed publikacją raportów konieczny jest przegląd praw do cytatów. Katalog metadanych jest wersjonowany z kodem; usunięcie rekordu i ponowne wdrożenie wycofuje go z wyszukiwania. To nie usuwa wcześniejszych kopii repozytorium.
 
 Aktualizacja: przed demo i następnie co tydzień operator może przebudować katalog. Zmiany tytułu, domeny, wydawcy lub warunków użycia wymagają przeglądu; niedostępne rekordy nie są przenoszone do nowego zbioru. Nowy katalog zastępuje poprzedni dopiero po osiągnięciu minimum 100 rekordów i 10 domen. Nie ma automatycznego harmonogramu ani obietnicy pełnej świeżości.
 
@@ -295,7 +295,7 @@ Remove-Item Env:RUN_BENCHMARK_CONTROLLED
 npm run benchmark:report
 ```
 
-Skrypt wykonuje przypadki kolejno, z przerwą 10 s między nimi (konfigurowalne `BENCHMARK_INTERVAL_MS`). Po HTTP 429 czeka co najmniej 60 s; trzy kolejne limity lub problem rozliczeń/autoryzacji przerywają przebieg z jawną listą niewykonanych przypadków. Nie zmienia modelu ani limitów aplikacji. Nowa sesja dla każdego przypadku zapobiega użyciu wyniku z poprzedniego testu. Następnie sprawdza automatyczną odpowiedź drugiego kanału na tej samej sesji, zgodnie z mechanizmem 5-minutowego współdzielenia wyników. Nie jest to porównanie dwóch niezależnych generacji.
+Skrypt wykonuje przypadki kolejno, z przerwą 10 s między nimi (konfigurowalne `BENCHMARK_INTERVAL_MS`). Po HTTP 429 czeka co najmniej 60 s; trzy kolejne limity lub problem rozliczeń/autoryzacji przerywają przebieg z jawną listą niewykonanych przypadków. Nie zmienia modelu ani limitów aplikacji. Nowa sesja dla każdego przypadku zapobiega użyciu wyniku z poprzedniego testu. Następnie sprawdza automatyczną odpowiedź drugiego kanału na tej samej sesji, zgodnie z godzinnym okresem ważności wyniku. Nie jest to porównanie dwóch niezależnych generacji.
 
 Historyczna próba kanałów porównywała dokładną migawkę: identyfikator, status, werdykt, cytaty i metadane źródeł. Wówczas `unable_to_verify` nie było zapamiętywane, więc drugi kanał mógł uruchomić nową analizę z innym identyfikatorem; niezaliczenie takiej próby nie dowodzi samo w sobie sprzecznych ocen merytorycznych. Cztery błędy HTTP w drugim przebiegu uniemożliwiły porównanie kanałów; piąta niezaliczona migawka dotyczyła właśnie niezatwierdzonej oceny I02. W zapisanym przebiegu zachowano wynik porównania, ale nie pełną drugą odpowiedź. Runner rozszerzono po pomiarze o zapis `channelResult` dla przyszłych przebiegów; nie uzupełniamy wstecz danych, których nie zapisano.
 
@@ -537,7 +537,7 @@ wyszukiwania i wywołań modelu.
 Klienci API mogą zażądać grafu, dodając `"evidenceGraph": true` do treści
 istniejącego żądania `POST /api/verify`. Wynik grafu jest dostępny w
 `evidenceGraph`, pod węzłem `verdict`. Powtórzenie tego samego żądania w tej
-samej sesji wykorzystuje zapisany wynik przez pięć minut.
+samej sesji wykorzystuje zapisany wynik przez maksymalnie godzinę.
 Eksport JSON zawiera graf i cytowane fragmenty zapisanych migawek, więc można
 porównać cytaty, zakresy znaków i hashe bez ponawiania analizy. Serwerowe
 archiwum audytu zachowuje dotychczasową politykę przechowywania metadanych.

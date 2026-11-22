@@ -8,7 +8,7 @@ import { assertSessionActive } from "./audit-store";
 import type { ProgressListener } from "@/core/progress";
 import { describeStrength, freshnessWarning } from "@/core/evidence";
 
-const TTL = 5 * 60_000;
+const RESULT_TTL_MS = 60 * 60_000;
 type Entry = {
   session: string;
   result: VerificationResult;
@@ -63,12 +63,12 @@ function cacheResult(
     clearTimeout(state.cache.get(oldest)!.timer);
     state.cache.delete(oldest);
   }
-  const timer = setTimeout(() => state.cache.delete(key), TTL);
+  const timer = setTimeout(() => state.cache.delete(key), RESULT_TTL_MS);
   timer.unref();
   state.cache.set(key, {
     session,
     result: structuredClone(result),
-    expires: Date.now() + TTL,
+    expires: Date.now() + RESULT_TTL_MS,
     timer,
     channels,
   });
@@ -106,7 +106,6 @@ function waiting<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
 }
 
 // Same session + exact input + same configuration => same evidence snapshot in both channels.
-// In-memory only, bounded, automatically removed after five minutes; never a canned answer.
 export async function runVerification(
   input: VerifyInput,
   session: string,

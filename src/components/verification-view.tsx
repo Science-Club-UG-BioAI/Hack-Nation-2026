@@ -252,9 +252,8 @@ export function VerificationView({ result }: { result: ResultDetails }) {
       )}
       {result.delivery?.reused && (
         <p className="reuse-notice">
-          To ten sam wynik sprawdzenia z tej sesji, z datą podaną poniżej. Nie
-          wykonano ponownego wyszukiwania. Wynik jest współdzielony między
-          kanałami przez maksymalnie 5 minut.
+          Pokazujemy wynik wcześniejszego sprawdzenia z tej sesji. Oba kanały
+          mogą z niego korzystać przez godzinę od zakończenia analizy.
         </p>
       )}
       {result.status === "completed" && result.coverage && (
