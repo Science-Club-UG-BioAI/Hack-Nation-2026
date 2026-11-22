@@ -10,7 +10,7 @@ catalog.records = catalog.records.filter((r) => {
   const key = r.domain + "|" + r.title.toLowerCase().trim();
   if (seen.has(key)) return false;
   seen.add(key);
-  r.licenseUrl = null; // Unknown is not a license grant; homepage is not a license reference.
+  r.licenseUrl ??= null;
   return true;
 });
 await writeFile(file, JSON.stringify(catalog, null, 2) + "\n");
