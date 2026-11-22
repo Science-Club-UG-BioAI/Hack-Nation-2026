@@ -240,13 +240,28 @@ it("includes the stated date in the shared result key", async () => {
   await discord(request({ content: claim, statedAt: "2026-01-02" }, session));
   expect(generate).toHaveBeenCalledTimes(6);
 });
-it("expires shared results after five minutes", async () => {
+it("reuses a result until exactly one hour after completion, even after a cache hit", async () => {
   const session = randomUUID();
-  const now = Date.now();
-  await web(request({ claim }, session));
-  vi.spyOn(Date, "now").mockReturnValue(now + 301_000);
-  await discord(request({ content: claim }, session));
+  const now = Date.parse("2026-11-22T12:00:00Z");
+  const clock = vi.spyOn(Date, "now").mockReturnValue(now);
+  const check = async () => (await web(request({ claim }, session))).json();
+  const first = await check();
+
+  clock.mockReturnValue(now + 3_599_999);
+  expect(await check()).toMatchObject({
+    requestId: first.requestId,
+    delivery: { reused: true },
+    usage: { cached: true, costUsd: 0, searchCalls: 0 },
+  });
+  expect(generate).toHaveBeenCalledTimes(3);
+  expect(search).toHaveBeenCalledTimes(6);
+
+  clock.mockReturnValue(now + 3_600_000);
+  const fresh = await check();
+  expect(fresh.delivery.reused).toBe(false);
+  expect(fresh.requestId).not.toBe(first.requestId);
   expect(generate).toHaveBeenCalledTimes(6);
+  expect(search).toHaveBeenCalledTimes(12);
 });
 it("responds automatically to a clarification without a factual verdict", async () => {
   vi.mocked(generate).mockResolvedValueOnce({
