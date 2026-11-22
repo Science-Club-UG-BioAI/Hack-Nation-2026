@@ -1,3 +1,4 @@
+import { demoResult } from "../src/core/demo";
 import { test, expect } from "@playwright/test";
 
 test("cancellation clears progress and allows a new analysis", async ({
@@ -28,9 +29,11 @@ test("cancellation clears progress and allows a new analysis", async ({
     page.getByRole("button", { name: "Sprawdź dowody" }),
   ).toBeEnabled();
   await expect(page.locator(".error-panel")).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Potwierdzenie", exact: true })
-    .click();
+  await page.unroute("**/api/verify");
+  await page.route("**/api/verify", (route) =>
+    route.fulfill({ json: demoResult("nato") }),
+  );
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
   await expect(
     page.getByRole("heading", { name: "Potwierdzone" }),
   ).toBeVisible();
@@ -163,9 +166,15 @@ test("multiple evidence cards, provenance, provider failures and mobile layout",
   await page.getByRole("button", { name: "Sprawdź dowody" }).click();
   await expect(page.locator("article.evidence")).toHaveCount(2);
   await expect(
-    page.getByText("Cytowane źródła: 2 · Grupy wydawców: 2"),
+    page.getByText("Cytowane źródła: 2 · Przejrzane materiały: 3"),
   ).toBeVisible();
-  await expect(page.getByText("Sejm / ELI API · Tylko metadane")).toBeVisible();
+  await expect(
+    page
+      .locator("article.evidence")
+      .getByText("Tylko metadane", { exact: true })
+      .filter({ visible: true }),
+  ).toBeVisible();
+  await page.getByText("Szczegóły analizy", { exact: true }).click();
   await page.getByText("Gdzie szukaliśmy dowodów", { exact: true }).click();
   const breakdown = page.locator(".retrieval-details");
   await expect(breakdown).toContainText(
@@ -177,12 +186,6 @@ test("multiple evidence cards, provenance, provider failures and mobile layout",
   await expect(breakdown).toContainText("Wikipedia API: do analizy: 1");
   await expect(breakdown).toContainText("Sejm / ELI API: do analizy: 1");
   await expect(breakdown).toContainText("arXiv API: do analizy: 1");
-  await expect(page.locator(".source-activity")).toContainText(
-    "Niepełne wyniki · do analizy: 0",
-  );
-  await expect(
-    page.getByRole("region", { name: "Podsumowanie materiałów" }),
-  ).toContainText("Materiały do analizy3");
   await page
     .getByText("Pozostałe przejrzane materiały — bez zatwierdzonego cytatu", {
       exact: true,
@@ -212,16 +215,22 @@ test("demo result, evidence, changed claim and mobile layout", async ({
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  let fixture = demoResult("nato");
+  await page.route("**/api/verify", (route) =>
+    route.fulfill({ json: fixture }),
+  );
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Zacznij od jednej tezy" }),
+    page.getByRole("heading", { name: "Sprawdź tezę" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Sprawdź dowody" }),
   ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Potwierdzenie", exact: true })
-    .click();
+  const input = page.getByLabel("Twierdzenie do sprawdzenia");
+  await expect(input).not.toHaveAttribute("placeholder");
+  await expect(page.getByText("Wypróbuj gotowy przykład")).toHaveCount(0);
+  await input.fill("Polska w NATO.");
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
   await expect(
     page.getByRole("heading", { name: "Potwierdzone" }),
   ).toBeVisible();
@@ -245,9 +254,8 @@ test("demo result, evidence, changed claim and mobile layout", async ({
     0,
   );
   await page.setViewportSize({ width: 390, height: 844 });
-  await page
-    .getByRole("button", { name: "Brak kontekstu", exact: true })
-    .click();
+  fixture = demoResult("context");
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
   await expect(
     page.getByRole("heading", { name: "Potrzebne doprecyzowanie" }),
   ).toBeVisible();

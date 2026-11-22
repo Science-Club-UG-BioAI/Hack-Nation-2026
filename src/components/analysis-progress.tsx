@@ -41,14 +41,14 @@ export function AnalysisProgress({
   elapsed,
   result,
   interrupted,
-  demo,
+  onCancel,
 }: {
   events: TimedProgress[];
   busy: boolean;
   elapsed: number;
   result: VerificationResult | null;
   interrupted: boolean;
-  demo: boolean;
+  onCancel?: () => void;
 }) {
   const stages = events.filter(
     (event): event is TimedProgress & { type: "stage"; stage: ProgressStage } =>
@@ -71,143 +71,112 @@ export function AnalysisProgress({
     : undefined;
   for (const source of result?.retrieval ?? [])
     sources.set(source.provider, source);
-  const title = busy
-    ? demo
-      ? "Otwieranie przykładu"
-      : current
-        ? stageLabels[current]
-        : "Łączenie z analizą"
-    : interrupted
-      ? "Analiza zatrzymana"
-      : result
-        ? result.mode === "demo"
-          ? "Przykład demonstracyjny"
-          : "Przebieg zakończony"
-        : "Każdy etap, na bieżąco";
-  const caption =
-    busy && !demo
-      ? "Statusy pochodzą z trwającej analizy na serwerze."
-      : result?.mode === "demo"
-        ? "Gotowy przykład — bez wyszukiwania i analizy na żywo."
-        : result?.delivery?.reused
-          ? "Ponownie pokazano wynik z tej sesji. Bez nowego wyszukiwania."
-          : interrupted
-            ? "Nie wydano nowego werdyktu. Możesz uruchomić sprawdzenie ponownie."
-            : result
-              ? "Szczegóły oceny i ograniczenia znajdziesz poniżej."
-              : null;
+  const title = current ? stageLabels[current] : "Łączenie z analizą";
   return (
-    <section className="pipeline-card" aria-labelledby="pipeline-title">
-      <div className="pipeline-heading">
-        <div>
-          <span className="eyebrow">PRZEBIEG WERYFIKACJI</span>
+    <section className="pipeline-card" aria-label="Przebieg weryfikacji">
+      {busy && (
+        <div className="pipeline-heading">
           <h2 id="pipeline-title" aria-live="polite" aria-atomic="true">
             {title}
           </h2>
+          <span className="live-badge is-live">{elapsed} s</span>
+          <button type="button" className="cancel-button" onClick={onCancel}>
+            Anuluj analizę
+          </button>
         </div>
-        <span className={`live-badge ${busy && !demo ? "is-live" : ""}`}>
-          <Icon name={busy ? "activity" : "clock"} />
-          {busy
-            ? `${elapsed} s`
-            : result
-              ? result.mode === "demo"
-                ? "DEMO"
-                : "Zakończono"
-              : interrupted
-                ? "Przerwano"
-                : "Oczekuje"}
-        </span>
-      </div>
-      <ol className="pipeline-steps">
-        {steps.map((step) => {
-          const visited = stages.some((event) => event.stage === step.id);
-          const running = busy && currentStep === step.id;
-          const stopped = interrupted && currentStep === step.id;
-          const done = visited && !running && !stopped;
-          return (
-            <li
-              key={step.id}
-              className={
-                running
-                  ? "step-active"
-                  : stopped
-                    ? "step-stopped"
-                    : done
-                      ? "step-done"
-                      : ""
-              }
-              aria-current={running ? "step" : undefined}
-            >
-              <span className="step-icon">
-                {running ? (
-                  <span className="spinner" />
-                ) : (
-                  <Icon name={done ? "check" : step.icon} />
-                )}
-              </span>
-              <strong>{step.label}</strong>
-              <small>
-                {running
-                  ? "W trakcie"
-                  : stopped
-                    ? "Przerwano"
-                    : done
-                      ? "Zakończono"
-                      : result
-                        ? "Nie wykonywano"
-                        : step.description}
-              </small>
-            </li>
-          );
-        })}
-      </ol>
-      {caption && <div className="pipeline-caption">{caption}</div>}
-      {sources.size > 0 && (
-        <div className="source-activity">
-          {[...sources.values()].map((source) => (
-            <div
-              key={source.provider}
-              className={`source-state source-${interrupted && source.status === "running" ? "partial" : source.status}`}
-            >
-              <span>{providerLabels[source.provider]}</span>
-              <small>
-                {
-                  {
-                    running: interrupted ? "Przerwano" : "Pobieranie…",
-                    ok: "Pobrano wyniki",
-                    empty: "Brak wyników",
-                    partial: "Niepełne wyniki",
-                    error: "Niedostępne",
-                    not_applicable: "Nie wybrano",
-                    not_configured: "Brak klucza API",
-                  }[source.status]
+      )}
+      <details className="result-disclosure">
+        <summary>Pokaż przebieg analizy</summary>
+        <ol className="pipeline-steps">
+          {steps.map((step) => {
+            const visited = stages.some((event) => event.stage === step.id);
+            const running = busy && currentStep === step.id;
+            const stopped = interrupted && currentStep === step.id;
+            const done = visited && !running && !stopped;
+            return (
+              <li
+                key={step.id}
+                className={
+                  running
+                    ? "step-active"
+                    : stopped
+                      ? "step-stopped"
+                      : done
+                        ? "step-done"
+                        : ""
                 }
-                {providerCounts &&
-                  ` · do analizy: ${providerCounts.get(source.provider) ?? 0}`}
-              </small>
-            </div>
-          ))}
-        </div>
-      )}
-      {events.length > 0 && (
-        <details className="activity-details">
-          <summary>
-            Dziennik aktywności <span>{events.length} zdarzeń</span>
-          </summary>
-          <ol>
-            {events.map((event, index) => (
-              <li key={index}>
-                <time>{event.seconds} s</time>
-                <span>
-                  {event.type === "stage"
-                    ? stageLabels[event.stage]
-                    : `${providerLabels[event.source.provider]} · ${{ running: "pobieranie", ok: "pobrano materiały", empty: "brak wyników", partial: "niepełne dane", error: "niedostępne", not_applicable: "nie wybrano dla tego tematu", not_configured: "brak klucza API" }[event.source.status]}`}
+                aria-current={running ? "step" : undefined}
+              >
+                <span className="step-icon">
+                  {running ? (
+                    <span className="spinner" />
+                  ) : (
+                    <Icon name={done ? "check" : step.icon} />
+                  )}
                 </span>
+                <strong>{step.label}</strong>
+                <small>
+                  {running
+                    ? "W trakcie"
+                    : stopped
+                      ? "Przerwano"
+                      : done
+                        ? "Zakończono"
+                        : result
+                          ? "Nie wykonywano"
+                          : step.description}
+                </small>
               </li>
+            );
+          })}
+        </ol>
+        {sources.size > 0 && (
+          <div className="source-activity">
+            {[...sources.values()].map((source) => (
+              <div
+                key={source.provider}
+                className={`source-state source-${interrupted && source.status === "running" ? "partial" : source.status}`}
+              >
+                <span>{providerLabels[source.provider]}</span>
+                <small>
+                  {
+                    {
+                      running: interrupted ? "Przerwano" : "Pobieranie…",
+                      ok: "Pobrano wyniki",
+                      empty: "Brak wyników",
+                      partial: "Niepełne wyniki",
+                      error: "Niedostępne",
+                      not_applicable: "Nie wybrano",
+                      not_configured: "Brak klucza API",
+                    }[source.status]
+                  }
+                  {providerCounts &&
+                    ` · do analizy: ${providerCounts.get(source.provider) ?? 0}`}
+                </small>
+              </div>
             ))}
-          </ol>
-        </details>
-      )}
+          </div>
+        )}
+        {events.length > 0 && (
+          <details className="activity-details">
+            <summary>
+              Dziennik aktywności <span>{events.length} zdarzeń</span>
+            </summary>
+            <ol>
+              {events.map((event, index) => (
+                <li key={index}>
+                  <time>{event.seconds} s</time>
+                  <span>
+                    {event.type === "stage"
+                      ? stageLabels[event.stage]
+                      : `${providerLabels[event.source.provider]} · ${{ running: "pobieranie", ok: "pobrano materiały", empty: "brak wyników", partial: "niepełne dane", error: "niedostępne", not_applicable: "nie wybrano dla tego tematu", not_configured: "brak klucza API" }[event.source.status]}`}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </details>
+        )}
+      </details>
     </section>
   );
 }

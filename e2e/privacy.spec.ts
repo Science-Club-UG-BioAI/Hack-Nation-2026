@@ -20,6 +20,7 @@ test("session erasure clears both open channels and exports only that session", 
   expect(started.ok()).toBe(true);
   const before = await context.cookies();
   expect(before.some((c) => c.name === "prawdowid-session")).toBe(true);
+  await page.getByText("Prywatność i dane sesji", { exact: true }).click();
   await page.getByRole("button", { name: "Usuń sesję i jej zapis" }).click();
   await expect(page.getByRole("status")).toContainText(
     "Usunięto lokalny zapis",
@@ -55,6 +56,7 @@ test("a failed deletion never displays a success message or clears the input", a
   await page.goto("/");
   const input = page.getByLabel("Twierdzenie do sprawdzenia");
   await input.fill("To treść, która ma pozostać po nieudanym usunięciu.");
+  await page.getByText("Prywatność i dane sesji", { exact: true }).click();
   await page.getByRole("button", { name: "Usuń sesję i jej zapis" }).click();
   await expect(page.getByRole("status")).toContainText(
     "Nie udało się potwierdzić",

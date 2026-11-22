@@ -1,3 +1,4 @@
+import { syntheticGraphDemo } from "../src/server/demo-graph";
 import { test, expect, type Page } from "@playwright/test";
 import { demoResult } from "../src/core/demo";
 import type { VerificationEvent } from "../src/core/progress";
@@ -62,6 +63,7 @@ test("real-time stages, source failures, activity log and final evidence stay co
   await expect(
     page.getByRole("heading", { name: "Rozpoznawanie tezy" }),
   ).toBeVisible();
+  await page.getByText("Pokaż przebieg analizy", { exact: true }).click();
   await expect(page.locator(".step-active")).toContainText("Rozpoznanie tezy");
   await emit(page, { type: "stage", stage: "searching" });
   await emit(page, {
@@ -177,11 +179,13 @@ test("dashboard has no horizontal overflow at phone, tablet and desktop widths",
     ).toBe(true);
   }
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.getByRole("button", { name: "Błędna data", exact: true }).click();
+  await page.route("**/api/verify", (route) =>
+    route.fulfill({ json: demoResult("eu") }),
+  );
+  await page.getByLabel("Twierdzenie do sprawdzenia").fill("Błędna data.");
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
   await expect(page.locator(".verdict-refuted")).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Przykład demonstracyjny" }),
-  ).toBeVisible();
+  await expect(page.locator(".demo-notice")).toBeVisible();
   await expect(page.locator(".step-done")).toHaveCount(0);
 });
 
@@ -217,11 +221,16 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
     ),
   };
   await emit(page, { type: "result", result: rich });
+  await page.getByText("Szczegóły analizy", { exact: true }).click();
   await expect(
     page.getByRole("complementary", { name: "Siła podstawy" }),
   ).toContainText(rich.strength.summary);
   await expect(page.getByText(rich.strength.limitations[0])).toBeVisible();
   const evidence = page.locator(".evidence-list");
+  for (const summary of await evidence
+    .getByText("Metadane źródła", { exact: true })
+    .all())
+    await summary.click();
   await expect(
     evidence.getByText("Wydawca · Redakcja archiwum", { exact: false }),
   ).toBeVisible();
@@ -269,6 +278,7 @@ test("shows optional evidence metadata and keeps a clear fallback for older resu
   await expect(
     page.getByText("Materiał archiwalny z marca 1999 r."),
   ).toHaveCount(0);
+  await evidence.getByText("Metadane źródła", { exact: true }).first().click();
   await expect(evidence.getByText(/Domena źródła/).first()).toBeVisible();
 });
 
@@ -281,21 +291,20 @@ test("supports keyboard navigation to the result and graph controls", async ({
   await expect(skip).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#workspace")).toBeFocused();
-  const demo = page.getByRole("button", {
-    name: /Graf dowodowy · dane syntetyczne/i,
-  });
-  for (let index = 0; index < 24; index++) {
-    if (await demo.evaluate((button) => button === document.activeElement))
-      break;
-    await page.keyboard.press("Tab");
-  }
-  await expect(demo).toBeFocused();
+  await page.route("**/api/verify", (route) =>
+    route.fulfill({ json: syntheticGraphDemo() }),
+  );
+  await page.getByLabel("Twierdzenie do sprawdzenia").fill("Teza testowa.");
+  await page.getByRole("button", { name: "Sprawdź dowody" }).click();
+  const summary = page.getByText("Pokaż graf dowodowy", { exact: true });
+  await summary.focus();
   await page.keyboard.press("Enter");
   const graph = page.getByRole("region", { name: "Graf dowodowy" });
   await expect(graph).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Fałszywe", exact: true }),
   ).toBeVisible();
+  await graph.getByText("Opcje grafu", { exact: true }).click();
   const filter = graph.getByLabel("Węzły");
   for (let index = 0; index < 18; index++) {
     if (await filter.evaluate((select) => select === document.activeElement))

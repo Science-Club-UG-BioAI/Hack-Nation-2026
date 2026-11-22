@@ -66,8 +66,19 @@ function sourceDate(value: string | null | undefined) {
   return <time dateTime={datetime}>{label}</time>;
 }
 
-export function VerificationView({ result }: { result: ResultDetails }) {
+export function VerificationView({
+  result,
+  onRetry,
+}: {
+  result: ResultDetails;
+  onRetry?: () => void;
+}) {
   const [copied, setCopied] = useState(false);
+  const [graphOpened, setGraphOpened] = useState(false);
+  const canShowGraph = result.status === "completed" && result.evidenceGraph;
+  const blockedArticles = result.retrieval?.some(
+    ({ unavailableArticles }) => unavailableArticles?.length,
+  );
   const strength = strengthSummary(result.strength);
   const displayedVerdict = result.verdict;
   const displayedLabel = resultLabel(result);
@@ -133,6 +144,11 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           <strong>Dlaczego?</strong> {result.explanation}
         </p>
       )}
+      {result.status === "unable_to_verify" && onRetry && (
+        <button type="button" className="text-button" onClick={onRetry}>
+          Spróbuj ponownie
+        </button>
+      )}
       {result.mode === "demo" && (
         <p className="demo-notice">
           Przykład demonstracyjny przygotowany ręcznie. To nie jest wynik
@@ -144,19 +160,6 @@ export function VerificationView({ result }: { result: ResultDetails }) {
         <p className="status-notice">
           Sprawdzane twierdzenie po oddzieleniu poleceń: {result.checkedClaim}
         </p>
-      )}
-      {result.contextualizedClaim && (
-        <div className="coverage-panel">
-          <strong>Proponowana teza po doprecyzowaniu</strong>
-          <p>{result.contextualizedClaim}</p>
-          <small>Ocena powyżej dotyczy tezy wejściowej.</small>
-        </div>
-      )}
-      {result.contextQuery && (
-        <div className="coverage-panel">
-          <strong>Zapytanie doprecyzowane na podstawie WWW</strong>
-          <p>{result.contextQuery}</p>
-        </div>
       )}
       {result.status !== "unable_to_verify" && (
         <p className="explanation">
@@ -216,66 +219,38 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           Rozbieżność między źródłami pozostaje nierozstrzygnięta.
         </p>
       ) : null}
-      {result.status === "completed" && strength && (
-        <aside className="coverage-panel" aria-label="Siła podstawy">
-          <strong>Siła podstawy</strong>
-          <p>{strength}</p>
-          {result.strength?.limitations?.map((text) => (
-            <p key={text}>{text}</p>
-          ))}
+      {result.limitations.length > 0 && (
+        <aside className="limitations">
+          <h3>Co warto mieć na uwadze</h3>
+          <ul>
+            {result.limitations.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
         </aside>
       )}
-      {result.archiveWarning && (
-        <p className="status-notice">{result.archiveWarning}</p>
+      {result.status === "unable_to_verify" && blockedArticles && (
+        <RetrievalDetails result={result} />
       )}
-      {result.status === "completed" && result.evidenceGraph && (
-        <EvidenceGraphView graph={result.evidenceGraph} />
-      )}
-      {result.graphStatus === "failed" && (
-        <p role="status" className="status-notice">
-          Nie udało się zbudować grafu dowodowego. Wyświetlono wynik sprawdzenia
-          całego twierdzenia.
-        </p>
-      )}
-      {result.graphStatus === "unavailable" &&
-        result.status !== "unable_to_verify" && (
-          <p className="status-notice">
-            Graf pojawi się po sprawdzeniu doprecyzowanego twierdzenia w
-            obsługiwanym zakresie.
-          </p>
-        )}
-
-      {result.status !== "completed" && (
-        <p className="status-notice">
-          To status obsługi zgłoszenia. Nie wydano werdyktu o prawdziwości.
-        </p>
-      )}
-      {result.delivery?.reused && (
-        <p className="reuse-notice">
-          Pokazujemy wynik wcześniejszego sprawdzenia z tej sesji. Oba kanały
-          mogą z niego korzystać przez godzinę od zakończenia analizy.
-        </p>
-      )}
-      {result.status === "completed" && result.coverage && (
-        <div className="coverage-panel">
-          <strong>
-            Cytowane źródła: {result.coverage.citedSources} · Grupy wydawców:{" "}
-            {result.coverage.publisherGroups}
-          </strong>
-          <small>
-            Materiały zakwalifikowane do analizy: {result.sources.length}.
-            Potwierdzenie lub obalenie wymaga dowodów z co najmniej{" "}
-            {result.coverage.minimumGroups} grup. Różne domeny nie gwarantują
-            niezależności informacji.
-          </small>
-        </div>
-      )}
-      <RetrievalDetails result={result} />
       {result.evidence.length > 0 && (
         <div className="evidence-list">
           <h3>Dowody, które możesz sprawdzić</h3>
+          {result.coverage && (
+            <p className="muted">
+              Cytowane źródła: {result.coverage.citedSources} · Przejrzane
+              materiały: {result.sources.length}
+            </p>
+          )}
+
           {result.evidence.map((e, index) => {
             const source = sourcesById.get(e.sourceId);
+            const published = sourceDate(source?.publishedAt);
+            const format =
+              source?.contentScope === "metadata"
+                ? "Tylko metadane"
+                : source?.contentScope === "abstract"
+                  ? "Tylko abstrakt"
+                  : "";
             const publisher = source?.publisher?.trim();
             const domain = source ? sourceDomain(source.url) : "";
             const publisherIsDomain =
@@ -311,42 +286,61 @@ export function VerificationView({ result }: { result: ResultDetails }) {
                     >
                       {source.title}
                     </a>
-                    <small>
-                      {source.provider &&
-                        `${providerLabels[source.provider]} · `}
-                      {source.contentScope === "metadata"
-                        ? "Tylko metadane"
-                        : source.contentScope === "abstract"
-                          ? "Tylko abstrakt"
-                          : "Pobrany tekst"}
-                      <br />
-                      {publisher && !publisherIsDomain ? (
-                        <>Wydawca · {publisher}</>
-                      ) : (
-                        <>
-                          Domena źródła (zamiast nazwy wydawcy) ·{" "}
-                          {publisher || domain || "brak danych"}
-                        </>
-                      )}
-                      <br />
-                      Publikacja ·{" "}
-                      {sourceDate(source.publishedAt) ?? "brak daty"}
-                      {source.updatedAt && (
-                        <>
-                          <br />
-                          Aktualizacja ·{" "}
-                          {sourceDate(source.updatedAt) ?? "brak daty"}
-                        </>
-                      )}
-                      {source.eventPeriod && (
-                        <>
-                          <br />
-                          Okres zdarzenia · {periodLabel(source.eventPeriod)}
-                        </>
-                      )}
-                      <br />
-                      Pobrano · {dateLabel(source.retrievedAt)}
-                    </small>
+                    {(format || published) && (
+                      <small>
+                        {format}
+                        {published && (
+                          <>
+                            {format && " · "}Publikacja {published}
+                          </>
+                        )}
+                      </small>
+                    )}
+                    <details className="source-metadata">
+                      <summary>Metadane źródła</summary>
+                      <small>
+                        {source.provider &&
+                          `${providerLabels[source.provider]} · `}
+                        {source.contentScope === "metadata"
+                          ? "Tylko metadane"
+                          : source.contentScope === "abstract"
+                            ? "Tylko abstrakt"
+                            : "Pobrany tekst"}
+                        <br />
+                        {publisher && !publisherIsDomain ? (
+                          <>Wydawca · {publisher}</>
+                        ) : (
+                          <>
+                            Domena źródła (zamiast nazwy wydawcy) ·{" "}
+                            {publisher || domain || "brak danych"}
+                          </>
+                        )}
+                        {!published && (
+                          <>
+                            <br />
+                            Publikacja · brak daty
+                          </>
+                        )}
+                        {source.updatedAt && (
+                          <>
+                            <br />
+                            Aktualizacja ·{" "}
+                            {sourceDate(source.updatedAt) ?? "brak daty"}
+                          </>
+                        )}
+                        {source.eventPeriod && (
+                          <>
+                            <br />
+                            Okres zdarzenia · {periodLabel(source.eventPeriod)}
+                          </>
+                        )}
+                        <br />
+                        Pobrano · {dateLabel(source.retrievedAt)}
+                      </small>
+                      {source.notes?.map((note, i) => (
+                        <small key={i}>{note}</small>
+                      ))}
+                    </details>
                     {(source.freshnessWarning ||
                       source.archived ||
                       source.archiveWarning) && (
@@ -356,9 +350,6 @@ export function VerificationView({ result }: { result: ResultDetails }) {
                           "Materiał archiwalny. Sprawdź, czy dotyczy okresu tezy."}
                       </small>
                     )}
-                    {source.notes?.map((note, i) => (
-                      <small key={i}>{note}</small>
-                    ))}
                   </>
                 )}
               </article>
@@ -366,37 +357,101 @@ export function VerificationView({ result }: { result: ResultDetails }) {
           })}
         </div>
       )}
-      {result.limitations.length > 0 && (
-        <aside className="limitations">
-          <h3>Co warto mieć na uwadze</h3>
-          <ul>
-            {result.limitations.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-        </aside>
+      {canShowGraph && (
+        <details
+          className="result-disclosure"
+          onToggle={(event) => {
+            if (event.currentTarget.open) setGraphOpened(true);
+          }}
+        >
+          <summary>Pokaż graf dowodowy</summary>
+          {graphOpened && <EvidenceGraphView graph={canShowGraph} />}
+        </details>
       )}
-      {uncitedSources.length > 0 && (
-        <details className="source-links">
-          <summary>
-            Pozostałe przejrzane materiały — bez zatwierdzonego cytatu
-          </summary>
-          {uncitedSources.map((source) => (
-            <a
-              href={source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              key={source.id}
-            >
-              {source.title}
-              {source.provider && ` · ${providerLabels[source.provider]}`}
-              {source.contentScope === "metadata"
-                ? " · tylko metadane"
-                : source.contentScope === "abstract"
-                  ? " · tylko abstrakt"
-                  : ""}
-            </a>
-          ))}
+      {(result.contextualizedClaim || result.contextQuery) && (
+        <details className="result-disclosure">
+          <summary>Kontekst wyszukiwania</summary>
+          {result.contextualizedClaim && (
+            <div className="coverage-panel">
+              <strong>Proponowana teza po doprecyzowaniu</strong>
+              <p>{result.contextualizedClaim}</p>
+              <small>Ocena powyżej dotyczy tezy wejściowej.</small>
+            </div>
+          )}
+          {result.contextQuery && (
+            <div className="coverage-panel">
+              <strong>Zapytanie doprecyzowane na podstawie WWW</strong>
+              <p>{result.contextQuery}</p>
+            </div>
+          )}
+        </details>
+      )}
+      {(result.retrieval?.length ||
+        result.sources.length ||
+        strength ||
+        result.delivery?.reused ||
+        result.archiveWarning ||
+        result.graphStatus) && (
+        <details className="result-disclosure">
+          <summary>Szczegóły analizy</summary>
+          {result.graphStatus === "failed" && (
+            <p role="status">Graf dowodowy jest niedostępny.</p>
+          )}
+          {result.status === "completed" && strength && (
+            <aside className="coverage-panel" aria-label="Siła podstawy">
+              <strong>Siła podstawy</strong>
+              <p>{strength}</p>
+              {result.strength?.limitations?.map((text) => (
+                <p key={text}>{text}</p>
+              ))}
+            </aside>
+          )}
+          {result.archiveWarning && (
+            <p className="status-notice">{result.archiveWarning}</p>
+          )}
+          {result.delivery?.reused && (
+            <p className="reuse-notice">
+              Pokazujemy wynik wcześniejszego sprawdzenia z tej sesji. Oba
+              kanały mogą z niego korzystać przez godzinę od zakończenia
+              analizy.
+            </p>
+          )}
+          {result.status === "completed" && result.coverage && (
+            <div className="coverage-panel">
+              <strong>Grupy wydawców: {result.coverage.publisherGroups}</strong>
+              <small>
+                Potwierdzenie lub obalenie wymaga dowodów z co najmniej{" "}
+                {result.coverage.minimumGroups} grup. Różne domeny nie
+                gwarantują niezależności informacji.
+              </small>
+            </div>
+          )}
+          {!(result.status === "unable_to_verify" && blockedArticles) && (
+            <RetrievalDetails result={result} />
+          )}
+          {uncitedSources.length > 0 && (
+            <details className="source-links">
+              <summary>
+                Pozostałe przejrzane materiały — bez zatwierdzonego cytatu
+              </summary>
+              {uncitedSources.map((source) => (
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  key={source.id}
+                >
+                  {source.title}
+                  {source.provider && ` · ${providerLabels[source.provider]}`}
+                  {source.contentScope === "metadata"
+                    ? " · tylko metadane"
+                    : source.contentScope === "abstract"
+                      ? " · tylko abstrakt"
+                      : ""}
+                </a>
+              ))}
+            </details>
+          )}
         </details>
       )}
       <footer className="result-footer">

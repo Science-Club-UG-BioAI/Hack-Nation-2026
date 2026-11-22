@@ -7,7 +7,6 @@ import {
   type VerificationResult,
 } from "@/core/contracts";
 import { VerificationView } from "./verification-view";
-import { demoExamples } from "@/core/demo";
 import { useVerificationRequest } from "./use-verification-request";
 import { SessionControls, ensureSession } from "./session-controls";
 import { AnalysisProgress, type TimedProgress } from "./analysis-progress";
@@ -31,7 +30,6 @@ export function Workbench() {
   const [error, setError] = useState<ApiErrorBody | null>(null);
   const [events, setEvents] = useState<TimedProgress[]>([]);
   const [cancelled, setCancelled] = useState(false);
-  const [demo, setDemo] = useState(false);
   const claimRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
@@ -59,12 +57,10 @@ export function Workbench() {
     setEvents([]);
     setCancelled(false);
   };
-  async function run(demoId?: string) {
-    if (!demoId && imageUnread) return;
-    if (demoId) resetImage();
+  async function run() {
+    if (imageUnread || !claim.trim()) return;
     clearResult();
     setElapsed(0);
-    setDemo(Boolean(demoId));
     requestAnimationFrame(() => {
       if (window.matchMedia("(max-width: 760px)").matches)
         progressRef.current?.scrollIntoView({ block: "start" });
@@ -72,28 +68,21 @@ export function Workbench() {
     const started = Date.now();
     await runRequest(
       async (signal) => {
-        if (!demoId) await ensureSession(signal);
-        const response = await fetch(
-          demoId ? `/api/demo?id=${encodeURIComponent(demoId)}` : "/api/verify",
-          demoId
-            ? { signal }
-            : {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "text/event-stream",
-                },
-                body: JSON.stringify({
-                  claim,
-                  evidenceGraph: true,
-                  ...(imageResult
-                    ? { imageContext: imageResult.description }
-                    : {}),
-                  ...(statedAt ? { statedAt } : {}),
-                }),
-                signal,
-              },
-        );
+        await ensureSession(signal);
+        const response = await fetch("/api/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({
+            claim,
+            evidenceGraph: true,
+            ...(imageResult ? { imageContext: imageResult.description } : {}),
+            ...(statedAt ? { statedAt } : {}),
+          }),
+          signal,
+        });
         const showResult = (value: VerificationResult) => {
           setResult(value);
           requestAnimationFrame(() =>
@@ -131,10 +120,6 @@ export function Workbench() {
           return;
         }
         showResult(data);
-        if (demoId) {
-          setClaim(data.claim);
-          setStatedAt("");
-        }
       },
       (timedOut) => {
         setError({
@@ -181,39 +166,10 @@ export function Workbench() {
         </nav>
       </header>
       <main id="workspace" tabIndex={-1}>
-        <section className="dashboard-intro">
-          <div>
-            <p className="eyebrow">TWÓJ PANEL WERYFIKACJI</p>
-            <h1>
-              Mniej domysłów. <span>Więcej faktów.</span>
-            </h1>
-            <p className="lead">
-              Sprawdź tezę i prześledź drogę od źródeł do wniosku.
-            </p>
-          </div>
-          <div className="trust-note">
-            <Icon name="shield" />
-            <span>
-              Dowody, które możesz
-              <br />
-              <strong>sprawdzić samodzielnie</strong>
-            </span>
-          </div>
-        </section>
+        <h1 id="input-title">Sprawdź tezę</h1>
         <div className="workspace dashboard-workspace">
           <div className="input-column">
             <section className="input-card" aria-labelledby="input-title">
-              <div className="card-heading">
-                <span className="section-symbol">
-                  <Icon name="search" />
-                </span>
-                <span className="text-badge">NOWA WERYFIKACJA</span>
-              </div>
-              <h2 id="input-title">Zacznij od jednej tezy</h2>
-              <p className="muted">
-                Wpisz własną tezę lub dołącz obraz, z którego możemy ją
-                odczytać.
-              </p>
               <form onSubmit={submit}>
                 <label htmlFor="claim">Twierdzenie do sprawdzenia</label>
                 <textarea
@@ -221,7 +177,6 @@ export function Workbench() {
                   ref={claimRef}
                   name="claim"
                   required
-                  minLength={20}
                   maxLength={500}
                   disabled={!mounted || busy}
                   value={claim}
@@ -229,15 +184,12 @@ export function Workbench() {
                     setClaim(e.target.value);
                     clearResult();
                   }}
-                  placeholder="Np. Polska przystąpiła do NATO 12 marca 1999 roku."
                   aria-describedby="claim-hint"
                 />
                 <div className="input-meta" id="claim-hint">
-                  <span>
-                    {draftClaim === null && imageResult?.suggestedClaim
-                      ? "Teza z obrazu · możesz ją edytować"
-                      : "Jedna teza · 20–500 znaków"}
-                  </span>
+                  {draftClaim === null && imageResult?.suggestedClaim && (
+                    <span>Teza z obrazu · możesz ją edytować</span>
+                  )}
                   <span>{claim.length}/500</span>
                 </div>
                 <ImageInput
@@ -252,26 +204,27 @@ export function Workbench() {
                     clearResult();
                   }}
                 />
-                <div className="date-row">
-                  <label htmlFor="statedAt">
-                    Data wypowiedzi{" "}
-                    <span className="optional">domyślnie dzisiaj</span>
-                  </label>
-                  <input
-                    id="statedAt"
-                    type="date"
-                    value={statedAt}
-                    disabled={!mounted || busy}
-                    onChange={(e) => {
-                      setStatedAt(e.target.value);
-                      clearResult();
-                    }}
-                  />
-                </div>
+                <details className="form-options">
+                  <summary>
+                    Zmień datę wypowiedzi · {statedAt || "dziś"}
+                  </summary>
+                  <div className="date-row">
+                    <label htmlFor="statedAt">Data wypowiedzi</label>
+                    <input
+                      id="statedAt"
+                      type="date"
+                      value={statedAt}
+                      disabled={!mounted || busy}
+                      onChange={(event) => {
+                        setStatedAt(event.target.value);
+                        clearResult();
+                      }}
+                    />
+                  </div>
+                </details>
                 {ready === false && (
                   <p className="configuration-note">
-                    Analiza online jest teraz niedostępna. Możesz poznać
-                    działanie panelu na przykładach demo.
+                    Analiza online jest teraz niedostępna.
                   </p>
                 )}
                 <p className="input-privacy-hint">
@@ -281,9 +234,7 @@ export function Workbench() {
                 <button
                   className="primary-button"
                   type="submit"
-                  disabled={
-                    !mounted || busy || imageUnread || claim.trim().length < 20
-                  }
+                  disabled={!mounted || busy || imageUnread || !claim.trim()}
                 >
                   {busy ? (
                     <>
@@ -297,117 +248,32 @@ export function Workbench() {
                     </>
                   )}
                 </button>
-                {busy && (
-                  <button
-                    type="button"
-                    className="cancel-button"
-                    onClick={() => {
-                      cancel();
-                      setCancelled(true);
-                      requestAnimationFrame(() => claimRef.current?.focus());
-                    }}
-                  >
-                    Anuluj analizę
-                  </button>
-                )}
               </form>
-              <div className="examples">
-                <p>
-                  Wypróbuj gotowy przykład <span>DEMO</span>
-                </p>
-                <div>
-                  {demoExamples.map((example, index) => (
-                    <button
-                      disabled={!mounted || busy}
-                      className={`example-button example-${index}`}
-                      key={example.id}
-                      onClick={() => void run(example.id)}
-                    >
-                      <span aria-hidden="true">
-                        {index === 0 ? "✓" : index === 1 ? "×" : "?"}
-                      </span>
-                      {example.label}
-                    </button>
-                  ))}
-                </div>
-                <small>
-                  Przygotowane przykłady, bez bieżącego wyszukiwania.
-                </small>
-              </div>
             </section>
-            <SessionControls
-              onClear={() => {
-                cancel();
-                setClaim(null);
-                resetImage();
-                setStatedAt("");
-                clearResult();
-              }}
-            />
           </div>
           <div className="analysis-column" ref={progressRef}>
-            <AnalysisProgress
-              events={events}
-              busy={busy}
-              elapsed={elapsed}
-              result={result}
-              interrupted={cancelled || Boolean(error)}
-              demo={demo}
-            />
-            <section
-              className="analysis-metrics"
-              aria-label="Podsumowanie materiałów"
-            >
-              <div>
-                <span className="metric-icon">
-                  <Icon name="layers" />
-                </span>
-                <div>
-                  <span>Materiały do analizy</span>
-                  <strong>{result?.sources.length ?? "—"}</strong>
-                </div>
-              </div>
-              <div>
-                <span className="metric-icon">
-                  <Icon name="file" />
-                </span>
-                <div>
-                  <span>Cytowane źródła</span>
-                  <strong>{result?.coverage?.citedSources ?? "—"}</strong>
-                </div>
-              </div>
-              <div>
-                <span className="metric-icon">
-                  <Icon name="shield" />
-                </span>
-                <div>
-                  <span>Grupy wydawców</span>
-                  <strong>{result?.coverage?.publisherGroups ?? "—"}</strong>
-                </div>
-              </div>
-            </section>
+            {busy && (
+              <AnalysisProgress
+                events={events}
+                busy
+                elapsed={elapsed}
+                result={null}
+                interrupted={false}
+                onCancel={() => {
+                  cancel();
+                  setCancelled(true);
+                  requestAnimationFrame(() => claimRef.current?.focus());
+                }}
+              />
+            )}
             <section
               className={`result-card ${result ? "has-result" : ""}`}
+              hidden={!result && !error && !cancelled}
               ref={resultRef}
               tabIndex={-1}
               aria-labelledby="result-title"
               aria-busy={busy}
             >
-              <div className="card-heading">
-                <span className="eyebrow">
-                  <Icon name="file" />
-                  WYNIK WERYFIKACJI
-                </span>
-                <span className="text-badge">
-                  {result?.mode === "demo"
-                    ? "DEMO"
-                    : result
-                      ? "RAPORT"
-                      : busy
-                        ? "W PRZYGOTOWANIU"
-                        : "CZEKA NA TEZĘ"}
-                </span>
-              </div>
               {error ? (
                 <div className="error-panel" role="alert">
                   <h2 id="result-title">Nie udało się ukończyć analizy</h2>
@@ -430,54 +296,43 @@ export function Workbench() {
                   </small>
                 </div>
               ) : result ? (
-                <VerificationView key={result.requestId} result={result} />
+                <VerificationView
+                  key={result.requestId}
+                  result={result}
+                  onRetry={() => void run()}
+                />
               ) : (
-                <div className="empty-result">
-                  <div
-                    className={`empty-illustration ${busy ? "is-analyzing" : ""}`}
-                    aria-hidden="true"
-                  >
-                    <span className="illustration-line line-one" />
-                    <span className="illustration-line line-two" />
-                    <span className="empty-icon">
-                      <Icon name={busy ? "activity" : "shield"} />
-                    </span>
-                    <span className="illustration-check">
-                      <Icon name="check" />
-                    </span>
-                  </div>
-                  <h2 id="result-title">
-                    {busy
-                      ? "Sprawdzamy. Ty widzisz, jak."
-                      : cancelled
-                        ? "Analiza została anulowana"
-                        : "Każdy wniosek ma swoje źródło."}
-                  </h2>
-                  <p>
-                    {busy
-                      ? "Śledź kolejne etapy powyżej. Wynik pojawi się po zakończeniu kontroli."
-                      : cancelled
-                        ? "Możesz poprawić tezę lub rozpocząć sprawdzenie ponownie."
-                        : "Tutaj znajdziesz ocenę tezy, konkretne cytaty i linki do materiałów, na których oparto wniosek."}
-                  </p>
-                  <div className="verdict-legend" aria-label="Legenda wyników">
-                    <span className="legend-supported">✓ Potwierdzone</span>
-                    <span className="legend-uncertain">
-                      ? Niepewne / kontekst
-                    </span>
-                    <span className="legend-refuted">× Fałszywe</span>
-                  </div>
-                  <p className="empty-footnote">
-                    Brak wystarczających dowodów nie oznacza fałszu.
-                  </p>
+                <div>
+                  <h2 id="result-title">Analiza została anulowana</h2>
+                  <p>Możesz rozpocząć sprawdzenie ponownie.</p>
                 </div>
               )}
             </section>
+            {!busy && events.length > 0 && (
+              <AnalysisProgress
+                events={events}
+                busy={false}
+                elapsed={elapsed}
+                result={result}
+                interrupted={cancelled || Boolean(error)}
+              />
+            )}
           </div>
         </div>
         <footer className="page-footer">
           <span>KitCheck · HackNation 2026</span>
-          <p>Sprawdzaj źródła. Zachowaj własny osąd.</p>
+          <details className="session-options">
+            <summary>Prywatność i dane sesji</summary>
+            <SessionControls
+              onClear={() => {
+                cancel();
+                setClaim(null);
+                resetImage();
+                setStatedAt("");
+                clearResult();
+              }}
+            />
+          </details>
         </footer>
       </main>
     </div>

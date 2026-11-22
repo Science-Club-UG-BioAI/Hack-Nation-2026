@@ -88,16 +88,13 @@ export function ChannelWorkbench() {
                 id="message"
                 ref={inputRef}
                 aria-describedby="message-hint"
-                minLength={20}
                 maxLength={500}
                 required
                 disabled={!mounted || busy}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Np. Polska przystąpiła do NATO 12 marca 1999 roku."
               />
               <div className="input-meta" id="message-hint">
-                <span>Jedna teza · 20–500 znaków</span>
                 <span>{content.length}/500</span>
               </div>
               <label htmlFor="message-date">
@@ -113,7 +110,7 @@ export function ChannelWorkbench() {
               <button
                 type="submit"
                 className="primary-button"
-                disabled={!mounted || busy || content.trim().length < 20}
+                disabled={!mounted || busy || !content.trim()}
               >
                 {busy ? "KitCheck sprawdza…" : "Wyślij w symulatorze"}
               </button>

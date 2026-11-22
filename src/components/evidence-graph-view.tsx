@@ -285,65 +285,6 @@ export function EvidenceGraphView({ graph }: { graph: EvidenceGraph }) {
           fikcyjne.
         </p>
       )}
-      <div className="graph-controls">
-        <label>
-          Węzły
-          <select
-            value={nodeType}
-            onChange={(event) => setNodeType(event.target.value)}
-          >
-            <option value="">Wszystkie typy</option>
-            {nodeTypes.map((type) => (
-              <option key={type} value={type}>
-                {nodeLabels[type]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Relacje
-          <select
-            value={edgeType}
-            onChange={(event) => setEdgeType(event.target.value)}
-          >
-            <option value="">Wszystkie typy</option>
-            {edgeTypes.map((type) => (
-              <option key={type} value={type}>
-                {relationLabels[type]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Status
-          <select
-            value={semantic}
-            onChange={(event) => setSemantic(event.target.value)}
-          >
-            <option value="">Wszystkie statusy</option>
-            {[...reviewDecisions, "NOT_APPLICABLE" as const].map((status) => (
-              <option key={status} value={status}>
-                {semanticLabels[status]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Kierunek
-          <select
-            value={direction}
-            onChange={(event) =>
-              setDirection(event.target.value as keyof typeof directionLabels)
-            }
-          >
-            {Object.entries(directionLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
       <div className="graph-actions">
         <button type="button" onClick={fit} disabled={displayFailed}>
           Dopasuj widok
@@ -368,39 +309,103 @@ export function EvidenceGraphView({ graph }: { graph: EvidenceGraph }) {
         >
           −
         </button>
-        <button
-          type="button"
-          onClick={() =>
-            download(
-              new Blob([JSON.stringify(graph, null, 2)], {
-                type: "application/json",
-              }),
-              "graf-dowodowy.json",
-            )
-          }
-        >
-          Eksport JSON
-        </button>
-        <button
-          type="button"
-          disabled={displayFailed}
-          onClick={() => {
-            const cy = network.current;
-            if (cy?.elements(":visible").length)
-              download(
-                cy.png({
-                  full: true,
-                  bg: "#ffffff",
-                  maxWidth: 2400,
-                  maxHeight: 2400,
-                }),
-                "graf-dowodowy.png",
-              );
-          }}
-        >
-          Eksport PNG
-        </button>
       </div>
+      <details className="result-disclosure">
+        <summary>Opcje grafu</summary>
+        <div className="graph-controls">
+          <label>
+            Węzły
+            <select
+              value={nodeType}
+              onChange={(event) => setNodeType(event.target.value)}
+            >
+              <option value="">Wszystkie typy</option>
+              {nodeTypes.map((type) => (
+                <option key={type} value={type}>
+                  {nodeLabels[type]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Relacje
+            <select
+              value={edgeType}
+              onChange={(event) => setEdgeType(event.target.value)}
+            >
+              <option value="">Wszystkie typy</option>
+              {edgeTypes.map((type) => (
+                <option key={type} value={type}>
+                  {relationLabels[type]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Status
+            <select
+              value={semantic}
+              onChange={(event) => setSemantic(event.target.value)}
+            >
+              <option value="">Wszystkie statusy</option>
+              {[...reviewDecisions, "NOT_APPLICABLE" as const].map((status) => (
+                <option key={status} value={status}>
+                  {semanticLabels[status]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Kierunek
+            <select
+              value={direction}
+              onChange={(event) =>
+                setDirection(event.target.value as keyof typeof directionLabels)
+              }
+            >
+              {Object.entries(directionLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="graph-actions">
+          <button
+            type="button"
+            onClick={() =>
+              download(
+                new Blob([JSON.stringify(graph, null, 2)], {
+                  type: "application/json",
+                }),
+                "graf-dowodowy.json",
+              )
+            }
+          >
+            Eksport JSON
+          </button>
+          <button
+            type="button"
+            disabled={displayFailed}
+            onClick={() => {
+              const cy = network.current;
+              if (cy?.elements(":visible").length)
+                download(
+                  cy.png({
+                    full: true,
+                    bg: "#ffffff",
+                    maxWidth: 2400,
+                    maxHeight: 2400,
+                  }),
+                  "graf-dowodowy.png",
+                );
+            }}
+          >
+            Eksport PNG
+          </button>
+        </div>
+      </details>
       <div className="graph-legend">
         {Object.entries(edgeColors).map(([type, color]) => (
           <span key={type} style={{ borderColor: color }}>

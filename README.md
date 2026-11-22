@@ -3,7 +3,7 @@
 **Aktualizacja: ustalenia z przypisanymi dowodami (P0.1).** Aktualny zakres opisuje ostatnia sekcja tego pliku. Wcześniejsze tabele benchmarków i braków są historyczne; nie stanowią wyników po najnowszych zmianach.
 
 Prototyp HackNation 2026: **teza → wyszukiwanie → ocena → kontrola cytatów → wynik z dowodami**.
-Ta wersja przyjmuje jedną tezę (20–500 znaków), nie cały artykuł. Obsługuje WWW i działający adapter demonstracyjny wiadomości Discord, zgodnie z pierwszym etapem dostosowania do opisu wyzwania.
+Ta wersja przyjmuje jedną niepustą tezę (do 500 znaków), nie cały artykuł. Obsługuje WWW i działający adapter demonstracyjny wiadomości Discord, zgodnie z pierwszym etapem dostosowania do opisu wyzwania.
 
 W panelu WWW można dołączyć JPG, PNG lub WebP do 4 MiB. Po wyborze pliku Gemini automatycznie przygotowuje opis, który staje się kontekstem tezy. Jeśli pole tezy jest puste, pojawi się w nim propozycja z obrazu, o ile grafika zawiera sprawdzalne twierdzenie. Tezę można edytować przed wybraniem **Sprawdź dowody**. Odczyt obrazu wymaga klucza Gemini i zużywa jedną próbę ze wspólnego limitu analiz.
 
@@ -20,7 +20,7 @@ npm run dev
 
 Otwórz http://127.0.0.1:3000. Nie nadpisuj istniejącego `.env.local`. Po dodaniu lub zmianie kluczy uruchom serwer ponownie. Sekrety są używane wyłącznie na serwerze. Nie dodawaj ich do `.env.example` ani repozytorium.
 
-Bez kluczy działają cztery **ręcznie przygotowane i oznaczone przykłady demo**. Analiza online zwróci `NOT_CONFIGURED`; nigdy nie zastępujemy jej przykładem.
+Ręcznie przygotowane, oznaczone przykłady demo są dostępne przez `GET /api/demo`. Analiza online zwróci `NOT_CONFIGURED`; nigdy nie zastępujemy jej przykładem.
 
 ```powershell
 npm run build

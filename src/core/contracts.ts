@@ -28,7 +28,7 @@ export const verifyInputSchema = z
     claim: z
       .string()
       .trim()
-      .min(20, "Wpisz przynajmniej 20 znaków.")
+      .min(1, "Wpisz tezę do sprawdzenia.")
       .max(500, "Teza może mieć najwyżej 500 znaków."),
     evidenceGraph: z.boolean().optional(),
     imageContext: imageContextSchema.optional(),

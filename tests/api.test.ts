@@ -286,7 +286,7 @@ describe("real route and adapters with controlled HTTP provider responses", () =
   it("rejects invalid input before accessing providers", async () => {
     const fetcher = vi.fn();
     vi.stubGlobal("fetch", fetcher);
-    expect((await POST(request({ claim: "short" }))).status).toBe(400);
+    expect((await POST(request({ claim: "   " }))).status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();
   });
   it("rejects a browser-marked cross-site request without an Origin header", async () => {

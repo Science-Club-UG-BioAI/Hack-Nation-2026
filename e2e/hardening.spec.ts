@@ -25,6 +25,7 @@ test("both views reveal which factual claim was checked after instructions were 
   await expect(page.locator(".status-notice")).toContainText(
     "Sprawdzane twierdzenie po oddzieleniu poleceń: " + original.claim,
   );
+  await page.getByText("Kontekst wyszukiwania", { exact: true }).click();
   await expect(
     page.getByText("Proponowana teza po doprecyzowaniu"),
   ).toBeVisible();

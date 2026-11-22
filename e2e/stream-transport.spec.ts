@@ -9,13 +9,13 @@ test("real HTTP streaming preserves validation errors instead of NETWORK_ERROR",
     headers: { "x-prawdowid-action": "start-session" },
   });
   expect(session.ok()).toBe(true);
-  const json = await request.post("/api/verify", { data: { claim: "short" } });
+  const json = await request.post("/api/verify", { data: { claim: "   " } });
   expect(json.status()).toBe(400);
   expect(await json.json()).toMatchObject({ code: "INPUT_INVALID" });
 
   const streamed = await request.post("/api/verify", {
     headers: { accept: "text/event-stream" },
-    data: { claim: "short" },
+    data: { claim: "   " },
   });
   expect(streamed.headers()["content-type"]).toContain("text/event-stream");
   const frames = (await streamed.text()).trim().split("\n\n");
