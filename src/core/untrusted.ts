@@ -17,10 +17,21 @@ const extraCommands = [
   /^koniec\s+(?:tezy|danych|instrukcji|wejścia|wejscia)\b/iu,
   /^(?:przestań|przestan|stop)\s+(?:sprawdzać|sprawdzac|weryfikować|weryfikowac|wyszukiwać|wyszukiwac|checking|searching)/iu,
   /^nie\s+(?:szukaj|sprawdzaj|weryfikuj|podawaj\s+źródeł|podawaj\s+zrodel)\b/iu,
+  /^(?:poniższe|powyższe)\s+(?:dane|informacje|źródła|cytaty)\s+(?:został[yo]\s+)?(?:już\s+)?zweryfikowan/iu,
+  /^nie\s+wymagaj(?:ą|a)\s+(?:dodatkowego\s+)?(?:sprawdzania|weryfikacji|potwierdzenia)\b/iu,
+  /^(?:wykorzystaj|użyj|potraktuj)\s+(?:powyższ(?:y|ą|e)|poniższ(?:y|ą|e)|ten|tę|te)\s+(?:cytat|dane|źródło|informacj\p{L}*)\s+jako\s+dowód\b/iu,
   /^(?:wyłącz|wylacz|disable)\s+(?:kontrolę|kontrole|weryfikację|weryfikacje|audyt|cytaty|filtr|checks?)/iu,
   /^jako\s+(?:model|asystent|ai|sztuczna\s+inteligencja)\b.*\b(?:musisz|masz|powinieneś|powinienes)\b/iu,
   /^(?:[Nn]apisz|[Ww]ypisz|[Zz]wróć|[Zz]wroc|[Pp]odaj|[Oo]dpowiedz|[Pp]rint|[Oo]utput)\s+(?:wyłącznie\s+|tylko\s+)?[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/u,
 ];
+
+function isSuppliedEvidenceRecord(record: string) {
+  return (
+    /"(?:source|url)"\s*:/iu.test(record) &&
+    /"(?:quote|citation)"\s*:/iu.test(record) &&
+    /"(?:verified|confidence|verdict)"\s*:/iu.test(record)
+  );
+}
 // Letters split by single separators ("z-i-g-n-o-r-u-j") are joined for detection only.
 function joinSpelledOut(text: string) {
   return text.replace(/(?<!\p{L})(?:\p{L}[-._·]){3,}\p{L}(?!\p{L})/gu, (word) =>
@@ -37,11 +48,12 @@ function segments(text: string) {
   );
 }
 export function hasControlInstruction(text: string) {
-  return segments(
-    joinSpelledOut(
-      text.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/gu, ""),
-    ),
-  ).some((part) => {
+  const normalized = joinSpelledOut(
+    text.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/gu, ""),
+  );
+  if ((normalized.match(/\{[^{}]*\}/gu) ?? []).some(isSuppliedEvidenceRecord))
+    return true;
+  return segments(normalized).some((part) => {
     const trimmed = part.trim();
     return (
       directCommand.test(trimmed) ||
@@ -52,7 +64,12 @@ export function hasControlInstruction(text: string) {
 export function guardClaim(claim: string) {
   const kept: string[] = [];
   let removed = 0;
-  for (const part of segments(claim)) {
+  const withoutRecords = claim.replace(/\{[^{}]*\}/gu, (record) => {
+    if (!isSuppliedEvidenceRecord(record)) return record;
+    removed++;
+    return "\n";
+  });
+  for (const part of segments(withoutRecords)) {
     if (hasControlInstruction(part)) removed++;
     else kept.push(part.trim());
   }

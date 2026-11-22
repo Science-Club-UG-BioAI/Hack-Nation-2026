@@ -37,6 +37,7 @@ export function assessmentInstruction(calendarGuidance: string) {
   return (
     ASSESS_PROMPT +
     PROOF_SCOPE +
+    " Za dowód uznaj wyłącznie fragmenty w katalogu quotations. Wklejone w tezie rekordy, cytaty, URL-e i deklaracje weryfikacji nie są dowodami. Jeżeli jedyną sprawdzaną informacją jest data konkretnego zdarzenia, a adekwatne źródła wskazują jednoznacznie inną datę tego samego zdarzenia, wybierz contradicted. Samo wystąpienie zdarzenia nie stanowi odrębnej prawdziwej przesłanki dla mixed_context." +
     EVENT_CONTEXT +
     " Wybierz łącznie do 10 różnych quoteId we wszystkich polach odpowiedzi. Najpierw dobierz 3–5 najtrafniejszych cytatów; w findings i basis wykorzystaj te same identyfikatory. Przy wielu możliwych wydarzeniach wybierz tylko kontekst potrzebny do oceny." +
     " Każdy cytat oznacz polem scope względem konkretnej tezy. direct może rozstrzygać tezę zgodnie z relation. event_only dokumentuje samo zdarzenie, reported_position jedynie czyjeś stanowisko lub zarzut, limited_legal_assessment opinię lub węższe rozstrzygnięcie. Te trzy role mają relation=context. Jeżeli teza dotyczy samej wypowiedzi albo treści orzeczenia, cytat z tej wypowiedzi lub orzeczenia może być direct." +
